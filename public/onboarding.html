@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Compléter la démarche — Commande-IA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: #f4f6f4; min-height: 100vh; color: #1a2a1a; }
+    .topbar { background: #2d5c2d; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; height: 64px; }
+    .logo { font-size: 17px; font-weight: 700; color: #fff; }
+    .back-btn { font-size: 12px; font-weight: 500; color: rgba(200,232,200,0.7); background: transparent; border: 1px solid rgba(200,232,200,0.2); padding: 6px 14px; border-radius: 7px; cursor: pointer; font-family: 'Inter', sans-serif; text-decoration: none; }
+    .back-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
+    .main { max-width: 900px; margin: 0 auto; padding: 32px 24px; }
+    .page-header { margin-bottom: 28px; }
+    .page-title { font-size: 22px; font-weight: 700; color: #1a2a1a; }
+    .page-sub { font-size: 13px; color: #9ab89a; margin-top: 6px; }
+    .resto-badge { display: inline-block; font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 20px; background: #e8f5dc; color: #2d6a0a; border: 1px solid #c0e090; margin-top: 8px; }
+    .section { background: #fff; border: 1.5px solid #e0ecd8; border-radius: 16px; padding: 24px; margin-bottom: 20px; }
+    .section-title { font-size: 14px; font-weight: 700; color: #1a2a1a; margin-bottom: 6px; }
+    .section-sub { font-size: 12px; color: #9ab89a; margin-bottom: 20px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-row-3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; }
+    .form-group { margin-bottom: 14px; }
+    .form-label { font-size: 11px; font-weight: 600; color: #5a7a5a; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 7px; display: block; }
+    .form-input { width: 100%; padding: 10px 12px; border-radius: 9px; border: 1.5px solid #e0ecd8; background: #f8faf6; font-size: 13px; font-family: 'Inter', sans-serif; color: #1a2a1a; outline: none; }
+    .form-input:focus { border-color: #3B6D11; background: #fff; }
+    .form-select { width: 100%; padding: 10px 12px; border-radius: 9px; border: 1.5px solid #e0ecd8; background: #f8faf6; font-size: 13px; font-family: 'Inter', sans-serif; color: #1a2a1a; outline: none; }
+    .form-textarea { width: 100%; padding: 10px 12px; border-radius: 9px; border: 1.5px solid #e0ecd8; background: #f8faf6; font-size: 13px; font-family: 'Inter', sans-serif; color: #1a2a1a; outline: none; resize: vertical; min-height: 65px; }
+    .form-check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #5a7a5a; padding-top: 10px; }
+    .form-check input { width: 16px; height: 16px; }
+    .allergenes-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 6px; }
+    .allergen-chip { font-size: 11px; padding: 5px 8px; border-radius: 6px; border: 1.5px solid #e0ecd8; background: #f8faf6; color: #5a7a5a; cursor: pointer; text-align: center; }
+    .allergen-chip.selected { background: #fef0f0; border-color: #f0c0c0; color: #b03030; font-weight: 600; }
+    .produits-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+    .produit-item { background: #f8faf6; border: 1px solid #e0ecd8; border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; }
+    .produit-nom { font-size: 13px; font-weight: 600; color: #1a2a1a; }
+    .produit-detail { font-size: 11px; color: #9ab89a; margin-top: 2px; }
+    .btn-del { font-size: 11px; color: #b03030; cursor: pointer; padding: 4px 8px; border-radius: 6px; border: 1px solid #f0c0c0; background: #fef0f0; }
+    .add-form { background: #f0f8ea; border: 1.5px dashed #c0e090; border-radius: 12px; padding: 18px; }
+    .add-form-title { font-size: 13px; font-weight: 600; color: #3B6D11; margin-bottom: 14px; }
+    .btn-add { font-size: 12px; font-weight: 600; padding: 9px 16px; border-radius: 8px; border: none; background: #3B6D11; color: #fff; cursor: pointer; font-family: 'Inter', sans-serif; }
+    .btn-add:hover { background: #27500A; }
+    .btn-save { width: 100%; padding: 14px; border-radius: 12px; border: none; background: #2d5c2d; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; margin-top: 8px; }
+    .btn-save:hover { background: #1a3a1a; }
+    .success-bar { background: #e8f5dc; border: 1px solid #c0e090; border-radius: 10px; padding: 14px 18px; font-size: 13px; color: #2d6a0a; font-weight: 500; display: none; margin-bottom: 16px; }
+    .success-bar.show { display: block; }
+    .horaire-row { display: grid; grid-template-columns: 90px 1fr 1fr 80px; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .horaire-label { font-size: 12px; font-weight: 600; color: #3B6D11; }
+    .horaire-check { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #9ab89a; }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">Commande<span style="color:#a8e07a">IA</span> — Configuration restaurant</div>
+  <a href="/admin.html" class="back-btn">Retour admin</a>
+</div>
+
+<div class="main">
+  <div class="page-header">
+    <div class="page-title">Compléter la démarche</div>
+    <div class="page-sub">Configure le restaurant pour finaliser la mise en place.</div>
+    <div class="resto-badge" id="resto-badge">Chargement...</div>
+  </div>
+
+  <div class="success-bar" id="success-bar">Tout enregistré avec succès !</div>
+
+  <div class="section">
+    <div class="section-title">Informations générales</div>
+    <div class="section-sub">Adresse et numéro Twilio du restaurant.</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Adresse complète</label>
+        <input class="form-input" id="r-adresse" placeholder="12 rue de la Paix, 75001 Paris" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Numéro Twilio</label>
+        <input class="form-input" id="r-twilio" placeholder="+33 1 00 00 00 00" />
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Horaires d'ouverture</div>
+    <div class="section-sub">Indique les horaires pour chaque jour.</div>
+    <div id="horaires-container"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Menu & Carte</div>
+    <div class="section-sub">Ajoute tous les produits. L'IA utilisera ces données pour prendre les commandes.</div>
+    <div class="produits-list" id="produits-list"><div style="font-size:13px;color:#9ab89a;">Aucun produit ajouté.</div></div>
+    <div class="add-form">
+      <div class="add-form-title">Ajouter un produit</div>
+      <div class="form-row-3">
+        <div class="form-group">
+          <label class="form-label">Nom du produit</label>
+          <input class="form-input" id="p-nom" placeholder="Chicken Burger" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Catégorie</label>
+          <select class="form-select" id="p-cat">
+            <option value="Sandwich">Sandwich</option>
+            <option value="Boisson">Boisson</option>
+            <option value="Accompagnement">Accompagnement</option>
+            <option value="Dessert">Dessert</option>
+            <option value="Menu">Menu</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Prix seul (€)</label>
+          <input class="form-input" id="p-prix" type="number" step="0.5" placeholder="8.50" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Prix en menu (€)</label>
+          <input class="form-input" id="p-prix-menu" type="number" step="0.5" placeholder="11.50" />
+        </div>
+        <div class="form-group">
+          <label class="form-check"><input type="checkbox" id="p-dispo-menu" /> Disponible en menu (frites + boisson)</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Composition / Ingrédients</label>
+        <textarea class="form-textarea" id="p-ingredients" placeholder="Pain brioché, steak de poulet pané, salade, tomate, oignon, sauce mayo"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ingrédients retirables (séparés par des virgules)</label>
+        <input class="form-input" id="p-retirables" placeholder="tomate, oignon, sauce mayo" />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Temps de préparation (min)</label>
+          <input class="form-input" id="p-temps" type="number" placeholder="5" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Allergènes présents</label>
+        <div class="allergenes-grid" id="allergenes-grid"></div>
+      </div>
+      <button class="btn-add" onclick="ajouterProduit()">+ Ajouter ce produit</button>
+    </div>
+  </div>
+
+  <button class="btn-save" onclick="sauvegarderTout()">Finaliser et enregistrer</button>
+</div>
+
+<script>
+  const user = sessionStorage.getItem('user');
+  if (!user) window.location.href = '/login.html?redirect=/admin.html';
+  const currentUser = JSON.parse(user || '{}');
+  if (currentUser.role !== 'Admin') window.location.href = '/';
+
+  const params = new URLSearchParams(window.location.search);
+  const restaurantId = params.get('restaurantId');
+  const restaurantNom = decodeURIComponent(params.get('nom') || 'Restaurant');
+  document.getElementById('resto-badge').textContent = restaurantNom;
+
+  const JOURS = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+  const ALLERGENES = ['Gluten','Lactose','Oeufs','Arachides','Fruits à coque','Soja','Poisson','Crustacés','Céleri','Moutarde','Sésame','Sulfites','Lupin','Mollusques'];
+  let selectedAllergenes = [];
+  let produits = [];
+
+  const horairesEl = document.getElementById('horaires-container');
+  JOURS.forEach(jour => {
+    const row = document.createElement('div');
+    row.className = 'horaire-row';
+    row.innerHTML = `
+      <span class="horaire-label">${jour}</span>
+      <input class="form-input" id="h-${jour}-open" placeholder="09:00" style="padding:7px 10px;" />
+      <input class="form-input" id="h-${jour}-close" placeholder="22:00" style="padding:7px 10px;" />
+      <label class="horaire-check"><input type="checkbox" id="h-${jour}-closed" onchange="toggleHoraire('${jour}')"> Fermé</label>`;
+    horairesEl.appendChild(row);
+  });
+
+  const allergGrid = document.getElementById('allergenes-grid');
+  ALLERGENES.forEach(a => {
+    const chip = document.createElement('div');
+    chip.className = 'allergen-chip';
+    chip.textContent = a;
+    chip.onclick = () => {
+      chip.classList.toggle('selected');
+      if (chip.classList.contains('selected')) selectedAllergenes.push(a);
+      else selectedAllergenes = selectedAllergenes.filter(x => x !== a);
+    };
+    allergGrid.appendChild(chip);
+  });
+
+  function toggleHoraire(jour) {
+    const closed = document.getElementById('h-' + jour + '-closed').checked;
+    document.getElementById('h-' + jour + '-open').disabled = closed;
+    document.getElementById('h-' + jour + '-close').disabled = closed;
+    if (closed) { document.getElementById('h-' + jour + '-open').value = ''; document.getElementById('h-' + jour + '-close').value = ''; }
+  }
+
+  function getHoraires() {
+    const h = {};
+    JOURS.forEach(jour => {
+      const closed = document.getElementById('h-' + jour + '-closed').checked;
+      const open = document.getElementById('h-' + jour + '-open').value;
+      const close = document.getElementById('h-' + jour + '-close').value;
+      h[jour] = closed ? 'Fermé' : ((open || '?') + ' - ' + (close || '?'));
+    });
+    return JSON.stringify(h);
+  }
+
+  function renderProduits() {
+    const list = document.getElementById('produits-list');
+    if (!produits.length) { list.innerHTML = '<div style="font-size:13px;color:#9ab89a;">Aucun produit ajouté.</div>'; return; }
+    list.innerHTML = '';
+    produits.forEach((p, i) => {
+      const div = document.createElement('div');
+      div.className = 'produit-item';
+      div.innerHTML = `
+        <div>
+          <div class="produit-nom">${p.nom} — ${p.categorie} — ${p.prix ? p.prix + ' €' : '—'}</div>
+          <div class="produit-detail">${p.ingredients || '—'}${p.allergenes.length ? ' | Allergènes: ' + p.allergenes.join(', ') : ''}</div>
+        </div>
+        <button class="btn-del" onclick="supprimerProduit(${i})">×</button>`;
+      list.appendChild(div);
+    });
+  }
+
+  function ajouterProduit() {
+    const nom = document.getElementById('p-nom').value.trim();
+    if (!nom) { alert('Nom du produit requis'); return; }
+    produits.push({
+      nom,
+      categorie: document.getElementById('p-cat').value,
+      prix: parseFloat(document.getElementById('p-prix').value) || 0,
+      prixMenu: parseFloat(document.getElementById('p-prix-menu').value) || 0,
+      dispoMenu: document.getElementById('p-dispo-menu').checked,
+      ingredients: document.getElementById('p-ingredients').value,
+      ingredientsRetirables: document.getElementById('p-retirables').value,
+      tempsPrepare: parseInt(document.getElementById('p-temps').value) || 0,
+      allergenes: [...selectedAllergenes],
+      restaurant: restaurantNom,
+      restaurantId
+    });
+    ['p-nom','p-prix','p-prix-menu','p-ingredients','p-retirables','p-temps'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('p-dispo-menu').checked = false;
+    selectedAllergenes = [];
+    document.querySelectorAll('.allergen-chip').forEach(c => c.classList.remove('selected'));
+    renderProduits();
+  }
+
+  function supprimerProduit(i) { produits.splice(i, 1); renderProduits(); }
+
+  async function sauvegarderTout() {
+    if (!restaurantId) { alert('ID du restaurant manquant'); return; }
+    const btn = document.querySelector('.btn-save');
+    btn.textContent = 'Enregistrement...';
+    btn.disabled = true;
+
+    await fetch('/admin/restaurants/' + restaurantId + '/infos', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        adresse: document.getElementById('r-adresse').value,
+        twilio: document.getElementById('r-twilio').value,
+        horaires: getHoraires(),
+        onboarding: produits.length > 0 ? 'Complété' : 'En cours',
+        menuComplete: produits.length > 0
+      })
+    });
+
+    for (const p of produits) {
+      await fetch('/admin/menus', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(p)
+      });
+    }
+
+    btn.textContent = 'Finaliser et enregistrer';
+    btn.disabled = false;
+    document.getElementById('success-bar').classList.add('show');
+    window.scrollTo(0, 0);
+    setTimeout(() => { window.location.href = '/admin.html'; }, 2000);
+  }
+</script>
+</body>
+</html>

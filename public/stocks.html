@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stocks — Commande-IA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: #f7f8f7; min-height: 100vh; color: #111; }
+    .topbar { background: #fff; border-bottom: 1px solid #eaeeea; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; height: 58px; }
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+    .logo { font-size: 16px; font-weight: 700; color: #111; display: flex; align-items: center; gap: 8px; }
+    .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: #3B6D11; }
+    .logo span { color: #3B6D11; }
+    .page-badge { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; background: #f0f7e8; color: #3B6D11; padding: 3px 8px; border-radius: 4px; border: 1px solid #d4eab8; }
+    .back-btn { font-size: 12px; font-weight: 500; color: #666; background: transparent; border: 1px solid #e0e0e0; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-family: 'Inter', sans-serif; text-decoration: none; }
+    .back-btn:hover { border-color: #3B6D11; color: #3B6D11; }
+
+    .main { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
+    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+    .page-title { font-size: 20px; font-weight: 700; color: #111; letter-spacing: -0.4px; }
+    .page-sub { font-size: 13px; color: #999; margin-top: 3px; }
+
+    .resto-select { font-size: 13px; padding: 8px 14px; border-radius: 8px; border: 1.5px solid #e0e0e0; background: #fff; font-family: 'Inter', sans-serif; color: #111; outline: none; cursor: pointer; }
+    .resto-select:focus { border-color: #3B6D11; }
+
+    .add-btn { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; padding: 9px 18px; border-radius: 8px; border: none; background: #2d5c2d; color: #fff; cursor: pointer; font-family: 'Inter', sans-serif; }
+    .add-btn:hover { background: #1a3a1a; }
+
+    /* ALERTES */
+    .alerts-bar { display: none; background: #fff8ec; border: 1px solid #f0d898; border-radius: 10px; padding: 12px 16px; margin-bottom: 20px; }
+    .alerts-bar.show { display: flex; align-items: center; gap: 12px; }
+    .alert-icon { font-size: 16px; }
+    .alert-text { font-size: 13px; font-weight: 500; color: #906010; }
+
+    /* STATS */
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+    .stat-card { background: #fff; border: 1px solid #eaeeea; border-radius: 10px; padding: 16px; }
+    .stat-label { font-size: 10px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+    .stat-val { font-size: 28px; font-weight: 700; color: #111; letter-spacing: -1px; }
+    .stat-val.green { color: #2d6a0a; }
+    .stat-val.orange { color: #906010; }
+    .stat-val.red { color: #c03030; }
+
+    /* TABLE */
+    .table-card { background: #fff; border: 1px solid #eaeeea; border-radius: 12px; overflow: hidden; }
+    .table-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 100px; gap: 12px; padding: 12px 20px; background: #f7f8f7; border-bottom: 1px solid #eaeeea; font-size: 11px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.8px; }
+    .table-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 100px; gap: 12px; padding: 14px 20px; border-bottom: 1px solid #f5f5f5; align-items: center; transition: background 0.1s; }
+    .table-row:last-child { border-bottom: none; }
+    .table-row:hover { background: #fafafa; }
+
+    .product-name { font-size: 14px; font-weight: 600; color: #111; }
+    .product-restaurant { font-size: 11px; color: #aaa; margin-top: 2px; }
+
+    .qty-display { font-size: 14px; font-weight: 600; color: #111; }
+    .qty-bar { height: 4px; background: #f0f0f0; border-radius: 2px; margin-top: 4px; }
+    .qty-bar-fill { height: 4px; border-radius: 2px; transition: width 0.3s; }
+    .qty-bar-fill.green { background: #3B6D11; }
+    .qty-bar-fill.orange { background: #f0a020; }
+    .qty-bar-fill.red { background: #e05555; }
+
+    .status-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 5px; display: inline-block; }
+    .status-badge.disponible { background: #f0f7e8; color: #2d6a0a; }
+    .status-badge.alerte { background: #fff8ec; color: #906010; }
+    .status-badge.rupture { background: #fef0f0; color: #c03030; }
+
+    .qty-input { width: 70px; padding: 6px 8px; border-radius: 6px; border: 1.5px solid #e0e0e0; font-size: 13px; font-family: 'Inter', sans-serif; text-align: center; outline: none; }
+    .qty-input:focus { border-color: #3B6D11; }
+
+    .row-actions { display: flex; gap: 5px; }
+    .btn-update { font-size: 11px; font-weight: 600; padding: 5px 9px; border-radius: 6px; border: none; background: #2d5c2d; color: #fff; cursor: pointer; font-family: 'Inter', sans-serif; }
+    .btn-update:hover { background: #1a3a1a; }
+    .btn-del { font-size: 11px; font-weight: 600; padding: 5px 8px; border-radius: 6px; border: 1px solid #f5c5c5; background: #fef0f0; color: #c03030; cursor: pointer; }
+    .btn-del:hover { background: #fce0e0; }
+
+    /* MODAL */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 999; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
+    .modal-overlay.open { display: flex; }
+    .modal { background: #fff; border-radius: 16px; padding: 32px; width: 100%; max-width: 440px; box-shadow: 0 24px 60px rgba(0,0,0,0.12); }
+    .modal-title { font-size: 17px; font-weight: 700; color: #111; margin-bottom: 24px; }
+    .form-group { margin-bottom: 14px; }
+    .form-label { font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 7px; display: block; }
+    .form-input { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1.5px solid #e8e8e8; background: #fafafa; font-size: 13px; font-family: 'Inter', sans-serif; color: #111; outline: none; }
+    .form-input:focus { border-color: #3B6D11; background: #fff; }
+    .form-select { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1.5px solid #e8e8e8; background: #fafafa; font-size: 13px; font-family: 'Inter', sans-serif; color: #111; outline: none; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .modal-footer { display: flex; gap: 10px; margin-top: 24px; }
+    .modal-btn { flex: 1; padding: 11px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; }
+    .modal-btn.primary { background: #2d5c2d; color: #fff; }
+    .modal-btn.secondary { background: #f5f5f5; color: #555; }
+
+    .loading { text-align: center; padding: 48px; color: #aaa; font-size: 13px; }
+    .empty { text-align: center; padding: 48px; color: #ccc; font-size: 13px; }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo"><div class="logo-dot"></div>Commande<span>IA</span></div>
+    <div class="page-badge">Stocks</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <select class="resto-select" id="resto-select" onchange="loadStocks()">
+      <option value="">Sélectionner un restaurant</option>
+    </select>
+    <a href="/" class="back-btn">← Dashboard</a>
+  </div>
+</div>
+
+<div class="main">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Gestion des stocks</div>
+      <div class="page-sub">Suivi en temps réel des ingrédients et produits</div>
+    </div>
+    <button class="add-btn" onclick="openModal()">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+      Ajouter un produit
+    </button>
+  </div>
+
+  <div class="alerts-bar" id="alerts-bar">
+    <span class="alert-icon">⚠️</span>
+    <span class="alert-text" id="alerts-text"></span>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-label">Total produits</div><div class="stat-val" id="stat-total">—</div></div>
+    <div class="stat-card"><div class="stat-label">Disponibles</div><div class="stat-val green" id="stat-dispo">—</div></div>
+    <div class="stat-card"><div class="stat-label">En alerte</div><div class="stat-val orange" id="stat-alerte">—</div></div>
+    <div class="stat-card"><div class="stat-label">Rupture</div><div class="stat-val red" id="stat-rupture">—</div></div>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header">
+      <div>Produit</div>
+      <div>Stock actuel</div>
+      <div>Stock initial</div>
+      <div>Seuil alerte</div>
+      <div>Statut</div>
+      <div>Actions</div>
+    </div>
+    <div id="stocks-list"><div class="loading">Sélectionne un restaurant pour voir ses stocks.</div></div>
+  </div>
+</div>
+
+<!-- MODAL AJOUT -->
+<div class="modal-overlay" id="modal-add">
+  <div class="modal">
+    <div class="modal-title">Ajouter un produit au stock</div>
+    <div class="form-group">
+      <label class="form-label">Nom du produit</label>
+      <input class="form-input" id="s-nom" placeholder="Ex: Pain brioché" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Quantité initiale</label>
+        <input class="form-input" id="s-qty" type="number" placeholder="50" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Seuil d'alerte</label>
+        <input class="form-input" id="s-seuil" type="number" placeholder="10" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Unité</label>
+      <select class="form-select" id="s-unite">
+        <option value="unité">Unité</option>
+        <option value="kg">Kilogramme</option>
+        <option value="litre">Litre</option>
+        <option value="portion">Portion</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn secondary" onclick="closeModal()">Annuler</button>
+      <button class="modal-btn primary" onclick="ajouterStock()">Ajouter</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const user = sessionStorage.getItem('user');
+  if (!user) window.location.href = '/login.html';
+  const currentUser = JSON.parse(user || '{}');
+
+  let stocks = [];
+  let selectedRestoId = '';
+  let selectedRestoNom = '';
+
+  async function loadRestaurants() {
+    const res = await fetch('/admin/restaurants');
+    const data = await res.json();
+    const sel = document.getElementById('resto-select');
+    data.forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r.id;
+      opt.textContent = r.nom;
+      sel.appendChild(opt);
+    });
+    if (currentUser.role !== 'Admin' && currentUser.restaurantId) {
+      sel.value = currentUser.restaurantId;
+      loadStocks();
+    }
+  }
+
+  async function loadStocks() {
+    const sel = document.getElementById('resto-select');
+    selectedRestoId = sel.value;
+    selectedRestoNom = sel.options[sel.selectedIndex]?.text || '';
+    if (!selectedRestoId) return;
+    document.getElementById('stocks-list').innerHTML = '<div class="loading">Chargement...</div>';
+    const res = await fetch('/stocks/' + selectedRestoId);
+    stocks = await res.json();
+    renderStocks();
+  }
+
+  function renderStocks() {
+    const list = document.getElementById('stocks-list');
+    const total = stocks.length;
+    const dispo = stocks.filter(s => s.statut === 'Disponible').length;
+    const alerte = stocks.filter(s => s.statut === 'Alerte').length;
+    const rupture = stocks.filter(s => s.statut === 'Rupture').length;
+
+    document.getElementById('stat-total').textContent = total || '—';
+    document.getElementById('stat-dispo').textContent = total ? dispo : '—';
+    document.getElementById('stat-alerte').textContent = total ? alerte : '—';
+    document.getElementById('stat-rupture').textContent = total ? rupture : '—';
+
+    const alertBar = document.getElementById('alerts-bar');
+    const alertes = stocks.filter(s => s.statut === 'Alerte' || s.statut === 'Rupture');
+    if (alertes.length) {
+      alertBar.classList.add('show');
+      document.getElementById('alerts-text').textContent = alertes.length + ' produit(s) nécessitent attention : ' + alertes.map(a => a.produit + ' (' + a.statut + ')').join(', ');
+    } else {
+      alertBar.classList.remove('show');
+    }
+
+    if (!stocks.length) { list.innerHTML = '<div class="empty">Aucun produit en stock. Ajoutez-en un.</div>'; return; }
+
+    list.innerHTML = '';
+    stocks.forEach(s => {
+      const pct = s.quantiteInitiale ? Math.max(0, Math.round((s.quantiteActuelle / s.quantiteInitiale) * 100)) : 0;
+      const color = s.statut === 'Rupture' ? 'red' : s.statut === 'Alerte' ? 'orange' : 'green';
+      const row = document.createElement('div');
+      row.className = 'table-row';
+      row.innerHTML = `
+        <div>
+          <div class="product-name">${s.produit}</div>
+          <div class="product-restaurant">${s.restaurant || '—'} · Màj: ${s.derniereMaj || '—'}</div>
+        </div>
+        <div>
+          <div class="qty-display">${s.quantiteActuelle ?? '—'} ${s.unite || ''}</div>
+          <div class="qty-bar"><div class="qty-bar-fill ${color}" style="width:${pct}%"></div></div>
+        </div>
+        <div class="qty-display">${s.quantiteInitiale ?? '—'} ${s.unite || ''}</div>
+        <div class="qty-display">${s.seuilAlerte ?? '—'} ${s.unite || ''}</div>
+        <div><span class="status-badge ${(s.statut || '').toLowerCase()}">${s.statut || '—'}</span></div>
+        <div class="row-actions">
+          <input class="qty-input" id="qty-${s.id}" type="number" value="${s.quantiteActuelle ?? 0}" min="0" />
+          <button class="btn-update" onclick="updateStock('${s.id}', ${s.seuilAlerte || 5})">✓</button>
+          <button class="btn-del" onclick="supprimerStock('${s.id}')">✕</button>
+        </div>`;
+      list.appendChild(row);
+    });
+  }
+
+  async function updateStock(id, seuil) {
+    const qty = parseFloat(document.getElementById('qty-' + id).value);
+    await fetch('/stocks/' + id, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ quantite: qty, seuilAlerte: seuil })
+    });
+    loadStocks();
+  }
+
+  async function supprimerStock(id) {
+    if (!confirm('Supprimer ce produit du stock ?')) return;
+    await fetch('/stocks/' + id, { method: 'DELETE' });
+    loadStocks();
+  }
+
+  async function ajouterStock() {
+    const nom = document.getElementById('s-nom').value.trim();
+    if (!nom || !selectedRestoId) { alert('Nom requis et restaurant sélectionné'); return; }
+    await fetch('/stocks', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        produit: nom,
+        quantite: document.getElementById('s-qty').value || 0,
+        seuilAlerte: document.getElementById('s-seuil').value || 5,
+        unite: document.getElementById('s-unite').value,
+        restaurant: selectedRestoNom,
+        restaurantId: selectedRestoId
+      })
+    });
+    closeModal();
+    loadStocks();
+  }
+
+  function openModal() {
+    if (!selectedRestoId) { alert('Sélectionne d\'abord un restaurant'); return; }
+    document.getElementById('modal-add').classList.add('open');
+  }
+  function closeModal() {
+    document.getElementById('modal-add').classList.remove('open');
+    document.getElementById('s-nom').value = '';
+    document.getElementById('s-qty').value = '';
+    document.getElementById('s-seuil').value = '';
+  }
+
+  loadRestaurants();
+  setInterval(() => { if (selectedRestoId) loadStocks(); }, 60000);
+</script>
+</body>
+</html>

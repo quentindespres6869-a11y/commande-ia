@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Commande-IA</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #eef2ee; min-height: 100vh; }
+    .topbar {
+      background: #1a3a1a;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 56px;
+    }
+    .logo { font-size: 16px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 10px; }
+    .logo-dot { width: 9px; height: 9px; border-radius: 50%; background: #7bc44c; }
+    .badge-live { font-size: 11px; background: #2d5a1b; color: #a8e07a; padding: 3px 9px; border-radius: 20px; border: 1px solid #3d7a26; }
+    .topbar-right { display: flex; align-items: center; gap: 20px; }
+    .stat-pill { font-size: 12px; color: #a8c4a8; }
+    .stat-pill strong { color: #fff; font-weight: 600; }
+    .tab-row { display: flex; gap: 4px; }
+    .tab { font-size: 12px; padding: 6px 16px; border-radius: 6px; border: 1.5px solid #3d7a26; background: transparent; color: #a8e07a; cursor: pointer; font-weight: 500; }
+    .tab.active { background: #3B6D11; color: #fff; border-color: #3B6D11; }
+    .main { display: grid; grid-template-columns: 1fr 260px; min-height: calc(100vh - 56px); }
+    .commands-panel { padding: 20px; display: flex; flex-direction: column; }
+    .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .panel-title { font-size: 11px; font-weight: 600; color: #5a7a5a; text-transform: uppercase; letter-spacing: 1px; }
+    #cards-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; align-content: start; }
+    .empty-state { grid-column: 1/-1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 20px; gap: 14px; }
+    .empty-icon { width: 64px; height: 64px; border-radius: 50%; background: #d8ecd8; display: flex; align-items: center; justify-content: center; }
+    .empty-title { font-size: 15px; font-weight: 600; color: #2d5a1b; }
+    .empty-sub { font-size: 13px; color: #7a9a7a; text-align: center; max-width: 260px; line-height: 1.6; }
+    .cmd-card { background: #fff; border: 1.5px solid #d4e8d0; border-radius: 14px; padding: 14px; cursor: pointer; transition: border-color 0.15s; }
+    .cmd-card:hover { border-color: #7bc44c; }
+    .cmd-card.selected { border-color: #3B6D11; border-width: 2px; }
+    .cmd-card.urgent { border-left: 4px solid #E24B4A; border-radius: 0 14px 14px 0; }
+    .cmd-card.validated { border-left: 4px solid #3B6D11; border-radius: 0 14px 14px 0; background: #f7fdf4; }
+    .cmd-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .cmd-avatar { width: 32px; height: 32px; border-radius: 50%; background: #d8ecd8; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #2d5a1b; flex-shrink: 0; }
+    .cmd-avatar.urgent-av { background: #FCEBEB; color: #791F1F; }
+    .cmd-name-block { flex: 1; margin-left: 8px; }
+    .cmd-name { font-size: 13px; font-weight: 700; color: #1a3a1a; }
+    .cmd-time { font-size: 10px; color: #9aaa9a; margin-top: 1px; }
+    .cmd-state-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .dot-new { background: #7bc44c; }
+    .dot-warn { background: #E24B4A; animation: pulse 1.2s infinite; }
+    .dot-val { background: #27500A; }
+    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+    .cmd-divider { height: 1px; background: #eef2ee; margin: 8px 0; }
+    .cmd-body { display: flex; flex-direction: column; gap: 4px; }
+    .cmd-line { font-size: 12px; color: #5a7a5a; }
+    .cmd-line span { color: #1a3a1a; font-weight: 600; }
+    .cmd-modif { font-size: 11px; color: #BA7517; background: #fef9ec; padding: 3px 7px; border-radius: 6px; margin-top: 3px; }
+    .cmd-allergy { font-size: 11px; color: #A32D2D; background: #FCEBEB; padding: 3px 7px; border-radius: 6px; margin-top: 2px; }
+    .cmd-chrono { font-size: 11px; color: #3B6D11; font-weight: 600; margin-top: 4px; }
+    .cmd-footer { display: flex; gap: 6px; margin-top: 12px; }
+    .btn { font-size: 12px; padding: 7px 10px; border-radius: 8px; border: 1.5px solid #3B6D11; background: #3B6D11; color: #fff; cursor: pointer; flex: 1; font-weight: 600; }
+    .btn:hover { background: #27500A; }
+    .btn-refuse { background: #fff; color: #A32D2D; border: 1.5px solid #E24B4A; }
+    .btn-refuse:hover { background: #FCEBEB; }
+    .detail-panel { background: #fff; border-left: 1px solid #d4e8d0; padding: 20px 16px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; }
+    .detail-section-title { font-size: 10px; font-weight: 700; color: #7a9a7a; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .detail-block { background: #f4f8f4; border-radius: 10px; padding: 12px; border: 1px solid #e0ecd8; }
+    .detail-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; padding: 4px 0; border-bottom: 1px solid #eef2ee; }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-row-key { color: #7a9a7a; }
+    .detail-row-val { color: #1a3a1a; font-weight: 600; text-align: right; }
+    .detail-modif { font-size: 11px; color: #BA7517; margin-top: 8px; padding: 6px 8px; background: #fef9ec; border-radius: 6px; }
+    .allergy-tag { display: inline-block; font-size: 11px; padding: 4px 8px; background: #FCEBEB; color: #791F1F; border-radius: 6px; margin-top: 6px; font-weight: 600; }
+    .chrono-big { font-size: 28px; font-weight: 700; color: #1a3a1a; letter-spacing: -1px; }
+    .chrono-sub { font-size: 11px; color: #7a9a7a; margin-top: 4px; }
+    .chrono-active { font-size: 11px; color: #3B6D11; font-weight: 600; margin-top: 6px; display: flex; align-items: center; gap: 5px; }
+    .chrono-active-dot { width: 6px; height: 6px; border-radius: 50%; background: #7bc44c; animation: pulse 1.2s infinite; }
+    .detail-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; gap: 12px; color: #9aaa9a; font-size: 13px; text-align: center; padding: 40px 0; line-height: 1.6; }
+    .pdf-btn { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px; border-radius: 10px; border: 1.5px solid #3B6D11; background: #3B6D11; color: #fff; font-size: 12px; cursor: pointer; text-decoration: none; font-weight: 600; }
+    .pdf-btn:hover { background: #27500A; }
+    .archive-panel { display: none; padding: 20px; grid-column: 1/-1; }
+    .archive-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+    .archive-card { background: #fff; border: 1px solid #d4e8d0; border-radius: 12px; padding: 12px 14px; }
+    .archive-tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 20px; margin-bottom: 8px; }
+    .archive-tag.refused { background: #FCEBEB; color: #791F1F; }
+    .archive-tag.done { background: #EAF3DE; color: #27500A; }
+    .archive-name { font-size: 14px; font-weight: 700; color: #1a3a1a; margin-bottom: 4px; }
+    .archive-detail { font-size: 12px; color: #5a7a5a; line-height: 1.6; }
+    .archive-phone { font-size: 12px; color: #3B6D11; margin-top: 6px; font-weight: 600; }
+    .archive-dur { font-size: 11px; color: #9aaa9a; margin-top: 3px; }
+    .cuisine-panel { display: none; padding: 20px; gap: 12px; flex-wrap: wrap; align-content: flex-start; grid-column: 1/-1; }
+    .kitchen-card { background: #fff; border: 1px solid #d4e8d0; border-radius: 12px; padding: 14px; width: calc(33.33% - 8px); }
+    .kitchen-name { font-size: 15px; font-weight: 700; color: #1a3a1a; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #eef2ee; }
+    .kitchen-item { font-size: 13px; color: #5a7a5a; padding: 3px 0; }
+  </style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-dot"></div>
+    Commande-IA
+    <span class="badge-live">En direct</span>
+  </div>
+  <div class="topbar-right">
+    <span class="stat-pill">En cours : <strong id="cmd-count">0</strong></span>
+    <span class="stat-pill">Prêtes : <strong id="done-count">0</strong></span>
+    <span class="stat-pill">Tps moyen : <strong id="avg-time">—</strong></span>
+    <div class="tab-row">
+      <button class="tab active" onclick="switchView('hote', this)">Hôte</button>
+      <button class="tab" onclick="switchView('cuisine', this)">Cuisine</button>
+      <button class="tab" onclick="switchView('archive', this)">Archives</button>
+    </div>
+  </div>
+</div>
+<div class="main" id="main">
+  <div class="commands-panel" id="hote-panel">
+    <div class="panel-header">
+      <span class="panel-title">Commandes en cours</span>
+    </div>
+    <div id="cards-container"></div>
+  </div>
+  <div class="detail-panel" id="detail-panel">
+    <div id="detail-content">
+      <div class="detail-empty">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="19" stroke="#d4e8d0" stroke-width="1.5"/><path d="M13 20h14M20 13v14" stroke="#7a9a7a" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Sélectionne une commande<br>pour voir le détail
+      </div>
+    </div>
+  </div>
+  <div class="archive-panel" id="archive-panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <span class="panel-title">Historique de la journée</span>
+      <a class="pdf-btn" href="#" style="width:auto;padding:7px 16px;" onclick="exportPDF(event)">Télécharger PDF</a>
+    </div>
+    <div class="archive-grid" id="archive-container">
+      <div style="grid-column:1/-1;font-size:13px;color:#9aaa9a;padding:20px 0;">Aucune commande archivée.</div>
+    </div>
+  </div>
+  <div class="cuisine-panel" id="cuisine-panel">
+    <div id="cuisine-container"></div>
+  </div>
+</div>
+<script>
+  const socket = io();
+  let commandes = [], archives = [], selected = null;
+  let chronoInterval = null, doneCount = 0, totalDuration = 0;
+  socket.on('nouvelle_commande', cmd => { commandes.push(cmd); renderCards(); });
+  socket.on('commande_mise_a_jour', cmd => {
+    const idx = commandes.findIndex(c => c.id === cmd.id);
+    if (idx !== -1) commandes[idx] = cmd;
+    renderCards();
+  });
+  socket.on('commande_terminee', cmd => {
+    commandes = commandes.filter(c => c.id !== cmd.id);
+    archives.unshift(cmd);
+    if (cmd.state === 'done' && cmd.chronoStart && cmd.chronoEnd) {
+      doneCount++;
+      totalDuration += Math.floor((cmd.chronoEnd - cmd.chronoStart) / 1000);
+      updateAvg();
+    }
+    document.getElementById('done-count').textContent = archives.filter(a => a.state === 'done').length;
+    renderCards(); renderArchive();
+  });
+  fetch('/commandes').then(r => r.json()).then(d => { commandes = d; renderCards(); });
+  fetch('/archives').then(r => r.json()).then(d => { archives = d; renderArchive(); });
+  function fmtTime(sec) {
+    if (sec == null) return '—';
+    return Math.floor(sec / 60) + 'min ' + String(sec % 60).padStart(2, '0') + 's';
+  }
+  function getElapsed(cmd) {
+    if (!cmd.chronoStart) return null;
+    return Math.floor(((cmd.chronoEnd || Date.now()) - cmd.chronoStart) / 1000);
+  }
+  function updateAvg() {
+    document.getElementById('avg-time').textContent = doneCount ? fmtTime(Math.round(totalDuration / doneCount)) : '—';
+  }
+  function initials(name) {
+    return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  }
+  function renderCards() {
+    const c = document.getElementById('cards-container');
+    c.innerHTML = '';
+    document.getElementById('cmd-count').textContent = commandes.length;
+    if (!commandes.length) {
+      c.innerHTML = `<div class="empty-state">
+        <div class="empty-icon"><svg width="30" height="30" viewBox="0 0 30 30" fill="none"><path d="M15 5C9.477 5 5 9.477 5 15s4.477 10 10 10 10-4.477 10-10S20.523 5 15 5z" stroke="#3B6D11" stroke-width="1.5"/><path d="M15 10v5l3 3" stroke="#3B6D11" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+        <div class="empty-title">Aucune commande en cours</div>
+        <div class="empty-sub">Les nouvelles commandes apparaîtront ici en temps réel dès qu'un client appellera.</div>
+      </div>`;
+      return;
+    }
+    clearInterval(chronoInterval);
+    commandes.forEach(cmd => {
+      const el = document.createElement('div');
+      el.className = 'cmd-card' + (cmd.id === selected ? ' selected' : '') + (cmd.state === 'urgent' ? ' urgent' : '') + (cmd.state === 'validated' ? ' validated' : '');
+      el.onclick = () => { selected = cmd.id; renderCards(); renderDetail(); };
+      const dotClass = cmd.state === 'urgent' ? 'dot-warn' : cmd.state === 'validated' ? 'dot-val' : 'dot-new';
+      el.innerHTML = `
+        <div class="cmd-header">
+          <div class="cmd-avatar ${cmd.state === 'urgent' ? 'urgent-av' : ''}">${initials(cmd.name)}</div>
+          <div class="cmd-name-block">
+            <div class="cmd-name">${cmd.name}</div>
+            <div class="cmd-time">${cmd.createdAt}</div>
+          </div>
+          <div class="cmd-state-dot ${dotClass}"></div>
+        </div>
+        <div class="cmd-divider"></div>
+        <div class="cmd-body">
+          <div class="cmd-line">Sandwich : <span>${cmd.sandwich}</span></div>
+          <div class="cmd-line">Boisson : <span>${cmd.boisson}</span></div>
+          <div class="cmd-line">Option : <span>${cmd.option}</span></div>
+          ${cmd.modif ? `<div class="cmd-modif">Modif : ${cmd.modif}</div>` : ''}
+          ${cmd.allergy ? `<div class="cmd-allergy">Allergie : ${cmd.allergy}</div>` : ''}
+          ${cmd.state === 'validated' ? `<div class="cmd-chrono" id="card-chrono-${cmd.id}">Chrono : ${fmtTime(getElapsed(cmd))}</div>` : ''}
+        </div>
+        <div class="cmd-footer">
+          ${cmd.state !== 'validated'
+            ? `<button class="btn" onclick="action(event,${cmd.id},'valider')">Valider</button>`
+            : `<button class="btn" onclick="action(event,${cmd.id},'prete')">Prête</button>`}
+          ${cmd.state !== 'validated'
+            ? `<button class="btn btn-refuse" onclick="action(event,${cmd.id},'refuser')">Refuser</button>`
+            : ''}
+        </div>`;
+      c.appendChild(el);
+    });
+    chronoInterval = setInterval(() => {
+      commandes.filter(c => c.state === 'validated').forEach(c => {
+        const el = document.getElementById('card-chrono-' + c.id);
+        if (el) el.textContent = 'Chrono : ' + fmtTime(getElapsed(c));
+      });
+      if (selected) renderDetail();
+    }, 1000);
+    renderDetail();
+  }
+  function renderDetail() {
+    const cmd = commandes.find(c => c.id === selected);
+    const container = document.getElementById('detail-content');
+    if (!cmd) {
+      container.innerHTML = `<div class="detail-empty">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="19" stroke="#d4e8d0" stroke-width="1.5"/><path d="M13 20h14M20 13v14" stroke="#7a9a7a" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Sélectionne une commande<br>pour voir le détail
+      </div>`;
+      return;
+    }
+    const elapsed = getElapsed(cmd);
+    container.innerHTML = `
+      <div style="margin-bottom:14px;">
+        <div class="detail-section-title">Commande</div>
+        <div class="detail-block">
+          <div class="detail-row"><span class="detail-row-key">Sandwich</span><span class="detail-row-val">${cmd.sandwich || '—'}</span></div>
+          <div class="detail-row"><span class="detail-row-key">Boisson</span><span class="detail-row-val">${cmd.boisson || '—'}</span></div>
+          <div class="detail-row"><span class="detail-row-key">Option</span><span class="detail-row-val">${cmd.option || '—'}</span></div>
+          ${cmd.modif ? `<div class="detail-modif">Modif : ${cmd.modif}</div>` : ''}
+          ${cmd.allergy ? `<div class="allergy-tag">Allergie : ${cmd.allergy}</div>` : ''}
+        </div>
+      </div>
+      <div style="margin-bottom:14px;">
+        <div class="detail-section-title">Chrono préparation</div>
+        <div class="detail-block">
+          <div class="chrono-big">${elapsed !== null ? fmtTime(elapsed) : '—'}</div>
+          <div class="chrono-sub">démarre à validation</div>
+          ${cmd.state === 'validated'
+            ? `<div class="chrono-active"><div class="chrono-active-dot"></div>En cours de préparation</div>`
+            : `<div style="font-size:11px;color:#9aaa9a;margin-top:6px;">En attente de validation</div>`}
+        </div>
+      </div>
+      <div style="margin-bottom:16px;">
+        <div class="detail-section-title">Client</div>
+        <div class="detail-block">
+          <div class="detail-row"><span class="detail-row-key">Nom</span><span class="detail-row-val">${cmd.name || '—'}</span></div>
+          <div class="detail-row"><span class="detail-row-key">Tél</span><span class="detail-row-val">${cmd.phone || '—'}</span></div>
+        </div>
+      </div>
+      <a class="pdf-btn" href="#" onclick="exportPDF(event)">Ticket PDF</a>`;
+  }
+  function action(e, id, type) {
+    e.stopPropagation();
+    if (type === 'refuser') {
+      if (!confirm('Êtes-vous sûr de vouloir refuser cette commande ?')) return;
+    }
+    fetch(`/commandes/${id}/${type}`, { method: 'PATCH' })
+      .then(r => r.json())
+      .then(() => { if (type !== 'valider') selected = null; });
+  }
+  function renderArchive() {
+    const c = document.getElementById('archive-container');
+    if (!archives.length) { c.innerHTML = '<div style="grid-column:1/-1;font-size:13px;color:#9aaa9a;padding:20px 0;">Aucune commande archivée.</div>'; return; }
+    c.innerHTML = '';
+    archives.forEach(cmd => {
+      const dur = cmd.chronoStart && cmd.chronoEnd ? fmtTime(Math.floor((cmd.chronoEnd - cmd.chronoStart) / 1000)) : null;
+      const el = document.createElement('div');
+      el.className = 'archive-card';
+      el.innerHTML = `
+        <div class="archive-tag ${cmd.state === 'refused' ? 'refused' : 'done'}">${cmd.state === 'refused' ? 'Refusée' : 'Prête'} — ${cmd.archivedAt}</div>
+        <div class="archive-name">${cmd.name}</div>
+        <div class="archive-detail">${cmd.sandwich} · ${cmd.boisson} · ${cmd.option}</div>
+        ${cmd.modif ? `<div class="archive-detail" style="color:#BA7517;font-size:11px;">Modif : ${cmd.modif}</div>` : ''}
+        ${cmd.allergy ? `<div class="archive-detail" style="color:#A32D2D;font-size:11px;">Allergie : ${cmd.allergy}</div>` : ''}
+        <div class="archive-phone">${cmd.phone || '—'}</div>
+        ${dur ? `<div class="archive-dur">Préparation : ${dur}</div>` : ''}`;
+      c.appendChild(el);
+    });
+  }
+  function switchView(view, tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    ['hote-panel', 'detail-panel', 'archive-panel', 'cuisine-panel'].forEach(id => {
+      document.getElementById(id).style.display = 'none';
+    });
+    if (view === 'hote') {
+      document.getElementById('hote-panel').style.display = 'flex';
+      document.getElementById('detail-panel').style.display = 'flex';
+    } else if (view === 'cuisine') {
+      document.getElementById('cuisine-panel').style.display = 'flex';
+      renderCuisine();
+    } else {
+      document.getElementById('archive-panel').style.display = 'block';
+    }
+  }
+  function renderCuisine() {
+    const c = document.getElementById('cuisine-container');
+    const validated = commandes.filter(x => x.state === 'validated');
+    if (!validated.length) { c.innerHTML = '<div style="font-size:13px;color:#9aaa9a;">Aucune commande validée en cours.</div>'; return; }
+    c.innerHTML = '';
+    validated.forEach(cmd => {
+      const el = document.createElement('div');
+      el.className = 'kitchen-card';
+      el.innerHTML = `
+        <div class="kitchen-name">${cmd.name}</div>
+        <div class="kitchen-item">${cmd.sandwich} — ${cmd.option}</div>
+        <div class="kitchen-item">${cmd.boisson}</div>
+        ${cmd.modif ? `<div class="kitchen-item" style="color:#BA7517;">Modif : ${cmd.modif}</div>` : ''}
+        ${cmd.allergy ? `<div class="kitchen-item" style="color:#A32D2D;">Allergie : ${cmd.allergy}</div>` : ''}`;
+      c.appendChild(el);
+    });
+  }
+  function exportPDF(e) {
+    e.preventDefault();
+    const lines = ['COMMANDE-IA — HISTORIQUE JOURNÉE', ''];
+    archives.forEach(c => {
+      lines.push(`${c.name} | ${c.createdAt} | ${c.sandwich} / ${c.boisson} / ${c.option}${c.modif ? ' / ' + c.modif : ''}${c.allergy ? ' | Allergie: ' + c.allergy : ''}`);
+    });
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'commandes_journee.txt';
+    a.click();
+  }
+</script>
+</body>
+</html>

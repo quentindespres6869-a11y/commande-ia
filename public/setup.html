@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Configuration — Commande-IA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: #f4f6f4; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+
+    .setup-card { background: #fff; border-radius: 20px; padding: 48px 40px; width: 100%; max-width: 560px; border: 1.5px solid #e0ecd8; box-shadow: 0 8px 40px rgba(0,0,0,0.08); }
+
+    .logo { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
+    .logo-icon { width: 42px; height: 42px; border-radius: 11px; background: #2d5c2d; display: flex; align-items: center; justify-content: center; }
+    .logo-icon svg { width: 22px; height: 22px; }
+    .logo-text { font-size: 22px; font-weight: 700; color: #1a2a1a; }
+    .logo-text span { color: #3B6D11; }
+
+    .setup-title { font-size: 20px; font-weight: 700; color: #1a2a1a; margin-bottom: 8px; }
+    .setup-sub { font-size: 13px; color: #9ab89a; margin-bottom: 32px; line-height: 1.6; }
+
+    .choice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px; }
+    .choice-card {
+      border: 2px solid #e0ecd8; border-radius: 14px; padding: 24px 20px;
+      cursor: pointer; text-align: center; transition: all 0.15s;
+    }
+    .choice-card:hover { border-color: #3B6D11; background: #f8fdf4; }
+    .choice-card.selected { border-color: #3B6D11; background: #f0fae8; }
+    .choice-icon { width: 48px; height: 48px; border-radius: 12px; margin: 0 auto 14px; display: flex; align-items: center; justify-content: center; }
+    .choice-icon.import { background: #e8f0ff; }
+    .choice-icon.manual { background: #e8f5dc; }
+    .choice-title { font-size: 14px; font-weight: 700; color: #1a2a1a; margin-bottom: 6px; }
+    .choice-sub { font-size: 12px; color: #9ab89a; line-height: 1.5; }
+
+    .import-zone {
+      border: 2px dashed #c0e090; border-radius: 12px; padding: 28px;
+      text-align: center; margin-bottom: 20px; display: none; cursor: pointer;
+      transition: all 0.15s;
+    }
+    .import-zone:hover { background: #f8fdf4; border-color: #3B6D11; }
+    .import-zone.active { display: block; }
+    .import-zone-text { font-size: 13px; color: #7aaa7a; margin-top: 8px; }
+    .import-zone-sub { font-size: 11px; color: #aacaaa; margin-top: 4px; }
+
+    .import-success { background: #e8f5dc; border: 1px solid #c0e090; border-radius: 10px; padding: 14px; margin-bottom: 16px; font-size: 13px; color: #2d6a0a; font-weight: 500; display: none; }
+    .import-success.show { display: block; }
+
+    .btn-continue { width: 100%; padding: 14px; border-radius: 10px; border: none; background: #2d5c2d; color: #fff; font-size: 15px; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; }
+    .btn-continue:hover { background: #1a3a1a; }
+    .btn-continue:disabled { background: #c0e090; cursor: not-allowed; }
+
+    .step { display: none; }
+    .step.active { display: block; }
+
+    .form-group { margin-bottom: 14px; }
+    .form-label { font-size: 11px; font-weight: 600; color: #5a7a5a; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 7px; display: block; }
+    .form-input { width: 100%; padding: 10px 12px; border-radius: 9px; border: 1.5px solid #e0ecd8; background: #f8faf6; font-size: 13px; font-family: 'Inter', sans-serif; color: #1a2a1a; outline: none; }
+    .form-input:focus { border-color: #3B6D11; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .form-select { width: 100%; padding: 10px 12px; border-radius: 9px; border: 1.5px solid #e0ecd8; background: #f8faf6; font-size: 13px; font-family: 'Inter', sans-serif; color: #1a2a1a; outline: none; }
+    .form-textarea { width: 100%; padding: 10px 12px; border-radius: 9px; border: 1.5px solid #e0ecd8; background: #f8faf6; font-size: 13px; font-family: 'Inter', sans-serif; color: #1a2a1a; outline: none; resize: vertical; min-height: 60px; }
+
+    .produit-item { background: #f8faf6; border: 1px solid #e0ecd8; border-radius: 8px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .produit-nom { font-size: 13px; font-weight: 600; color: #1a2a1a; }
+    .produit-detail { font-size: 11px; color: #9ab89a; }
+    .btn-del { font-size: 11px; color: #b03030; cursor: pointer; padding: 3px 7px; border-radius: 5px; border: 1px solid #f0c0c0; background: #fef0f0; }
+
+    .allergenes-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 6px; }
+    .allergen-chip { font-size: 10px; padding: 4px 6px; border-radius: 5px; border: 1px solid #e0ecd8; background: #f8faf6; color: #5a7a5a; cursor: pointer; text-align: center; }
+    .allergen-chip.selected { background: #fef0f0; border-color: #f0c0c0; color: #b03030; font-weight: 600; }
+
+    .section-divider { height: 1px; background: #f0f5ee; margin: 20px 0; }
+    .section-label { font-size: 10px; font-weight: 700; color: #7aaa7a; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+
+<div class="setup-card">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 22 22" fill="none"><path d="M3 7h16M3 11h10M3 15h13" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+    </div>
+    <div class="logo-text">Commande<span>IA</span></div>
+  </div>
+
+  <!-- ETAPE 1 : choix -->
+  <div class="step active" id="step-1">
+    <div class="setup-title">Bienvenue !</div>
+    <div class="setup-sub">Avant d'accéder à votre dashboard, configurez votre restaurant. Vous pouvez importer le panel fourni par Commande-IA ou le configurer manuellement.</div>
+
+    <div class="choice-grid">
+      <div class="choice-card" id="choice-import" onclick="selectChoice('import')">
+        <div class="choice-icon import">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 15V3M12 15l-4-4M12 15l4-4" stroke="#2a50aa" stroke-width="2" stroke-linecap="round"/><path d="M3 17v2a2 2 0 002 2h14a2 2 0 002-2v-2" stroke="#2a50aa" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <div class="choice-title">Importer mon panel</div>
+        <div class="choice-sub">J'ai reçu un fichier panel.json de Commande-IA</div>
+      </div>
+      <div class="choice-card" id="choice-manual" onclick="selectChoice('manual')">
+        <div class="choice-icon manual">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#3B6D11" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <div class="choice-title">Configurer manuellement</div>
+        <div class="choice-sub">Je veux saisir mes informations et mon menu moi-même</div>
+      </div>
+    </div>
+
+    <div class="import-zone active" id="import-zone" style="display:none;" onclick="document.getElementById('file-input').click()">
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect x="4" y="4" width="24" height="24" rx="6" stroke="#c0e090" stroke-width="1.5"/><path d="M16 10v12M16 10l-4 4M16 10l4 4" stroke="#3B6D11" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <div class="import-zone-text">Cliquez pour sélectionner votre fichier panel</div>
+      <div class="import-zone-sub">Format accepté : .json</div>
+      <input type="file" id="file-input" accept=".json" style="display:none;" onchange="importPanel(event)" />
+    </div>
+
+    <div class="import-success" id="import-success"></div>
+
+    <button class="btn-continue" id="btn-step1" onclick="goStep2()" disabled>Continuer</button>
+  </div>
+
+  <!-- ETAPE 2 : config manuelle -->
+  <div class="step" id="step-2">
+    <div class="setup-title">Configuration du restaurant</div>
+    <div class="setup-sub">Renseignez les informations de votre établissement.</div>
+
+    <div class="section-label">Informations générales</div>
+    <div class="form-group">
+      <label class="form-label">Adresse</label>
+      <input class="form-input" id="m-adresse" placeholder="12 rue de la Paix, 75001 Paris" />
+    </div>
+
+    <div class="section-divider"></div>
+    <div class="section-label">Ajouter un produit au menu</div>
+
+    <div id="produits-list" style="margin-bottom:12px;"></div>
+
+    <div class="form-row" style="margin-bottom:10px;">
+      <div class="form-group">
+        <label class="form-label">Nom du produit</label>
+        <input class="form-input" id="p-nom" placeholder="Chicken Burger" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Catégorie</label>
+        <select class="form-select" id="p-cat">
+          <option value="Sandwich">Sandwich</option>
+          <option value="Boisson">Boisson</option>
+          <option value="Accompagnement">Accompagnement</option>
+          <option value="Dessert">Dessert</option>
+          <option value="Menu">Menu</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row" style="margin-bottom:10px;">
+      <div class="form-group">
+        <label class="form-label">Prix seul (€)</label>
+        <input class="form-input" id="p-prix" type="number" step="0.5" placeholder="8.50" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Prix menu (€)</label>
+        <input class="form-input" id="p-prix-menu" type="number" step="0.5" placeholder="11.50" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Ingrédients / Composition</label>
+      <textarea class="form-textarea" id="p-ingredients" placeholder="Pain brioché, steak de poulet, salade, tomate..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Ingrédients retirables</label>
+      <input class="form-input" id="p-retirables" placeholder="tomate, oignon, sauce" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Allergènes</label>
+      <div class="allergenes-grid" id="allergenes-grid-2"></div>
+    </div>
+    <button class="btn-continue" style="background:#e8f5dc;color:#2d6a0a;margin-bottom:16px;" onclick="ajouterProduitManuel()">+ Ajouter ce produit</button>
+
+    <div class="section-divider"></div>
+    <button class="btn-continue" onclick="sauvegarderManuel()">Finaliser et accéder au dashboard</button>
+  </div>
+</div>
+
+<script>
+  const user = sessionStorage.getItem('user');
+  if (!user) window.location.href = '/login.html';
+  const currentUser = JSON.parse(user || '{}');
+
+  let choice = null;
+  let panelData = null;
+  let produitsManuel = [];
+  let selectedAllergenes2 = [];
+
+  const ALLERGENES = ['Gluten','Lactose','Oeufs','Arachides','Fruits à coque','Soja','Poisson','Crustacés','Céleri','Moutarde','Sésame','Sulfites','Lupin','Mollusques'];
+
+  // Init allergènes manuel
+  const ag2 = document.getElementById('allergenes-grid-2');
+  ALLERGENES.forEach(a => {
+    const chip = document.createElement('div');
+    chip.className = 'allergen-chip';
+    chip.textContent = a;
+    chip.onclick = () => {
+      chip.classList.toggle('selected');
+      if (chip.classList.contains('selected')) selectedAllergenes2.push(a);
+      else selectedAllergenes2 = selectedAllergenes2.filter(x => x !== a);
+    };
+    ag2.appendChild(chip);
+  });
+
+  function selectChoice(c) {
+    choice = c;
+    document.getElementById('choice-import').classList.toggle('selected', c === 'import');
+    document.getElementById('choice-manual').classList.toggle('selected', c === 'manual');
+    document.getElementById('import-zone').style.display = c === 'import' ? 'block' : 'none';
+    if (c === 'manual') {
+      document.getElementById('btn-step1').disabled = false;
+    }
+  }
+
+  function importPanel(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        panelData = JSON.parse(e.target.result);
+        const box = document.getElementById('import-success');
+        box.textContent = 'Panel importé : ' + panelData.restaurant?.nom + ' — ' + (panelData.menu?.length || 0) + ' produits détectés';
+        box.classList.add('show');
+        document.getElementById('btn-step1').disabled = false;
+      } catch(err) {
+        alert('Fichier invalide — assurez-vous d\'utiliser le panel fourni par Commande-IA.');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  async function goStep2() {
+    if (choice === 'import' && panelData) {
+      // Import automatique — sauvegarde tout directement
+      await sauvegarderImport();
+    } else if (choice === 'manual') {
+      document.getElementById('step-1').classList.remove('active');
+      document.getElementById('step-2').classList.add('active');
+    }
+  }
+
+  async function sauvegarderImport() {
+    const btn = document.getElementById('btn-step1');
+    btn.textContent = 'Importation en cours...';
+    btn.disabled = true;
+
+    const restaurantId = currentUser.restaurantId;
+
+    // Sauvegarde les infos du restaurant
+    if (restaurantId && panelData.restaurant) {
+      await fetch('/admin/restaurants/' + restaurantId + '/infos', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          adresse: panelData.restaurant.adresse || '',
+          twilio: panelData.restaurant.twilio || '',
+          horaires: panelData.restaurant.horaires || '',
+          onboarding: 'Complété',
+          menuComplete: true
+        })
+      });
+    }
+
+    // Sauvegarde les produits
+    for (const p of (panelData.menu || [])) {
+      await fetch('/admin/menus', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...p, restaurantId: restaurantId || p.restaurantId })
+      });
+    }
+
+    // Marque setup comme terminé
+    currentUser.setupDone = true;
+    sessionStorage.setItem('user', JSON.stringify(currentUser));
+    window.location.href = '/';
+  }
+
+  function renderProduitsManuel() {
+    const list = document.getElementById('produits-list');
+    if (!produitsManuel.length) { list.innerHTML = ''; return; }
+    list.innerHTML = '';
+    produitsManuel.forEach((p, i) => {
+      const div = document.createElement('div');
+      div.className = 'produit-item';
+      div.innerHTML = `
+        <div><div class="produit-nom">${p.nom} — ${p.prix}€</div><div class="produit-detail">${p.categorie} — ${p.ingredients || '—'}</div></div>
+        <button class="btn-del" onclick="supprimerProduitM(${i})">×</button>`;
+      list.appendChild(div);
+    });
+  }
+
+  function ajouterProduitManuel() {
+    const nom = document.getElementById('p-nom').value.trim();
+    if (!nom) { alert('Nom requis'); return; }
+    produitsManuel.push({
+      nom,
+      categorie: document.getElementById('p-cat').value,
+      prix: parseFloat(document.getElementById('p-prix').value) || 0,
+      prixMenu: parseFloat(document.getElementById('p-prix-menu').value) || 0,
+      ingredients: document.getElementById('p-ingredients').value,
+      ingredientsRetirables: document.getElementById('p-retirables').value,
+      allergenes: [...selectedAllergenes2],
+      restaurant: currentUser.restaurant,
+      restaurantId: currentUser.restaurantId
+    });
+    ['p-nom','p-prix','p-prix-menu','p-ingredients','p-retirables'].forEach(id => document.getElementById(id).value = '');
+    selectedAllergenes2 = [];
+    document.querySelectorAll('.allergen-chip').forEach(c => c.classList.remove('selected'));
+    renderProduitsManuel();
+  }
+
+  function supprimerProduitM(i) { produitsManuel.splice(i, 1); renderProduitsManuel(); }
+
+  async function sauvegarderManuel() {
+    const btn = document.querySelector('#step-2 .btn-continue:last-child');
+    btn.textContent = 'Enregistrement...';
+    btn.disabled = true;
+
+    const restaurantId = currentUser.restaurantId;
+    if (restaurantId) {
+      await fetch('/admin/restaurants/' + restaurantId + '/infos', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          adresse: document.getElementById('m-adresse').value,
+          onboarding: 'Complété',
+          menuComplete: produitsManuel.length > 0
+        })
+      });
+    }
+
+    for (const p of produitsManuel) {
+      await fetch('/admin/menus', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(p)
+      });
+    }
+
+    currentUser.setupDone = true;
+    sessionStorage.setItem('user', JSON.stringify(currentUser));
+    window.location.href = '/';
+  }
+</script>
+</body>
+</html>

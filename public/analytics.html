@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analytics — Commande-IA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: #f7f8f7; min-height: 100vh; color: #111; }
+
+    .topbar { background: #fff; border-bottom: 1px solid #eaeeea; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; height: 58px; }
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+    .logo { font-size: 16px; font-weight: 700; color: #111; display: flex; align-items: center; gap: 8px; }
+    .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: #3B6D11; }
+    .logo span { color: #3B6D11; }
+    .page-badge { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; background: #f0f7e8; color: #3B6D11; padding: 3px 8px; border-radius: 4px; border: 1px solid #d4eab8; }
+    .back-btn { font-size: 12px; font-weight: 500; color: #666; background: transparent; border: 1px solid #e0e0e0; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-family: 'Inter', sans-serif; text-decoration: none; transition: all 0.15s; }
+    .back-btn:hover { border-color: #3B6D11; color: #3B6D11; }
+
+    .main { max-width: 1200px; margin: 0 auto; padding: 28px 24px; }
+
+    .page-header { margin-bottom: 28px; display: flex; align-items: flex-end; justify-content: space-between; }
+    .page-title { font-size: 22px; font-weight: 700; color: #111; letter-spacing: -0.5px; }
+    .page-sub { font-size: 13px; color: #999; margin-top: 4px; }
+    .date-badge { font-size: 12px; font-weight: 500; color: #666; background: #fff; border: 1px solid #eaeeea; padding: 6px 14px; border-radius: 8px; }
+
+    /* STATS CARDS */
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+    .stat-card { background: #fff; border: 1px solid #eaeeea; border-radius: 12px; padding: 20px; }
+    .stat-card-label { font-size: 11px; font-weight: 600; color: #aaa; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; }
+    .stat-card-value { font-size: 32px; font-weight: 700; color: #111; letter-spacing: -1px; line-height: 1; }
+    .stat-card-value.green { color: #2d6a0a; }
+    .stat-card-value.red { color: #c03030; }
+    .stat-card-value.blue { color: #2a50aa; }
+    .stat-card-sub { font-size: 12px; color: #aaa; margin-top: 6px; }
+    .stat-trend { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; margin-top: 6px; padding: 2px 7px; border-radius: 4px; }
+    .stat-trend.up { background: #f0f7e8; color: #2d6a0a; }
+    .stat-trend.down { background: #fef0f0; color: #c03030; }
+
+    /* CHARTS */
+    .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-bottom: 24px; }
+    .chart-card { background: #fff; border: 1px solid #eaeeea; border-radius: 12px; padding: 20px; }
+    .chart-title { font-size: 13px; font-weight: 600; color: #111; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; }
+    .chart-sub { font-size: 11px; color: #aaa; }
+    .chart-wrap { position: relative; height: 220px; }
+
+    /* TOP PRODUITS */
+    .bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .list-card { background: #fff; border: 1px solid #eaeeea; border-radius: 12px; padding: 20px; }
+    .list-title { font-size: 13px; font-weight: 600; color: #111; margin-bottom: 16px; }
+    .list-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f5f5f5; }
+    .list-item:last-child { border-bottom: none; }
+    .list-rank { font-size: 11px; font-weight: 700; color: #ccc; width: 20px; text-align: center; }
+    .list-name { flex: 1; font-size: 13px; font-weight: 500; color: #333; }
+    .list-count { font-size: 13px; font-weight: 700; color: #2d6a0a; }
+    .list-bar { height: 4px; background: #f0f7e8; border-radius: 2px; margin-top: 3px; }
+    .list-bar-fill { height: 4px; background: #3B6D11; border-radius: 2px; }
+    .list-detail { font-size: 11px; color: #aaa; }
+
+    .empty-analytics { text-align: center; padding: 40px; color: #bbb; font-size: 13px; }
+
+    .loading-state { display: flex; align-items: center; justify-content: center; height: 200px; color: #bbb; font-size: 13px; }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo"><div class="logo-dot"></div>Commande<span>IA</span></div>
+    <div class="page-badge">Analytics</div>
+  </div>
+  <a href="/" class="back-btn">← Dashboard</a>
+</div>
+
+<div class="main">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Tableau de bord analytique</div>
+      <div class="page-sub">Statistiques en temps réel de votre activité</div>
+    </div>
+    <div class="date-badge" id="current-date"></div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-card-label">Commandes aujourd'hui</div>
+      <div class="stat-card-value green" id="stat-total">0</div>
+      <div class="stat-card-sub">depuis minuit</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">Temps moyen</div>
+      <div class="stat-card-value blue" id="stat-avg">—</div>
+      <div class="stat-card-sub">de préparation</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">Taux de complétion</div>
+      <div class="stat-card-value green" id="stat-completion">—</div>
+      <div class="stat-card-sub">commandes servies</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">Refusées</div>
+      <div class="stat-card-value red" id="stat-refused">0</div>
+      <div class="stat-card-sub">aujourd'hui</div>
+    </div>
+  </div>
+
+  <!-- GRAPHIQUES -->
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title">
+        Commandes par heure
+        <span class="chart-sub" id="peak-hour"></span>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="hourly-chart"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Répartition</div>
+      <div class="chart-wrap">
+        <canvas id="pie-chart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOP PRODUITS + DERNIÈRES COMMANDES -->
+  <div class="bottom-grid">
+    <div class="list-card">
+      <div class="list-title">Top produits commandés</div>
+      <div id="top-produits"><div class="empty-analytics">Aucune donnée disponible</div></div>
+    </div>
+    <div class="list-card">
+      <div class="list-title">Dernières commandes</div>
+      <div id="last-commandes"><div class="empty-analytics">Aucune commande</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const user = sessionStorage.getItem('user');
+  if (!user) window.location.href = '/login.html';
+
+  document.getElementById('current-date').textContent = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+  function fmtTime(sec) {
+    if (!sec) return '—';
+    return Math.floor(sec / 60) + 'min ' + String(sec % 60).padStart(2, '0') + 's';
+  }
+
+  let hourlyChart, pieChart;
+
+  async function loadAnalytics() {
+    const res = await fetch('/archives');
+    const archives = await res.json();
+
+    // Stats de base
+    const total = archives.length;
+    const refused = archives.filter(a => a.state === 'refused').length;
+    const done = archives.filter(a => a.state === 'done').length;
+
+    document.getElementById('stat-total').textContent = total;
+    document.getElementById('stat-refused').textContent = refused;
+    document.getElementById('stat-completion').textContent = total ? Math.round((done / total) * 100) + '%' : '—';
+
+    // Temps moyen
+    const withTime = archives.filter(a => a.chronoStart && a.chronoEnd && a.state === 'done');
+    const avgSec = withTime.length ? Math.round(withTime.reduce((s, a) => s + Math.floor((a.chronoEnd - a.chronoStart) / 1000), 0) / withTime.length) : null;
+    document.getElementById('stat-avg').textContent = avgSec ? fmtTime(avgSec) : '—';
+
+    // Commandes par heure
+    const hourCounts = Array(24).fill(0);
+    archives.forEach(a => {
+      if (a.createdAt) {
+        const parts = a.createdAt.split(':');
+        if (parts.length >= 1) {
+          const h = parseInt(parts[0]);
+          if (!isNaN(h) && h >= 0 && h < 24) hourCounts[h]++;
+        }
+      }
+    });
+
+    const labels = Array.from({length: 24}, (_, i) => i + 'h');
+    const maxHour = hourCounts.indexOf(Math.max(...hourCounts));
+    if (Math.max(...hourCounts) > 0) {
+      document.getElementById('peak-hour').textContent = 'Pic : ' + maxHour + 'h';
+    }
+
+    if (hourlyChart) hourlyChart.destroy();
+    const ctx1 = document.getElementById('hourly-chart').getContext('2d');
+    hourlyChart = new Chart(ctx1, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          data: hourCounts,
+          backgroundColor: hourCounts.map((_, i) => i === maxHour ? '#2d5c2d' : '#e8f5dc'),
+          borderRadius: 4,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#aaa' } },
+          y: { grid: { color: '#f5f5f5' }, ticks: { font: { size: 10 }, color: '#aaa', stepSize: 1 } }
+        }
+      }
+    });
+
+    // Pie chart répartition
+    if (pieChart) pieChart.destroy();
+    const ctx2 = document.getElementById('pie-chart').getContext('2d');
+    pieChart = new Chart(ctx2, {
+      type: 'doughnut',
+      data: {
+        labels: ['Servies', 'Refusées'],
+        datasets: [{
+          data: [done, refused],
+          backgroundColor: ['#2d5c2d', '#fca5a5'],
+          borderWidth: 0,
+          hoverOffset: 4
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { font: { size: 11 }, color: '#555', padding: 16 } }
+        },
+        cutout: '70%'
+      }
+    });
+
+    // Top produits
+    const prodCount = {};
+    archives.forEach(a => {
+      if (a.sandwich) prodCount[a.sandwich] = (prodCount[a.sandwich] || 0) + 1;
+    });
+    const sorted = Object.entries(prodCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const maxCount = sorted[0]?.[1] || 1;
+    const topEl = document.getElementById('top-produits');
+    if (sorted.length) {
+      topEl.innerHTML = sorted.map(([name, count], i) => `
+        <div class="list-item">
+          <div class="list-rank">${i + 1}</div>
+          <div style="flex:1;">
+            <div class="list-name">${name}</div>
+            <div class="list-bar"><div class="list-bar-fill" style="width:${Math.round((count/maxCount)*100)}%"></div></div>
+          </div>
+          <div class="list-count">${count}</div>
+        </div>`).join('');
+    } else {
+      topEl.innerHTML = '<div class="empty-analytics">Aucune donnée disponible</div>';
+    }
+
+    // Dernières commandes
+    const lastEl = document.getElementById('last-commandes');
+    const last = [...archives].slice(0, 6);
+    if (last.length) {
+      lastEl.innerHTML = last.map(a => `
+        <div class="list-item">
+          <div style="flex:1;">
+            <div class="list-name">${a.name}</div>
+            <div class="list-detail">${a.sandwich || '—'} · ${a.boisson || '—'}</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="stat-trend ${a.state === 'done' ? 'up' : 'down'}">${a.state === 'done' ? 'Servie' : 'Refusée'}</div>
+            <div class="list-detail" style="margin-top:3px;">${a.archivedAt || ''}</div>
+          </div>
+        </div>`).join('');
+    } else {
+      lastEl.innerHTML = '<div class="empty-analytics">Aucune commande</div>';
+    }
+  }
+
+  loadAnalytics();
+  setInterval(loadAnalytics, 30000); // Refresh toutes les 30s
+</script>
+</body>
+</html>

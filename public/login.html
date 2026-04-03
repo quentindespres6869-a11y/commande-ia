@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Connexion — Commande-IA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: #fff;
+    }
+
+    /* PANNEAU GAUCHE */
+    .left-panel {
+      background: #1c3a1c;
+      display: flex; flex-direction: column;
+      justify-content: space-between;
+      padding: 48px;
+      position: relative;
+      overflow: hidden;
+    }
+    .left-panel::before {
+      content: '';
+      position: absolute;
+      width: 500px; height: 500px;
+      border-radius: 50%;
+      background: rgba(74,138,26,0.12);
+      top: -120px; right: -120px;
+    }
+    .left-panel::after {
+      content: '';
+      position: absolute;
+      width: 320px; height: 320px;
+      border-radius: 50%;
+      background: rgba(74,138,26,0.08);
+      bottom: -60px; left: -60px;
+    }
+
+    .left-logo { display: flex; align-items: center; gap: 12px; position: relative; z-index: 1; }
+    .left-logo-icon { width: 40px; height: 40px; border-radius: 10px; background: #4a8a1a; display: flex; align-items: center; justify-content: center; }
+    .left-logo-icon svg { width: 22px; height: 22px; }
+    .left-logo-text { font-size: 20px; font-weight: 700; color: #fff; letter-spacing: -0.4px; }
+    .left-logo-text span { color: #a8e07a; }
+
+    .left-content { position: relative; z-index: 1; }
+    .left-title { font-size: 38px; font-weight: 700; color: #fff; line-height: 1.15; letter-spacing: -1.5px; margin-bottom: 16px; }
+    .left-title span { color: #a8e07a; }
+    .left-sub { font-size: 15px; color: rgba(255,255,255,0.45); line-height: 1.7; max-width: 320px; }
+
+    .left-features { display: flex; flex-direction: column; gap: 12px; position: relative; z-index: 1; }
+    .feature-item { display: flex; align-items: center; gap: 10px; }
+    .feature-dot { width: 6px; height: 6px; border-radius: 50%; background: #a8e07a; flex-shrink: 0; }
+    .feature-text { font-size: 13px; color: rgba(255,255,255,0.5); }
+
+    /* PANNEAU DROIT */
+    .right-panel {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 48px;
+      background: #fff;
+      position: relative;
+    }
+
+    .login-form { width: 100%; max-width: 360px; }
+
+    .form-header { margin-bottom: 36px; }
+    .form-title { font-size: 24px; font-weight: 700; color: #1a2a1a; letter-spacing: -0.5px; margin-bottom: 6px; }
+    .form-sub { font-size: 13px; color: #b0c8b0; }
+
+    .login-alert { padding: 12px 14px; border-radius: 10px; font-size: 13px; font-weight: 500; margin-bottom: 20px; display: none; }
+    .login-alert.error { background: #fef0f0; color: #b03030; border: 1px solid #f0c0c0; display: block; }
+    .login-alert.success { background: #e8f5dc; color: #2d6a0a; border: 1px solid #c0e090; display: block; }
+
+    .form-group { margin-bottom: 16px; }
+    .form-label { font-size: 11px; font-weight: 600; color: #7aaa7a; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; display: block; }
+
+    .input-wrapper { position: relative; }
+    .input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); }
+    .input-icon svg { width: 16px; height: 16px; }
+    .form-input {
+      width: 100%; padding: 13px 14px 13px 42px;
+      border-radius: 10px; border: 1.5px solid #e8f0e0;
+      background: #f8faf6; font-size: 14px;
+      font-family: 'Inter', sans-serif; color: #1a2a1a;
+      outline: none; transition: all 0.15s;
+    }
+    .form-input:focus { border-color: #3B6D11; background: #fff; box-shadow: 0 0 0 3px rgba(59,109,17,0.07); }
+
+    .login-btn {
+      width: 100%; padding: 14px; border-radius: 10px; border: none;
+      background: #2d5c2d; color: #fff; font-size: 14px; font-weight: 600;
+      font-family: 'Inter', sans-serif; cursor: pointer; margin-top: 8px;
+      transition: all 0.15s; letter-spacing: -0.1px;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .login-btn:hover { background: #1a3a1a; box-shadow: 0 4px 20px rgba(45,92,45,0.2); }
+    .login-btn:disabled { background: #c0d8c0; cursor: not-allowed; box-shadow: none; }
+    .login-btn svg { width: 16px; height: 16px; }
+
+    /* BADGE BAS DROITE */
+    .bottom-badge {
+      position: absolute;
+      bottom: 32px; right: 32px;
+      display: flex; align-items: center; gap: 8px;
+      background: #f8faf6; border: 1px solid #e0ecd8;
+      padding: 8px 14px; border-radius: 20px;
+    }
+    .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: #5ab52a; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+    .badge-text { font-size: 11px; font-weight: 600; color: #3B6D11; }
+
+    .form-footer { text-align: center; margin-top: 28px; font-size: 11px; color: #d0ddd0; }
+
+    @media (max-width: 768px) {
+      body { grid-template-columns: 1fr; }
+      .left-panel { display: none; }
+      .right-panel { padding: 32px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="left-panel">
+  <div class="left-logo">
+    <div class="left-logo-icon">
+      <svg viewBox="0 0 22 22" fill="none"><path d="M3 7h16M3 11h10M3 15h13" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+    </div>
+    <div class="left-logo-text">Commande<span>IA</span></div>
+  </div>
+
+  <div class="left-content">
+    <div class="left-title">La prise de<br>commande<br><span>réinventée.</span></div>
+    <div class="left-sub" style="margin-top:16px;">Une IA qui prend les commandes, les structure et les envoie en cuisine sans erreur.</div>
+  </div>
+
+  <div class="left-features">
+    <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Commandes en temps réel</div></div>
+    <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Zéro erreur, zéro confusion</div></div>
+    <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Gestion des allergies automatique</div></div>
+    <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Dashboard hôte & cuisine</div></div>
+  </div>
+</div>
+
+<div class="right-panel">
+  <div class="login-form">
+    <div class="form-header">
+      <div class="form-title">Connexion</div>
+      <div class="form-sub">Accès réservé au personnel autorisé</div>
+    </div>
+
+    <div class="login-alert" id="alert"></div>
+
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <div class="input-wrapper">
+        <div class="input-icon">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M2 4h12v8H2zM2 4l6 5 6-5" stroke="#c0d8c0" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <input class="form-input" type="email" id="email" placeholder="votre@email.com" />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Mot de passe</label>
+      <div class="input-wrapper">
+        <div class="input-icon">
+          <svg viewBox="0 0 16 16" fill="none"><rect x="3" y="7" width="10" height="7" rx="1.5" stroke="#c0d8c0" stroke-width="1.3"/><path d="M5.5 7V5a2.5 2.5 0 015 0v2" stroke="#c0d8c0" stroke-width="1.3" stroke-linecap="round"/></svg>
+        </div>
+        <input class="form-input" type="password" id="password" placeholder="••••••••" />
+      </div>
+    </div>
+
+    <button class="login-btn" id="login-btn" onclick="login()">
+      Se connecter
+      <svg viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+
+    <div class="form-footer">Commande-IA © 2025 — Accès sécurisé</div>
+  </div>
+
+  <div class="bottom-badge">
+    <div class="badge-dot"></div>
+    <div class="badge-text">Système opérationnel</div>
+  </div>
+</div>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const redirect = params.get('redirect') || '/';
+  if (sessionStorage.getItem('user')) window.location.href = redirect;
+
+  async function login() {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const btn = document.getElementById('login-btn');
+    const alertEl = document.getElementById('alert');
+    alertEl.className = 'login-alert';
+    alertEl.textContent = '';
+    if (!email || !password) {
+      alertEl.className = 'login-alert error';
+      alertEl.textContent = 'Veuillez remplir tous les champs.';
+      return;
+    }
+    btn.disabled = true;
+    btn.innerHTML = 'Connexion...';
+    try {
+      const res = await fetch('/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alertEl.className = 'login-alert error';
+        alertEl.textContent = data.error || 'Erreur de connexion.';
+        btn.disabled = false;
+        btn.innerHTML = 'Se connecter <svg viewBox="0 0 16 16" fill="none" width="16" height="16"><path d="M3 8h10M9 4l4 4-4 4" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        return;
+      }
+      sessionStorage.setItem('user', JSON.stringify(data.user));
+      alertEl.className = 'login-alert success';
+      alertEl.textContent = 'Bienvenue ' + data.user.nom + ' — Redirection...';
+      setTimeout(() => { window.location.href = redirect; }, 1000);
+    } catch (e) {
+      alertEl.className = 'login-alert error';
+      alertEl.textContent = 'Erreur réseau. Vérifiez que le serveur tourne.';
+      btn.disabled = false;
+      btn.innerHTML = 'Se connecter <svg viewBox="0 0 16 16" fill="none" width="16" height="16"><path d="M3 8h10M9 4l4 4-4 4" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    }
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+</script>
+</body>
+</html>

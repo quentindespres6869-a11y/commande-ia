@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Commande-IA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: #f7f8f7; min-height: 100vh; color: #111; }
+
+    .topbar { background: #fff; border-bottom: 1px solid #eaeeea; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: 60px; }
+    .topbar-left { display: flex; align-items: center; gap: 16px; }
+    .logo { font-size: 16px; font-weight: 700; color: #111; letter-spacing: -0.3px; display: flex; align-items: center; gap: 8px; }
+    .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: #3B6D11; }
+    .logo span { color: #3B6D11; }
+    .admin-pill { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; background: #f0f7e8; color: #3B6D11; padding: 3px 8px; border-radius: 4px; border: 1px solid #d4eab8; }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+    .user-name { font-size: 13px; font-weight: 500; color: #666; }
+    .back-btn { font-size: 12px; font-weight: 500; color: #666; background: transparent; border: 1px solid #e0e0e0; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-family: 'Inter', sans-serif; text-decoration: none; transition: all 0.15s; }
+    .back-btn:hover { border-color: #3B6D11; color: #3B6D11; }
+
+    .layout { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 60px); }
+
+    /* SIDEBAR */
+    .sidebar { background: #fff; border-right: 1px solid #eaeeea; padding: 24px 0; }
+    .sidebar-section { padding: 0 16px; margin-bottom: 8px; }
+    .sidebar-label { font-size: 10px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 1px; padding: 0 8px; margin-bottom: 6px; }
+    .sidebar-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; color: #555; transition: all 0.1s; margin-bottom: 2px; }
+    .sidebar-item:hover { background: #f5f5f5; color: #111; }
+    .sidebar-item.active { background: #f0f7e8; color: #2d5c2d; font-weight: 600; }
+    .sidebar-item svg { width: 15px; height: 15px; flex-shrink: 0; }
+    .sidebar-count { margin-left: auto; font-size: 11px; font-weight: 600; color: #3B6D11; background: #e8f5dc; padding: 1px 7px; border-radius: 10px; }
+
+    /* MAIN */
+    .main { padding: 32px; overflow-y: auto; }
+    .main-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+    .main-title { font-size: 20px; font-weight: 700; color: #111; letter-spacing: -0.4px; }
+    .main-sub { font-size: 13px; color: #999; margin-top: 3px; }
+
+    .add-btn { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; padding: 9px 18px; border-radius: 8px; border: none; background: #2d5c2d; color: #fff; cursor: pointer; font-family: 'Inter', sans-serif; transition: background 0.15s; }
+    .add-btn:hover { background: #1a3a1a; }
+    .add-btn svg { width: 14px; height: 14px; }
+
+    /* GRILLE */
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+    /* CARDS */
+    .card { background: #fff; border: 1px solid #eaeeea; border-radius: 12px; padding: 20px; transition: box-shadow 0.15s; }
+    .card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+    .card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
+    .card-identity { display: flex; align-items: center; gap: 12px; }
+    .card-avatar { width: 38px; height: 38px; border-radius: 10px; background: #f0f7e8; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #2d6a0a; flex-shrink: 0; }
+    .card-name { font-size: 14px; font-weight: 600; color: #111; }
+    .card-meta { font-size: 11px; color: #aaa; margin-top: 2px; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+    .status-dot.actif { background: #5ab52a; }
+    .status-dot.suspendu { background: #e05555; }
+
+    .card-divider { height: 1px; background: #f5f5f5; margin: 14px 0; }
+
+    .card-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; padding: 3px 0; }
+    .card-key { color: #aaa; }
+    .card-val { color: #333; font-weight: 500; text-align: right; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .card-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .tag { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 5px; }
+    .tag.green { background: #f0f7e8; color: #2d6a0a; }
+    .tag.red { background: #fef0f0; color: #b03030; }
+    .tag.blue { background: #eff4ff; color: #2a50aa; }
+    .tag.orange { background: #fff8ec; color: #906010; }
+    .tag.gray { background: #f5f5f5; color: #666; }
+
+    .card-actions { display: flex; gap: 6px; margin-top: 14px; }
+    .btn-sm { font-size: 11px; font-weight: 600; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-family: 'Inter', sans-serif; flex: 1; border: 1px solid transparent; transition: all 0.12s; }
+    .btn-primary { background: #2d5c2d; color: #fff; }
+    .btn-primary:hover { background: #1a3a1a; }
+    .btn-warning { background: #fff8ec; color: #906010; border-color: #f0d898; }
+    .btn-warning:hover { background: #fef0d0; }
+    .btn-danger { background: #fef0f0; color: #b03030; border-color: #f5c5c5; }
+    .btn-danger:hover { background: #fce0e0; }
+
+    /* MODAL */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 999; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
+    .modal-overlay.open { display: flex; }
+    .modal { background: #fff; border-radius: 16px; padding: 32px; width: 100%; max-width: 460px; box-shadow: 0 24px 60px rgba(0,0,0,0.12); }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+    .modal-title { font-size: 17px; font-weight: 700; color: #111; letter-spacing: -0.3px; }
+    .modal-close { width: 28px; height: 28px; border-radius: 6px; border: none; background: #f5f5f5; color: #666; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .modal-close:hover { background: #eee; }
+    .form-group { margin-bottom: 16px; }
+    .form-label { font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 7px; display: block; }
+    .form-input { width: 100%; padding: 11px 13px; border-radius: 8px; border: 1.5px solid #e8e8e8; background: #fafafa; font-size: 13px; font-family: 'Inter', sans-serif; color: #111; outline: none; transition: all 0.15s; }
+    .form-input:focus { border-color: #3B6D11; background: #fff; }
+    .form-select { width: 100%; padding: 11px 13px; border-radius: 8px; border: 1.5px solid #e8e8e8; background: #fafafa; font-size: 13px; font-family: 'Inter', sans-serif; color: #111; outline: none; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .modal-footer { display: flex; gap: 10px; margin-top: 28px; }
+    .modal-btn { flex: 1; padding: 11px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; transition: background 0.15s; }
+    .modal-btn.primary { background: #2d5c2d; color: #fff; }
+    .modal-btn.primary:hover { background: #1a3a1a; }
+    .modal-btn.secondary { background: #f5f5f5; color: #555; }
+    .modal-btn.secondary:hover { background: #eee; }
+    .success-box { background: #f0f7e8; border: 1px solid #c8e8a0; border-radius: 8px; padding: 12px 14px; margin-top: 16px; font-size: 13px; color: #2d5c2d; font-weight: 500; display: none; word-break: break-all; }
+    .success-box.show { display: block; }
+    .loading { text-align: center; font-size: 13px; color: #aaa; padding: 48px 0; }
+
+    .section-view { display: none; }
+    .section-view.active { display: block; }
+    .btn-reset { font-size: 11px; font-weight: 600; padding: 6px 10px; border-radius: 7px; border: 1.5px solid #b0c8f8; background: #eff4ff; color: #2a50aa; cursor: pointer; flex: 1; font-family: 'Inter', sans-serif; }
+.btn-reset:hover { background: #ddeeff; }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo"><div class="logo-dot"></div>Commande<span>IA</span></div>
+    <div class="admin-pill">Admin</div>
+  </div>
+  <div class="topbar-right">
+    <span class="user-name" id="admin-name"></span>
+    <a href="/" class="back-btn">← Dashboard</a>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Gestion</div>
+      <div class="sidebar-item active" id="nav-restaurants" onclick="switchSection('restaurants', this)">
+        <svg viewBox="0 0 15 15" fill="none"><path d="M2 3h11M2 7.5h11M2 12h11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        Restaurants
+        <span class="sidebar-count" id="count-restaurants">0</span>
+      </div>
+      <div class="sidebar-item" id="nav-employes" onclick="switchSection('employes', this)">
+        <svg viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="5" r="2.5" stroke="currentColor" stroke-width="1.4"/><path d="M2 13c0-3.038 2.462-5.5 5.5-5.5S13 9.962 13 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        Employés
+        <span class="sidebar-count" id="count-employes">0</span>
+      </div>
+      <div class="sidebar-item" onclick="window.location.href='/stocks.html'">
+  <svg viewBox="0 0 15 15" fill="none"><rect x="1.5" y="1.5" width="12" height="4" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="1.5" y="7.5" width="12" height="4" rx="1" stroke="currentColor" stroke-width="1.3"/></svg>
+  Stocks
+</div>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- RESTAURANTS -->
+    <div class="section-view active" id="section-restaurants">
+      <div class="main-header">
+        <div>
+          <div class="main-title">Restaurants</div>
+          <div class="main-sub">Gérez les comptes restaurants de vos clients</div>
+        </div>
+        <button class="add-btn" onclick="openModal('restaurant')">
+          <svg viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+          Nouveau restaurant
+        </button>
+      </div>
+      <div class="grid" id="grid-restaurants"><div class="loading">Chargement...</div></div>
+    </div>
+
+    <!-- EMPLOYES -->
+    <div class="section-view" id="section-employes">
+      <div class="main-header">
+        <div>
+          <div class="main-title">Employés</div>
+          <div class="main-sub">Gérez les accès au dashboard</div>
+        </div>
+        <button class="add-btn" onclick="openModal('employe')">
+          <svg viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+          Nouvel employé
+        </button>
+      </div>
+      <div class="grid" id="grid-employes"><div class="loading">Chargement...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RESTAURANT -->
+<div class="modal-overlay" id="modal-restaurant">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Nouveau restaurant</div>
+      <button class="modal-close" onclick="closeModal('restaurant')">×</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Nom</label>
+        <input class="form-input" id="r-nom" placeholder="Burger Express" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Abonnement</label>
+        <select class="form-select" id="r-abo">
+          <option value="Mensuel">Mensuel</option>
+          <option value="Annuel">Annuel</option>
+          <option value="Gratuit">Gratuit</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input class="form-input" id="r-email" type="email" placeholder="contact@restaurant.fr" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Téléphone</label>
+      <input class="form-input" id="r-tel" placeholder="+33 6 00 00 00 00" />
+    </div>
+    <div class="success-box" id="r-success"></div>
+    <div class="modal-footer">
+      <button class="modal-btn secondary" onclick="closeModal('restaurant')">Annuler</button>
+      <button class="modal-btn primary" onclick="creerRestaurant()">Créer le restaurant</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EMPLOYE -->
+<div class="modal-overlay" id="modal-employe">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Nouvel employé</div>
+      <button class="modal-close" onclick="closeModal('employe')">×</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Nom complet</label>
+        <input class="form-input" id="e-nom" placeholder="Jean Dupont" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Rôle</label>
+        <select class="form-select" id="e-role">
+          <option value="Hôte">Hôte</option>
+          <option value="Cuisine">Cuisine</option>
+          <option value="Gérant">Gérant</option>
+          <option value="Admin">Admin</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input class="form-input" id="e-email" type="email" placeholder="jean@restaurant.fr" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Restaurant (nom)</label>
+        <input class="form-input" id="e-restaurant" placeholder="Burger Express" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Restaurant ID</label>
+        <input class="form-input" id="e-restaurant-id" placeholder="ID Notion" />
+      </div>
+    </div>
+    <div class="success-box" id="e-success"></div>
+    <div class="modal-footer">
+      <button class="modal-btn secondary" onclick="closeModal('employe')">Annuler</button>
+      <button class="modal-btn primary" onclick="creerEmploye()">Créer l'employé</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const user = sessionStorage.getItem('user');
+  if (!user) window.location.href = '/login.html?redirect=/admin.html';
+  const currentUser = JSON.parse(user || '{}');
+  if (currentUser.role !== 'Admin') window.location.href = '/';
+  document.getElementById('admin-name').textContent = currentUser.nom;
+
+  function initials(name) { return (name || '?').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2); }
+
+  function switchSection(section, el) {
+    document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+    document.querySelectorAll('.section-view').forEach(s => s.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('section-' + section).classList.add('active');
+  }
+
+  function openModal(type) {
+    document.getElementById('modal-' + type).classList.add('open');
+    document.getElementById(type === 'restaurant' ? 'r-success' : 'e-success').classList.remove('show');
+  }
+  function closeModal(type) { document.getElementById('modal-' + type).classList.remove('open'); }
+  async function resetPassword(id, type) {
+  if (!confirm('Générer un nouveau mot de passe pour ce compte ?')) return;
+  const res = await fetch('/admin/reset-password/' + id, {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type })
+  });
+  const data = await res.json();
+  if (data.motDePasse) {
+    alert('Nouveau mot de passe : ' + data.motDePasse + '\n\nNote-le et transmets-le au client.');
+  } else {
+    alert('Erreur : ' + (data.error || 'inconnue'));
+  }
+}
+
+  async function loadRestaurants() {
+    const res = await fetch('/admin/restaurants');
+    const data = await res.json();
+    document.getElementById('count-restaurants').textContent = data.length;
+    const grid = document.getElementById('grid-restaurants');
+    if (!data.length) { grid.innerHTML = '<div class="loading">Aucun restaurant.</div>'; return; }
+    grid.innerHTML = '';
+    data.forEach(r => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="card-top">
+          <div class="card-identity">
+            <div class="card-avatar">${initials(r.nom)}</div>
+            <div>
+              <div class="card-name">${r.nom || '—'}</div>
+              <div class="card-meta">${r.abonnement || '—'}</div>
+            </div>
+          </div>
+          <div class="status-dot ${r.statut === 'Actif' ? 'actif' : 'suspendu'}"></div>
+        </div>
+        <div class="card-divider"></div>
+        <div class="card-row"><span class="card-key">Email</span><span class="card-val">${r.email || '—'}</span></div>
+        <div class="card-row"><span class="card-key">Tél</span><span class="card-val">${r.telephone || '—'}</span></div>
+        <div class="card-row"><span class="card-key">ID</span><span class="card-val" style="font-size:10px;color:#aaa;">${r.id?.slice(0, 18) + '...' || '—'}</span></div>
+        <div class="card-tags">
+          <span class="tag ${r.statut === 'Actif' ? 'green' : 'red'}">${r.statut || '—'}</span>
+          <span class="tag ${r.onboarding === 'Complété' ? 'green' : r.onboarding === 'En cours' ? 'orange' : 'gray'}">${r.onboarding || 'À compléter'}</span>
+        </div>
+        <div class="card-actions">
+          <button class="btn-sm btn-primary" onclick="ouvrirOnboarding('${r.id}','${encodeURIComponent(r.nom || '')}')">${r.onboarding === 'Complété' ? 'Modifier' : 'Compléter'}</button>
+          ${r.onboarding === 'Complété' ? `<button class="btn-sm btn-warning" onclick="telechargerPanel('${r.id}','${encodeURIComponent(r.nom || '')}')">Panel</button>` : ''}
+          <button class="btn-sm btn-danger" onclick="supprimerRestaurant('${r.id}')">Supprimer</button>
+          <button class="btn-reset" onclick="resetPassword('${r.id}', 'restaurant')">Réinitialiser MDP</button>
+        </div>`;
+      grid.appendChild(card);
+    });
+  }
+
+  async function loadEmployes() {
+    const res = await fetch('/admin/employes');
+    const data = await res.json();
+    document.getElementById('count-employes').textContent = data.length;
+    const grid = document.getElementById('grid-employes');
+    if (!data.length) { grid.innerHTML = '<div class="loading">Aucun employé.</div>'; return; }
+    grid.innerHTML = '';
+    data.forEach(e => {
+      const roleColors = { 'Admin': 'red', 'Gérant': 'orange', 'Hôte': 'blue', 'Cuisine': 'green' };
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="card-top">
+          <div class="card-identity">
+            <div class="card-avatar">${initials(e.nom)}</div>
+            <div>
+              <div class="card-name">${e.nom || '—'}</div>
+              <div class="card-meta">${e.restaurant || '—'}</div>
+            </div>
+          </div>
+          <div class="status-dot ${e.statut === 'Actif' ? 'actif' : 'suspendu'}"></div>
+        </div>
+        <div class="card-divider"></div>
+        <div class="card-row"><span class="card-key">Email</span><span class="card-val">${e.email || '—'}</span></div>
+        <div class="card-row"><span class="card-key">Dernière co.</span><span class="card-val">${e.derniereConnexion || 'Jamais'}</span></div>
+        <div class="card-tags">
+          <span class="tag ${roleColors[e.role] || 'gray'}">${e.role || '—'}</span>
+          <span class="tag ${e.statut === 'Actif' ? 'green' : 'red'}">${e.statut || '—'}</span>
+        </div>
+        <div class="card-actions">
+          ${e.statut === 'Actif'
+            ? `<button class="btn-sm btn-warning" onclick="toggleStatut('${e.id}','Suspendu','employe')">Suspendre</button>`
+            : `<button class="btn-sm btn-primary" onclick="toggleStatut('${e.id}','Actif','employe')">Activer</button>`}
+          <button class="btn-sm btn-danger" onclick="supprimerEmploye('${e.id}')">Supprimer</button>
+        </div>`;
+      grid.appendChild(card);
+    });
+  }
+
+  async function creerRestaurant() {
+    const nom = document.getElementById('r-nom').value.trim();
+    const email = document.getElementById('r-email').value.trim();
+    if (!nom || !email) { alert('Nom et email requis'); return; }
+    const res = await fetch('/admin/restaurants', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nom, email, telephone: document.getElementById('r-tel').value, abonnement: document.getElementById('r-abo').value, notes: '{}' })
+    });
+    const data = await res.json();
+    if (!data.success) { alert('Erreur : ' + data.error); return; }
+    document.getElementById('r-success').textContent = 'Créé ! Mot de passe : ' + data.motDePasse + ' | ID : ' + data.id;
+    document.getElementById('r-success').classList.add('show');
+    await loadRestaurants();
+  }
+
+  async function creerEmploye() {
+    const nom = document.getElementById('e-nom').value.trim();
+    const email = document.getElementById('e-email').value.trim();
+    if (!nom || !email) { alert('Nom et email requis'); return; }
+    const res = await fetch('/admin/employes', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nom, email, role: document.getElementById('e-role').value, restaurant: document.getElementById('e-restaurant').value, restaurantId: document.getElementById('e-restaurant-id').value })
+    });
+    const data = await res.json();
+    document.getElementById('e-success').textContent = 'Employé créé ! Mot de passe : ' + data.motDePasse;
+    document.getElementById('e-success').classList.add('show');
+    await loadEmployes();
+  }
+
+  async function supprimerRestaurant(id) {
+    if (!confirm('Supprimer ce restaurant ? Cette action est irréversible.')) return;
+    await fetch('/admin/restaurants/' + id, { method: 'DELETE' });
+    loadRestaurants();
+  }
+
+  async function supprimerEmploye(id) {
+    if (!confirm('Supprimer cet employé ?')) return;
+    await fetch('/admin/employes/' + id, { method: 'DELETE' });
+    loadEmployes();
+  }
+
+  async function toggleStatut(id, statut, type) {
+    await fetch('/admin/' + (type === 'restaurant' ? 'restaurants' : 'employes') + '/' + id + '/statut', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ statut })
+    });
+    type === 'restaurant' ? loadRestaurants() : loadEmployes();
+  }
+
+  function ouvrirOnboarding(id, nom) {
+    window.location.href = '/onboarding.html?restaurantId=' + id + '&nom=' + nom;
+  }
+
+  async function telechargerPanel(restaurantId, nom) {
+    const [restoRes, menuRes] = await Promise.all([fetch('/mon-restaurant/' + restaurantId), fetch('/mon-menu/' + restaurantId)]);
+    const resto = await restoRes.json();
+    const menu = await menuRes.json();
+    const panel = { version: '1.0', generatedAt: new Date().toISOString(), restaurant: resto, menu };
+    const blob = new Blob([JSON.stringify(panel, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'panel-' + decodeURIComponent(nom).toLowerCase().replace(/\s+/g, '-') + '.json';
+    a.click();
+  }
+
+  loadRestaurants();
+  loadEmployes();
+</script>
+</body>
+</html>
