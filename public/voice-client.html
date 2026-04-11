@@ -135,11 +135,23 @@ async function sendMessage() {
     
     addMessage('ai', data.response);
     updatePanier(data.panier, data.totalPrice);
+
+    // Si la commande est prête, afficher le bouton confirmer
+    if (data.commandePrete) {
+      const confirmDiv = document.createElement('div');
+      confirmDiv.innerHTML = `
+        <div class="order-summary">
+          ${data.panier.map(p => `<div class="order-item"><span>${p.quantite}x ${p.nom}${p.modifications ? ' (' + p.modifications + ')' : ''}</span><span>${p.prix}€</span></div>`).join('')}
+          <div class="order-item order-total"><span>Total</span><span>${data.totalPrice}€</span></div>
+        </div>
+        <button class="btn-confirm" onclick="confirmOrder()">✅ Confirmer la commande</button>`;
+      document.getElementById('messages').appendChild(confirmDiv);
+      document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+    }
   } catch (e) {
     addMessage('ai', '❌ Erreur: ' + e.message);
   }
 }
-
 async function confirmOrder() {
   const name = prompt('Votre nom (optionnel):') || 'Anonyme';
   const phone = prompt('Votre téléphone (optionnel):') || '';
