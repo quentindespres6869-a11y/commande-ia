@@ -4,11 +4,15 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 const crypto = require('crypto');
 require('dotenv').config();
-const twilio = require('twilio');
-const { createClient } = require('@deepgram/sdk');
-
-const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-const deepgram = createClient(process.env.DEEPGRAM_API_KEY);
+let twilioClient, deepgram;
+try {
+  const twilio = require('twilio');
+  twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+} catch(e) { console.log('Twilio non disponible'); }
+try {
+  const { createClient } = require('@deepgram/sdk');
+  deepgram = createClient(process.env.DEEPGRAM_API_KEY);
+} catch(e) { console.log('Deepgram non disponible'); }
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
@@ -20,7 +24,7 @@ app.use(express.static('public'));
 const NOTION_TOKEN = process.env.NOTION_TOKEN;
 const DB_RESTAURANTS = '2954180a10da476da3f20db69bd7bdbf';
 const DB_EMPLOYES = '26a7bfc0e3b147aeae55e87dffeee763';
-const ADMIN_EMAIL = 'quentin@commande-ia.fr'; // ← ton email admin
+const ADMIN_EMAIL = 'quentin@commande-ia.fr';
 const DB_MENUS = 'aa3d9c7174e641f2a82265a8fca8d251';
 const DB_STOCKS = '2bab39532bb24fe3b874a7eb92415f8e';
 
@@ -31,6 +35,9 @@ const notionHeaders = {
 };
 
 let commandes = [], archives = [], nextId = 1;
+
+// Sessions vocales (déclaré ICI, avant les routes)
+const voiceSessions = {};
 
 function hashPassword(pwd) { return crypto.createHash('sha256').update(pwd).digest('hex'); }
 function generatePassword() { return Math.random().toString(36).slice(2, 10).toUpperCase(); }
@@ -51,7 +58,6 @@ app.patch('/commandes/:id/valider', async (req, res) => {
   cmd.state = 'validated'; cmd.chronoStart = Date.now();
   io.emit('commande_mise_a_jour', cmd);
 
-  // Déduire le stock automatiquement si restaurantId disponible
   if (cmd.restaurantId) {
     try {
       const r = await fetch(`https://api.notion.com/v1/databases/${DB_STOCKS}/query`, {
@@ -126,9 +132,9 @@ app.post('/auth/login', async (req, res) => {
     const statut = props['Statut']?.select?.name;
     if (statut === 'Suspendu') return res.status(403).json({ error: 'Compte suspendu' });
     const roleFromNotion = props['Rôle']?.select?.name;
-if (roleFromNotion === 'Admin' && email !== ADMIN_EMAIL) {
-  return res.status(403).json({ error: 'Accès non autorisé' });
-}
+    if (roleFromNotion === 'Admin' && email !== ADMIN_EMAIL) {
+      return res.status(403).json({ error: 'Accès non autorisé' });
+    }
     if (storedPwd !== hashPassword(password)) return res.status(401).json({ error: 'Mot de passe incorrect' });
     await fetch(`https://api.notion.com/v1/pages/${page.id}`, {
       method: 'PATCH', headers: notionHeaders,
@@ -395,7 +401,7 @@ app.get('/mon-menu/:restaurantId', async (req, res) => {
     })));
   } catch (e) { res.status(500).json({ error: 'Erreur' }); }
 });
-// Supprimer un restaurant
+
 app.delete('/admin/restaurants/:id', async (req, res) => {
   try {
     await fetch(`https://api.notion.com/v1/pages/${req.params.id}`, {
@@ -406,7 +412,6 @@ app.delete('/admin/restaurants/:id', async (req, res) => {
   } catch (e) { res.status(500).json({ error: 'Erreur suppression' }); }
 });
 
-// Supprimer un employé
 app.delete('/admin/employes/:id', async (req, res) => {
   try {
     await fetch(`https://api.notion.com/v1/pages/${req.params.id}`, {
@@ -416,6 +421,7 @@ app.delete('/admin/employes/:id', async (req, res) => {
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: 'Erreur suppression' }); }
 });
+
 // ─── STOCKS ──────────────────────────────────────────
 
 app.get('/stocks/:restaurantId', async (req, res) => {
@@ -544,10 +550,8 @@ app.post('/twilio/traiter', async (req, res) => {
 </Response>`;
   res.type('text/xml').send(twiml);
 
-  // Traitement en arrière-plan
   setTimeout(async () => {
     try {
-      // 1. Transcrire avec Deepgram
       const audioRes = await fetch(recordingUrl + '.mp3', {
         headers: { 'Authorization': 'Basic ' + Buffer.from(process.env.TWILIO_ACCOUNT_SID + ':' + process.env.TWILIO_AUTH_TOKEN).toString('base64') }
       });
@@ -561,7 +565,6 @@ app.post('/twilio/traiter', async (req, res) => {
 
       if (!transcription) return;
 
-      // 2. Structurer avec Claude
       const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -570,7 +573,7 @@ app.post('/twilio/traiter', async (req, res) => {
           'anthropic-version': '2023-06-01'
         },
         body: JSON.stringify({
-          model: 'claude-3-haiku-20240307',
+          model: 'claude-sonnet-4-20250514',
           max_tokens: 500,
           messages: [{
             role: 'user',
@@ -593,7 +596,6 @@ Format de réponse:
       const jsonText = claudeData.content?.[0]?.text || '{}';
       const commande = JSON.parse(jsonText);
 
-      // 3. Envoyer au dashboard
       const cmd = {
         id: nextId++,
         ...commande,
@@ -613,6 +615,188 @@ Format de réponse:
   }, 3000);
 });
 
+// ─── COMMANDE VOCALE VIA CLIENT WEB ──────────────────
+
+app.post('/api/order/voice/session', async (req, res) => {
+  try {
+    const { restaurantId } = req.body;
+    if (!restaurantId) return res.status(400).json({ error: 'restaurantId manquant' });
+
+    const restauRes = await fetch(`https://api.notion.com/v1/pages/${restaurantId}`, {
+      method: 'GET', headers: notionHeaders
+    });
+    const restau = await restauRes.json();
+    if (restau.object === 'error') return res.status(404).json({ error: 'Restaurant non trouvé' });
+
+    const nomRestaurant = restau.properties['Nom du restaurant']?.title?.[0]?.plain_text || 'Restaurant';
+
+    const menuRes = await fetch(`https://api.notion.com/v1/databases/${DB_MENUS}/query`, {
+      method: 'POST', headers: notionHeaders,
+      body: JSON.stringify({
+        filter: {
+          or: [
+            { property: 'Restaurant ID', rich_text: { equals: restaurantId } },
+            { property: 'Restaurant', rich_text: { equals: nomRestaurant } }
+          ]
+        }
+      })
+    });
+    const menuData = await menuRes.json();
+    const menuItems = (menuData.results || []).map(p => {
+      const props = p.properties;
+      return {
+        nom: props['Nom du produit']?.title?.[0]?.plain_text || '',
+        prix: props['Prix']?.number || 0,
+        prixMenu: props['Prix menu']?.number || 0,
+        dispoMenu: props['Disponible en menu']?.checkbox || false,
+        categorie: props['Catégorie']?.select?.name || '',
+        ingredients: props['Ingrédients']?.rich_text?.[0]?.plain_text || '',
+        ingredientsRetirables: props['Ingrédients retirables']?.rich_text?.[0]?.plain_text || '',
+        allergenes: props['Allergènes']?.multi_select?.map(a => a.name) || []
+      };
+    });
+
+    const sid = Date.now().toString();
+
+    // Stocker la session avec le menu
+    voiceSessions[sid] = { panier: [], historique: [], menu: menuItems, restaurant: nomRestaurant, restaurantId };
+
+    res.json({
+      success: true,
+      sessionId: sid,
+      restaurantData: {
+        nom: nomRestaurant,
+        menu: menuItems
+      },
+      greeting: `Bonjour ! Bienvenue chez ${nomRestaurant}. Que souhaitez-vous commander ?`
+    });
+  } catch (e) {
+    console.log('Erreur session vocale:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/order/voice/message', async (req, res) => {
+  try {
+    const { sessionId, message } = req.body;
+    if (!sessionId || !message) return res.status(400).json({ error: 'sessionId et message requis' });
+
+    if (!voiceSessions[sessionId]) {
+      return res.status(400).json({ error: 'Session expirée, rechargez la page' });
+    }
+    const session = voiceSessions[sessionId];
+    session.historique.push({ role: 'user', content: message });
+
+    const menuTexte = session.menu.map(p =>
+      `- ${p.nom} (${p.categorie}) : ${p.prix}€${p.dispoMenu ? ' | En menu : ' + p.prixMenu + '€' : ''}${p.ingredients ? ' | Ingrédients : ' + p.ingredients : ''}${p.ingredientsRetirables ? ' | Retirables : ' + p.ingredientsRetirables : ''}`
+    ).join('\n');
+
+    const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 800,
+        system: `Tu es un assistant de prise de commande pour le restaurant "${session.restaurant}".
+
+CARTE DU RESTAURANT :
+${menuTexte}
+
+PANIER ACTUEL : ${JSON.stringify(session.panier)}
+
+RÈGLES :
+- Utilise UNIQUEMENT les produits et prix de la carte ci-dessus
+- Si le client demande un produit qui n'existe pas, dis-lui poliment et propose des alternatives
+- Si le client demande "en menu" et que le produit est disponible en menu, utilise le prix menu
+- Note les modifications (sans cornichon, sans oignon, etc.) dans le champ modifications
+- Si le client dit "c'est tout", "valider", "confirmer", mets commandePrete à true
+- Sois naturel et sympa, comme un vrai employé de fast-food
+
+Réponds UNIQUEMENT en JSON valide (pas de markdown, pas de backticks).
+Format :
+{
+  "response": "ta réponse au client",
+  "panier": [{"nom": "nom exact du produit", "quantite": 1, "prix": 0.00, "modifications": ""}],
+  "totalPrice": 0.00,
+  "commandePrete": false
+}`,
+        messages: session.historique
+      })
+    });
+
+    const claudeData = await claudeRes.json();
+    console.log('Réponse Claude brute:', JSON.stringify(claudeData).slice(0, 500));
+    let jsonText = claudeData.content?.[0]?.text || '{}';
+    
+    // Nettoyer les backticks markdown si Claude en ajoute
+    jsonText = jsonText.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+
+    let parsed;
+    try {
+      parsed = JSON.parse(jsonText);
+    } catch (e) {
+      console.log('Erreur parsing JSON Claude:', jsonText);
+      parsed = { response: jsonText, panier: session.panier, totalPrice: 0, commandePrete: false };
+    }
+
+    session.panier = parsed.panier || [];
+    session.historique.push({ role: 'assistant', content: parsed.response });
+
+    res.json({
+      response: parsed.response,
+      panier: session.panier,
+      totalPrice: parsed.totalPrice || 0,
+      commandePrete: parsed.commandePrete || false
+    });
+  } catch (e) {
+    console.log('Erreur message vocal:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/order/voice/confirm', async (req, res) => {
+  try {
+    const { sessionId, clientName, clientPhone } = req.body;
+    if (!sessionId) return res.status(400).json({ error: 'sessionId requis' });
+
+    const session = voiceSessions[sessionId];
+    if (!session || !session.panier.length) return res.status(400).json({ error: 'Panier vide' });
+
+    const items = session.panier.map(p => p.nom + (p.modifications ? ' (' + p.modifications + ')' : '')).join(', ');
+    const cmd = {
+      id: nextId++,
+      name: clientName || 'Client vocal',
+      phone: clientPhone || '',
+      sandwich: items,
+      boisson: '',
+      option: '',
+      modif: session.panier.filter(p => p.modifications).map(p => p.modifications).join(', '),
+      allergy: '',
+      restaurantId: session.restaurantId || '',
+      restaurant: session.restaurant || '',
+      state: 'new',
+      chronoStart: null,
+      chronoEnd: null,
+      createdAt: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+    };
+
+    commandes.push(cmd);
+    io.emit('nouvelle_commande', cmd);
+
+    delete voiceSessions[sessionId];
+
+    res.json({ success: true, commande: cmd });
+  } catch (e) {
+    console.log('Erreur confirmation:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ─── PING & START ────────────────────────────────────
 
 app.get('/ping', (req, res) => res.json({ message: 'Serveur en ligne ✅' }));
 

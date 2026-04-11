@@ -69,27 +69,37 @@ let sessionId = null;
 let restaurantData = null;
 
 async function startSession() {
-  // À remplacer par le restaurantId réel
   const restaurantId = prompt('Entrez l\'ID du restaurant:');
-  if (!restaurantId) return;
+  if (!restaurantId || restaurantId.trim() === '') {
+    alert('ID restaurant requis');
+    return;
+  }
 
   try {
     const res = await fetch('/api/order/voice/session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ restaurantId })
+      body: JSON.stringify({ restaurantId: restaurantId.trim() })
     });
+    
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({}));
+      alert('Erreur: ' + (error.error || 'Erreur serveur (' + res.status + ')'));
+      return;
+    }
+    
     const data = await res.json();
     
     sessionId = data.sessionId;
     restaurantData = data.restaurantData;
     
-    document.getElementById('restaurant-name').textContent = restaurantData.nom;
+    document.getElementById('restaurant-name').textContent = restaurantData.nom || 'Restaurant';
     document.getElementById('session-id').textContent = `Session: ${sessionId.slice(0, 8)}...`;
     
-    addMessage('ai', data.greeting);
+    addMessage('ai', data.greeting || 'Bienvenue!');
   } catch (e) {
-    alert('Erreur: ' + e.message);
+    alert('Erreur de connexion: ' + e.message);
+    console.error(e);
   }
 }
 
