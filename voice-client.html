@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Conversation IA — Commande-IA</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: #f4f6f4; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+
+    .container { background: #fff; border-radius: 16px; width: 100%; max-width: 600px; display: flex; flex-direction: column; height: 80vh; max-height: 800px; box-shadow: 0 8px 40px rgba(0,0,0,0.1); }
+
+    .header { padding: 20px; border-bottom: 1px solid #e0ecd8; }
+    .header h2 { font-size: 18px; color: #1a2a1a; margin-bottom: 6px; }
+    .header p { font-size: 12px; color: #9ab89a; }
+
+    .panier-summary { padding: 12px 20px; background: #f8fdf4; border-bottom: 1px solid #e0ecd8; font-size: 12px; color: #5a7a5a; }
+    .panier-summary strong { color: #3B6D11; }
+
+    .messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+    .message { display: flex; gap: 12px; animation: slideIn 0.3s ease-out; }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .message.user { justify-content: flex-end; }
+    .message.ai { justify-content: flex-start; }
+
+    .bubble { max-width: 70%; padding: 12px 16px; border-radius: 12px; font-size: 14px; line-height: 1.4; }
+    .message.user .bubble { background: #3B6D11; color: #fff; }
+    .message.ai .bubble { background: #e0ecd8; color: #1a2a1a; }
+
+    .input-section { padding: 20px; border-top: 1px solid #e0ecd8; display: flex; gap: 10px; }
+    .input-section input { flex: 1; padding: 12px 14px; border: 1.5px solid #e0ecd8; border-radius: 10px; font-size: 14px; font-family: 'Inter', sans-serif; }
+    .input-section button { padding: 12px 24px; background: #3B6D11; color: #fff; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; }
+    .input-section button:hover { background: #2d5c0a; }
+
+    .loading { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #9ab89a; animation: pulse 1.5s infinite; margin-right: 4px; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    .order-summary { background: #f0fae8; border: 1px solid #c0e090; border-radius: 10px; padding: 12px; margin: 12px 0; font-size: 12px; }
+    .order-item { display: flex; justify-content: space-between; color: #2d5c2d; margin: 4px 0; }
+    .order-total { font-weight: 700; color: #3B6D11; border-top: 1px solid #c0e090; padding-top: 6px; margin-top: 6px; }
+
+    .btn-confirm { width: 100%; padding: 14px; background: #3B6D11; color: #fff; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+    .btn-confirm:hover { background: #2d5c0a; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h2 id="restaurant-name">Restaurant</h2>
+    <p id="session-id">Session: —</p>
+  </div>
+
+  <div class="panier-summary">
+    Panier: <strong id="panier-count">0 articles</strong> · <strong id="panier-total">0€</strong>
+  </div>
+
+  <div class="messages" id="messages"></div>
+
+  <div class="input-section">
+    <input type="text" id="input-msg" placeholder="Votre message..." />
+    <button onclick="sendMessage()">Envoyer</button>
+  </div>
+</div>
+
+<script>
+let sessionId = null;
+let restaurantData = null;
+
+async function startSession() {
+  // À remplacer par le restaurantId réel
+  const restaurantId = prompt('Entrez l\'ID du restaurant:');
+  if (!restaurantId) return;
+
+  try {
+    const res = await fetch('/api/order/voice/session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ restaurantId })
+    });
+    const data = await res.json();
+    
+    sessionId = data.sessionId;
+    restaurantData = data.restaurantData;
+    
+    document.getElementById('restaurant-name').textContent = restaurantData.nom;
+    document.getElementById('session-id').textContent = `Session: ${sessionId.slice(0, 8)}...`;
+    
+    addMessage('ai', data.greeting);
+  } catch (e) {
+    alert('Erreur: ' + e.message);
+  }
+}
+
+function addMessage(role, text) {
+  const msg = document.createElement('div');
+  msg.className = `message ${role}`;
+  msg.innerHTML = `<div class="bubble">${escapeHtml(text)}</div>`;
+  document.getElementById('messages').appendChild(msg);
+  document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+}
+
+function updatePanier(panier, totalPrice) {
+  const count = panier.reduce((sum, p) => sum + p.quantite, 0);
+  document.getElementById('panier-count').textContent = `${count} article${count > 1 ? 's' : ''}`;
+  document.getElementById('panier-total').textContent = `${totalPrice}€`;
+}
+
+async function sendMessage() {
+  const input = document.getElementById('input-msg');
+  const message = input.value.trim();
+  if (!message || !sessionId) return;
+
+  addMessage('user', message);
+  input.value = '';
+
+  try {
+    const res = await fetch('/api/order/voice/message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId, message })
+    });
+    const data = await res.json();
+    
+    addMessage('ai', data.response);
+    updatePanier(data.panier, data.totalPrice);
+  } catch (e) {
+    addMessage('ai', '❌ Erreur: ' + e.message);
+  }
+}
+
+async function confirmOrder() {
+  const name = prompt('Votre nom (optionnel):') || 'Anonyme';
+  const phone = prompt('Votre téléphone (optionnel):') || '';
+
+  try {
+    const res = await fetch('/api/order/voice/confirm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId, clientName: name, clientPhone: phone })
+    });
+    const data = await res.json();
+    
+    addMessage('ai', `✅ Commande #${data.commande.id} confirmée ! Merci pour votre commande.`);
+    document.getElementById('input-msg').disabled = true;
+    document.querySelector('button').disabled = true;
+  } catch (e) {
+    addMessage('ai', '❌ Erreur confirmation: ' + e.message);
+  }
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+document.getElementById('input-msg').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') sendMessage();
+});
+
+// Au chargement
+window.addEventListener('load', startSession);
+</script>
+
+</body>
+</html>

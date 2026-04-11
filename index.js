@@ -4,7 +4,11 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 const crypto = require('crypto');
 require('dotenv').config();
+const twilio = require('twilio');
+const { createClient } = require('@deepgram/sdk');
 
+const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+const deepgram = createClient(process.env.DEEPGRAM_API_KEY);
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
@@ -505,6 +509,110 @@ app.patch('/admin/reset-password/:id', async (req, res) => {
     res.json({ success: true, motDePasse: pwd });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
+
+// ─── TWILIO + IA ──────────────────────────────────────
+
+app.post('/twilio/appel', async (req, res) => {
+  const twiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say language="fr-FR" voice="Polly.Lea">
+    Bonjour, bienvenue chez ${req.query.restaurant || 'le restaurant'}. 
+    Je suis votre assistant de commande. 
+    Veuillez dicter votre commande après le bip.
+  </Say>
+  <Record 
+    action="/twilio/traiter?restaurantId=${req.query.restaurantId || ''}&restaurant=${req.query.restaurant || ''}"
+    method="POST"
+    maxLength="30"
+    playBeep="true"
+    transcribe="false"
+  />
+</Response>`;
+  res.type('text/xml').send(twiml);
+});
+
+app.post('/twilio/traiter', async (req, res) => {
+  const recordingUrl = req.body.RecordingUrl;
+  const restaurantId = req.query.restaurantId;
+  const restaurant = req.query.restaurant;
+
+  const twiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say language="fr-FR" voice="Polly.Lea">
+    Merci, votre commande est en cours de traitement. Au revoir.
+  </Say>
+</Response>`;
+  res.type('text/xml').send(twiml);
+
+  // Traitement en arrière-plan
+  setTimeout(async () => {
+    try {
+      // 1. Transcrire avec Deepgram
+      const audioRes = await fetch(recordingUrl + '.mp3', {
+        headers: { 'Authorization': 'Basic ' + Buffer.from(process.env.TWILIO_ACCOUNT_SID + ':' + process.env.TWILIO_AUTH_TOKEN).toString('base64') }
+      });
+      const audioBuffer = await audioRes.arrayBuffer();
+      const { result } = await deepgram.listen.prerecorded.transcribeFile(
+        Buffer.from(audioBuffer),
+        { model: 'nova-2', language: 'fr' }
+      );
+      const transcription = result?.results?.channels?.[0]?.alternatives?.[0]?.transcript || '';
+      console.log('Transcription:', transcription);
+
+      if (!transcription) return;
+
+      // 2. Structurer avec Claude
+      const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': process.env.ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: 'claude-3-haiku-20240307',
+          max_tokens: 500,
+          messages: [{
+            role: 'user',
+            content: `Tu es un assistant de restaurant. Extrait les informations de cette commande vocale et réponds UNIQUEMENT en JSON valide sans markdown.
+Commande vocale: "${transcription}"
+Format de réponse:
+{
+  "name": "prénom du client ou Inconnu",
+  "phone": "numéro de téléphone ou vide",
+  "sandwich": "nom du sandwich commandé",
+  "boisson": "boisson commandée ou Eau",
+  "option": "frites ou salade ou rien",
+  "modif": "modifications demandées ou vide",
+  "allergy": "allergies mentionnées ou vide"
+}`
+          }]
+        })
+      });
+      const claudeData = await claudeRes.json();
+      const jsonText = claudeData.content?.[0]?.text || '{}';
+      const commande = JSON.parse(jsonText);
+
+      // 3. Envoyer au dashboard
+      const cmd = {
+        id: nextId++,
+        ...commande,
+        restaurantId,
+        restaurant,
+        state: 'new',
+        chronoStart: null,
+        chronoEnd: null,
+        createdAt: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+      };
+      commandes.push(cmd);
+      io.emit('nouvelle_commande', cmd);
+      console.log('Commande créée:', cmd);
+    } catch (e) {
+      console.log('Erreur traitement commande:', e.message);
+    }
+  }, 3000);
+});
+
 
 app.get('/ping', (req, res) => res.json({ message: 'Serveur en ligne ✅' }));
 
