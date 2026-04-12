@@ -40,9 +40,12 @@
     .filter-btn { font-size: 12px; padding: 5px 14px; border-radius: 20px; border: 1.5px solid #e0ecd8; background: #fff; color: #5a7a5a; cursor: pointer; font-family: 'Inter', sans-serif; font-weight: 500; }
     .filter-btn.active { background: #2d5c2d; color: #fff; border-color: #2d5c2d; }
 
+    .btn-add { font-size: 12px; padding: 7px 16px; border-radius: 8px; border: none; background: #3B6D11; color: #fff; cursor: pointer; font-family: 'Inter', sans-serif; font-weight: 600; }
+    .btn-add:hover { background: #2d5c0a; }
+
     .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
 
-    .menu-card { background: #fff; border: 1.5px solid #e0ecd8; border-radius: 14px; padding: 16px; }
+    .menu-card { background: #fff; border: 1.5px solid #e0ecd8; border-radius: 14px; padding: 16px; position: relative; }
     .menu-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
     .menu-card-name { font-size: 14px; font-weight: 700; color: #1a2a1a; }
     .menu-cat-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
@@ -61,6 +64,12 @@
     .menu-allergenes { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
     .allergen-badge { font-size: 9px; font-weight: 600; padding: 2px 6px; border-radius: 4px; background: #fef0f0; color: #b03030; border: 1px solid #f0c0c0; }
 
+    .menu-card-actions { display: flex; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #f0f5ee; }
+    .btn-edit { font-size: 11px; padding: 5px 12px; border-radius: 6px; border: 1px solid #e0ecd8; background: #f8faf6; color: #5a7a5a; cursor: pointer; font-family: 'Inter', sans-serif; font-weight: 500; flex: 1; }
+    .btn-edit:hover { background: #e8f5dc; border-color: #3B6D11; color: #3B6D11; }
+    .btn-delete { font-size: 11px; padding: 5px 12px; border-radius: 6px; border: 1px solid #f0c0c0; background: #fef8f8; color: #b03030; cursor: pointer; font-family: 'Inter', sans-serif; font-weight: 500; }
+    .btn-delete:hover { background: #fef0f0; }
+
     .horaires-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .horaire-item { background: #fff; border: 1.5px solid #e0ecd8; border-radius: 10px; padding: 12px; }
     .horaire-day { font-size: 12px; font-weight: 700; color: #3B6D11; margin-bottom: 4px; }
@@ -76,6 +85,30 @@
 
     .loading { text-align: center; font-size: 13px; color: #9ab89a; padding: 40px 0; }
     .empty { text-align: center; font-size: 13px; color: #9ab89a; padding: 40px 0; }
+
+    /* Modal */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 100; align-items: center; justify-content: center; }
+    .modal-overlay.show { display: flex; }
+    .modal { background: #fff; border-radius: 16px; padding: 28px; width: 100%; max-width: 520px; max-height: 85vh; overflow-y: auto; border: 1.5px solid #e0ecd8; }
+    .modal-title { font-size: 16px; font-weight: 700; color: #1a2a1a; margin-bottom: 20px; }
+    .form-group { margin-bottom: 12px; }
+    .form-label { font-size: 11px; font-weight: 600; color: #5a7a5a; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 5px; display: block; }
+    .form-input { width: 100%; padding: 9px 12px; border-radius: 8px; border: 1.5px solid #e0ecd8; background: #f8faf6; font-size: 13px; font-family: 'Inter', sans-serif; color: #1a2a1a; outline: none; }
+    .form-input:focus { border-color: #3B6D11; }
+    .form-select { width: 100%; padding: 9px 12px; border-radius: 8px; border: 1.5px solid #e0ecd8; background: #f8faf6; font-size: 13px; font-family: 'Inter', sans-serif; color: #1a2a1a; outline: none; }
+    .form-textarea { width: 100%; padding: 9px 12px; border-radius: 8px; border: 1.5px solid #e0ecd8; background: #f8faf6; font-size: 13px; font-family: 'Inter', sans-serif; color: #1a2a1a; outline: none; resize: vertical; min-height: 50px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .form-row-3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; }
+    .form-check { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #5a7a5a; margin-top: 6px; }
+    .form-check input { accent-color: #3B6D11; }
+    .allergenes-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 6px; }
+    .allergen-chip { font-size: 10px; padding: 4px 6px; border-radius: 5px; border: 1px solid #e0ecd8; background: #f8faf6; color: #5a7a5a; cursor: pointer; text-align: center; }
+    .allergen-chip.selected { background: #fef0f0; border-color: #f0c0c0; color: #b03030; font-weight: 600; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-save { flex: 1; padding: 11px; border-radius: 8px; border: none; background: #3B6D11; color: #fff; font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; }
+    .btn-save:hover { background: #2d5c0a; }
+    .btn-cancel { flex: 1; padding: 11px; border-radius: 8px; border: 1.5px solid #e0ecd8; background: #fff; color: #5a7a5a; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; cursor: pointer; }
+    .btn-cancel:hover { background: #f8faf6; }
   </style>
 </head>
 <body>
@@ -108,8 +141,11 @@
   <!-- MENU -->
   <div class="section active" id="section-menu">
     <div class="section-header">
-      <div class="section-title">Menu du restaurant</div>
-      <span id="menu-count" style="font-size:12px;color:#9ab89a;"></span>
+      <div>
+        <div class="section-title">Menu du restaurant</div>
+        <span id="menu-count" style="font-size:12px;color:#9ab89a;"></span>
+      </div>
+      <button class="btn-add" onclick="openModal()">+ Ajouter un produit</button>
     </div>
     <div class="menu-filters">
       <button class="filter-btn active" onclick="filterMenu('tous', this)">Tous</button>
@@ -135,6 +171,67 @@
   </div>
 </div>
 
+<!-- MODAL AJOUT/MODIFICATION PRODUIT -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Ajouter un produit</div>
+
+    <div class="form-row-3">
+      <div class="form-group">
+        <label class="form-label">Nom du produit</label>
+        <input class="form-input" id="m-nom" placeholder="Ex: Big Mac" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Catégorie</label>
+        <select class="form-select" id="m-cat">
+          <option>Sandwich</option><option>Boisson</option><option>Accompagnement</option><option>Dessert</option><option>Menu</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Prix seul (€)</label>
+        <input class="form-input" id="m-prix" type="number" step="0.01" placeholder="6.00" />
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Prix menu (€)</label>
+        <input class="form-input" id="m-prix-menu" type="number" step="0.01" placeholder="11.00" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Temps préparation (min)</label>
+        <input class="form-input" id="m-temps" type="number" placeholder="5" />
+      </div>
+    </div>
+
+    <label class="form-check">
+      <input type="checkbox" id="m-dispo-menu" /> Disponible en menu (frites + boisson)
+    </label>
+
+    <div style="height:12px"></div>
+
+    <div class="form-group">
+      <label class="form-label">Composition / Ingrédients</label>
+      <textarea class="form-textarea" id="m-ingredients" placeholder="pain, steak, salade, tomate..."></textarea>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Ingrédients retirables (séparés par des virgules)</label>
+      <input class="form-input" id="m-retirables" placeholder="cornichons, oignons, sauce" />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Allergènes présents</label>
+      <div class="allergenes-grid" id="allergenes-grid"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Annuler</button>
+      <button class="btn-save" id="btn-save" onclick="saveProduct()">Ajouter</button>
+    </div>
+  </div>
+</div>
+
 <script>
   const user = sessionStorage.getItem('user');
   if (!user) window.location.href = '/login.html?redirect=/restaurant.html';
@@ -143,6 +240,24 @@
 
   let allMenuItems = [];
   let restoData = null;
+  let editingProductId = null;
+  let selectedAllergenes = [];
+
+  const ALLERGENES = ['Gluten','Lactose','Oeufs','Arachides','Fruits à coque','Soja','Poisson','Crustacés','Céleri','Moutarde','Sésame','Sulfites','Lupin','Mollusques'];
+
+  // Initialiser les chips allergènes dans le modal
+  const ag = document.getElementById('allergenes-grid');
+  ALLERGENES.forEach(a => {
+    const chip = document.createElement('div');
+    chip.className = 'allergen-chip';
+    chip.textContent = a;
+    chip.onclick = () => {
+      chip.classList.toggle('selected');
+      if (chip.classList.contains('selected')) selectedAllergenes.push(a);
+      else selectedAllergenes = selectedAllergenes.filter(x => x !== a);
+    };
+    ag.appendChild(chip);
+  });
 
   function initials(name) {
     return (name || '?').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
@@ -181,9 +296,123 @@
         ${p.tempsPrepare ? `<div class="menu-card-row"><span class="menu-card-key">Préparation</span><span class="menu-card-val">${p.tempsPrepare} min</span></div>` : ''}
         ${p.ingredients ? `<div class="menu-ingredients">${p.ingredients}</div>` : ''}
         ${p.ingredientsRetirables ? `<div class="menu-retirables">Retirables : ${p.ingredientsRetirables}</div>` : ''}
-        ${p.allergenes?.length ? `<div class="menu-allergenes">${p.allergenes.map(a => '<span class="allergen-badge">' + a + '</span>').join('')}</div>` : ''}`;
+        ${p.allergenes?.length ? `<div class="menu-allergenes">${p.allergenes.map(a => '<span class="allergen-badge">' + a + '</span>').join('')}</div>` : ''}
+        <div class="menu-card-actions">
+          <button class="btn-edit" onclick="openModal('${p.id}')">✏️ Modifier</button>
+          <button class="btn-delete" onclick="deleteProduct('${p.id}', '${(p.nom || '').replace(/'/g, "\\'")}')">🗑️ Supprimer</button>
+        </div>`;
       grid.appendChild(card);
     });
+  }
+
+  // ─── MODAL ──────────────────────────────────────────
+
+  function openModal(productId) {
+    editingProductId = productId || null;
+    selectedAllergenes = [];
+    document.querySelectorAll('.allergen-chip').forEach(c => c.classList.remove('selected'));
+
+    if (productId) {
+      // Mode modification — pré-remplir le formulaire
+      const p = allMenuItems.find(item => item.id === productId);
+      if (!p) return;
+      document.getElementById('modal-title').textContent = 'Modifier : ' + p.nom;
+      document.getElementById('btn-save').textContent = 'Enregistrer';
+      document.getElementById('m-nom').value = p.nom || '';
+      document.getElementById('m-cat').value = p.categorie || 'Sandwich';
+      document.getElementById('m-prix').value = p.prix || '';
+      document.getElementById('m-prix-menu').value = p.prixMenu || '';
+      document.getElementById('m-temps').value = p.tempsPrepare || '';
+      document.getElementById('m-dispo-menu').checked = p.dispoMenu || false;
+      document.getElementById('m-ingredients').value = p.ingredients || '';
+      document.getElementById('m-retirables').value = p.ingredientsRetirables || '';
+      selectedAllergenes = [...(p.allergenes || [])];
+      document.querySelectorAll('.allergen-chip').forEach(c => {
+        if (selectedAllergenes.includes(c.textContent)) c.classList.add('selected');
+      });
+    } else {
+      // Mode ajout — formulaire vide
+      document.getElementById('modal-title').textContent = 'Ajouter un produit';
+      document.getElementById('btn-save').textContent = 'Ajouter';
+      ['m-nom','m-prix','m-prix-menu','m-temps','m-ingredients','m-retirables'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('m-cat').value = 'Sandwich';
+      document.getElementById('m-dispo-menu').checked = false;
+    }
+
+    document.getElementById('modal-overlay').classList.add('show');
+  }
+
+  function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('show');
+    editingProductId = null;
+  }
+
+  async function saveProduct() {
+    const nom = document.getElementById('m-nom').value.trim();
+    if (!nom) { alert('Le nom du produit est requis'); return; }
+
+    const btn = document.getElementById('btn-save');
+    btn.disabled = true;
+    btn.textContent = 'Enregistrement...';
+
+    const data = {
+      nom,
+      categorie: document.getElementById('m-cat').value,
+      prix: parseFloat(document.getElementById('m-prix').value) || 0,
+      prixMenu: parseFloat(document.getElementById('m-prix-menu').value) || 0,
+      dispoMenu: document.getElementById('m-dispo-menu').checked,
+      ingredients: document.getElementById('m-ingredients').value,
+      ingredientsRetirables: document.getElementById('m-retirables').value,
+      allergenes: selectedAllergenes,
+      tempsPrepare: parseInt(document.getElementById('m-temps').value) || 0,
+      restaurant: currentUser.restaurant,
+      restaurantId: currentUser.restaurantId
+    };
+
+    try {
+      if (editingProductId) {
+        // Modification
+        await fetch('/admin/menus/' + editingProductId, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+      } else {
+        // Ajout
+        await fetch('/admin/menus', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+      }
+      closeModal();
+      await reloadMenu();
+    } catch (e) {
+      alert('Erreur: ' + e.message);
+    }
+
+    btn.disabled = false;
+    btn.textContent = editingProductId ? 'Enregistrer' : 'Ajouter';
+  }
+
+  async function deleteProduct(id, nom) {
+    if (!confirm('Supprimer "' + nom + '" du menu ?')) return;
+    try {
+      await fetch('/admin/menus/' + id, { method: 'DELETE' });
+      await reloadMenu();
+    } catch (e) {
+      alert('Erreur suppression: ' + e.message);
+    }
+  }
+
+  async function reloadMenu() {
+    const menuRes = await fetch('/mon-menu/' + currentUser.restaurantId);
+    allMenuItems = await menuRes.json();
+    document.getElementById('menu-count').textContent = allMenuItems.length + ' produit' + (allMenuItems.length > 1 ? 's' : '');
+    renderMenuGrid(allMenuItems);
+    // Reset filter to "tous"
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.filter-btn').classList.add('active');
   }
 
   async function loadResto() {

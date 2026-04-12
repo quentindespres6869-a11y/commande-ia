@@ -6,278 +6,211 @@
   <title>Analytics — Commande-IA</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', system-ui, sans-serif; background: #f7f8f7; min-height: 100vh; color: #111; }
-
-    .topbar { background: #fff; border-bottom: 1px solid #eaeeea; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; height: 58px; }
-    .topbar-left { display: flex; align-items: center; gap: 12px; }
-    .logo { font-size: 16px; font-weight: 700; color: #111; display: flex; align-items: center; gap: 8px; }
-    .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: #3B6D11; }
-    .logo span { color: #3B6D11; }
-    .page-badge { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; background: #f0f7e8; color: #3B6D11; padding: 3px 8px; border-radius: 4px; border: 1px solid #d4eab8; }
-    .back-btn { font-size: 12px; font-weight: 500; color: #666; background: transparent; border: 1px solid #e0e0e0; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-family: 'Inter', sans-serif; text-decoration: none; transition: all 0.15s; }
-    .back-btn:hover { border-color: #3B6D11; color: #3B6D11; }
-
-    .main { max-width: 1200px; margin: 0 auto; padding: 28px 24px; }
-
+    body { font-family: 'Inter', system-ui, sans-serif; background: #f4f6f4; min-height: 100vh; color: #1a2a1a; }
+    .topbar { background: #2d5c2d; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; height: 64px; }
+    .topbar-left { display: flex; align-items: center; gap: 14px; }
+    .logo { font-size: 17px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 10px; }
+    .logo-icon { width: 34px; height: 34px; border-radius: 9px; background: #4a8a1a; display: flex; align-items: center; justify-content: center; }
+    .logo-icon svg { width: 18px; height: 18px; }
+    .logo span { color: #a8e07a; }
+    .page-badge { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; background: rgba(168,224,122,0.15); color: #a8e07a; padding: 4px 10px; border-radius: 4px; border: 1px solid rgba(168,224,122,0.3); }
+    .back-btn { font-size: 12px; font-weight: 500; color: rgba(200,232,200,0.7); background: transparent; border: 1px solid rgba(200,232,200,0.2); padding: 6px 14px; border-radius: 7px; cursor: pointer; font-family: 'Inter', sans-serif; text-decoration: none; transition: all 0.15s; }
+    .back-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
+    .main { max-width: 1260px; margin: 0 auto; padding: 28px 24px; }
     .page-header { margin-bottom: 28px; display: flex; align-items: flex-end; justify-content: space-between; }
-    .page-title { font-size: 22px; font-weight: 700; color: #111; letter-spacing: -0.5px; }
-    .page-sub { font-size: 13px; color: #999; margin-top: 4px; }
-    .date-badge { font-size: 12px; font-weight: 500; color: #666; background: #fff; border: 1px solid #eaeeea; padding: 6px 14px; border-radius: 8px; }
-
-    /* STATS CARDS */
-    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
-    .stat-card { background: #fff; border: 1px solid #eaeeea; border-radius: 12px; padding: 20px; }
-    .stat-card-label { font-size: 11px; font-weight: 600; color: #aaa; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; }
-    .stat-card-value { font-size: 32px; font-weight: 700; color: #111; letter-spacing: -1px; line-height: 1; }
+    .page-title { font-size: 22px; font-weight: 700; color: #1a2a1a; letter-spacing: -0.5px; }
+    .page-sub { font-size: 13px; color: #9ab89a; margin-top: 4px; }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    .date-badge { font-size: 12px; font-weight: 500; color: #5a7a5a; background: #fff; border: 1.5px solid #e0ecd8; padding: 6px 14px; border-radius: 8px; }
+    .btn-export { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: #fff; background: #3B6D11; border: none; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s; }
+    .btn-export:hover { background: #2d5c0a; }
+    .btn-export:disabled { background: #c0e090; color: #fff; cursor: not-allowed; }
+    .btn-export svg { width: 14px; height: 14px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin-bottom: 24px; }
+    .stat-card { background: #fff; border: 1.5px solid #e0ecd8; border-radius: 14px; padding: 20px; transition: border-color 0.2s; }
+    .stat-card:hover { border-color: #c0e090; }
+    .stat-card-label { font-size: 10px; font-weight: 600; color: #9ab89a; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; }
+    .stat-card-value { font-size: 28px; font-weight: 700; color: #1a2a1a; letter-spacing: -1px; line-height: 1; }
     .stat-card-value.green { color: #2d6a0a; }
-    .stat-card-value.red { color: #c03030; }
+    .stat-card-value.red { color: #b03030; }
     .stat-card-value.blue { color: #2a50aa; }
-    .stat-card-sub { font-size: 12px; color: #aaa; margin-top: 6px; }
-    .stat-trend { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; margin-top: 6px; padding: 2px 7px; border-radius: 4px; }
-    .stat-trend.up { background: #f0f7e8; color: #2d6a0a; }
-    .stat-trend.down { background: #fef0f0; color: #c03030; }
-
-    /* CHARTS */
-    .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-bottom: 24px; }
-    .chart-card { background: #fff; border: 1px solid #eaeeea; border-radius: 12px; padding: 20px; }
-    .chart-title { font-size: 13px; font-weight: 600; color: #111; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; }
-    .chart-sub { font-size: 11px; color: #aaa; }
+    .stat-card-value.orange { color: #906010; }
+    .stat-card-sub { font-size: 11px; color: #9ab89a; margin-top: 6px; }
+    .charts-row { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 14px; margin-bottom: 24px; }
+    .chart-card { background: #fff; border: 1.5px solid #e0ecd8; border-radius: 14px; padding: 20px; }
+    .chart-title { font-size: 13px; font-weight: 700; color: #1a2a1a; margin-bottom: 4px; }
+    .chart-sub { font-size: 11px; color: #9ab89a; margin-bottom: 14px; }
     .chart-wrap { position: relative; height: 220px; }
-
-    /* TOP PRODUITS */
-    .bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-    .list-card { background: #fff; border: 1px solid #eaeeea; border-radius: 12px; padding: 20px; }
-    .list-title { font-size: 13px; font-weight: 600; color: #111; margin-bottom: 16px; }
-    .list-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f5f5f5; }
+    .bottom-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+    .list-card { background: #fff; border: 1.5px solid #e0ecd8; border-radius: 14px; padding: 20px; }
+    .list-title { font-size: 13px; font-weight: 700; color: #1a2a1a; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; }
+    .list-count-badge { font-size: 10px; font-weight: 700; color: #2d6a0a; background: #e8f5dc; padding: 2px 8px; border-radius: 10px; border: 1px solid #c0e090; }
+    .list-item { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid #f0f5ee; }
     .list-item:last-child { border-bottom: none; }
-    .list-rank { font-size: 11px; font-weight: 700; color: #ccc; width: 20px; text-align: center; }
-    .list-name { flex: 1; font-size: 13px; font-weight: 500; color: #333; }
-    .list-count { font-size: 13px; font-weight: 700; color: #2d6a0a; }
-    .list-bar { height: 4px; background: #f0f7e8; border-radius: 2px; margin-top: 3px; }
-    .list-bar-fill { height: 4px; background: #3B6D11; border-radius: 2px; }
-    .list-detail { font-size: 11px; color: #aaa; }
-
-    .empty-analytics { text-align: center; padding: 40px; color: #bbb; font-size: 13px; }
-
-    .loading-state { display: flex; align-items: center; justify-content: center; height: 200px; color: #bbb; font-size: 13px; }
+    .list-rank { font-size: 10px; font-weight: 700; color: #9ab89a; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; background: #f4f8f0; border-radius: 6px; }
+    .list-rank.gold { background: #fff8e8; color: #906010; border: 1px solid #e8d090; }
+    .list-rank.silver { background: #f0f2f0; color: #666; border: 1px solid #ddd; }
+    .list-rank.bronze { background: #fef0f0; color: #b06030; border: 1px solid #f0c8a0; }
+    .list-name { flex: 1; font-size: 13px; font-weight: 500; color: #1a2a1a; }
+    .list-val { font-size: 13px; font-weight: 700; color: #2d6a0a; }
+    .list-bar-wrap { flex: 1; }
+    .list-bar { height: 4px; background: #f0f5ee; border-radius: 2px; margin-top: 4px; }
+    .list-bar-fill { height: 4px; border-radius: 2px; }
+    .list-detail { font-size: 11px; color: #9ab89a; }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+    .status-dot.done { background: #3B6D11; }
+    .status-dot.refused { background: #b03030; }
+    .empty-analytics { text-align: center; padding: 30px; color: #9ab89a; font-size: 13px; }
+    .perf-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid #f0f5ee; }
+    .perf-row:last-child { border-bottom: none; }
+    .perf-label { font-size: 12px; color: #7aaa7a; width: 110px; flex-shrink: 0; }
+    .perf-bar-wrap { flex: 1; height: 8px; background: #f0f5ee; border-radius: 4px; overflow: hidden; }
+    .perf-bar { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+    .perf-val { font-size: 12px; font-weight: 700; color: #1a2a1a; width: 55px; text-align: right; }
+    @media (max-width: 900px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } .charts-row { grid-template-columns: 1fr; } .bottom-grid { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
-
 <div class="topbar">
   <div class="topbar-left">
-    <div class="logo"><div class="logo-dot"></div>Commande<span>IA</span></div>
+    <div class="logo"><div class="logo-icon"><svg viewBox="0 0 18 18" fill="none"><path d="M3 5h12M3 9h8M3 13h10" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg></div>Commande<span>IA</span></div>
     <div class="page-badge">Analytics</div>
   </div>
   <a href="/" class="back-btn">← Dashboard</a>
 </div>
-
-<div class="main">
+<div class="main" id="analytics-content">
   <div class="page-header">
-    <div>
-      <div class="page-title">Tableau de bord analytique</div>
-      <div class="page-sub">Statistiques en temps réel de votre activité</div>
+    <div><div class="page-title">Tableau de bord analytique</div><div class="page-sub">Statistiques en temps réel de votre activité</div></div>
+    <div class="header-right">
+      <div class="date-badge" id="current-date"></div>
+      <button class="btn-export" id="btn-pdf" onclick="exportPDF()"><svg viewBox="0 0 16 16" fill="none"><path d="M8 2v9M5 8l3 3 3-3M2 13h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Télécharger PDF</button>
     </div>
-    <div class="date-badge" id="current-date"></div>
   </div>
-
-  <!-- STATS -->
   <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-card-label">Commandes aujourd'hui</div>
-      <div class="stat-card-value green" id="stat-total">0</div>
-      <div class="stat-card-sub">depuis minuit</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-card-label">Temps moyen</div>
-      <div class="stat-card-value blue" id="stat-avg">—</div>
-      <div class="stat-card-sub">de préparation</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-card-label">Taux de complétion</div>
-      <div class="stat-card-value green" id="stat-completion">—</div>
-      <div class="stat-card-sub">commandes servies</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-card-label">Refusées</div>
-      <div class="stat-card-value red" id="stat-refused">0</div>
-      <div class="stat-card-sub">aujourd'hui</div>
-    </div>
+    <div class="stat-card"><div class="stat-card-label">Commandes totales</div><div class="stat-card-value green" id="stat-total">0</div><div class="stat-card-sub">depuis minuit</div></div>
+    <div class="stat-card"><div class="stat-card-label">Servies</div><div class="stat-card-value" id="stat-done">0</div><div class="stat-card-sub">commandes prêtes</div></div>
+    <div class="stat-card"><div class="stat-card-label">Refusées</div><div class="stat-card-value red" id="stat-refused">0</div><div class="stat-card-sub">aujourd'hui</div></div>
+    <div class="stat-card"><div class="stat-card-label">Taux de réussite</div><div class="stat-card-value green" id="stat-completion">—</div><div class="stat-card-sub">commandes servies</div></div>
+    <div class="stat-card"><div class="stat-card-label">Temps moyen</div><div class="stat-card-value blue" id="stat-avg">—</div><div class="stat-card-sub">de préparation</div></div>
+    <div class="stat-card"><div class="stat-card-label">Chiffre estimé</div><div class="stat-card-value orange" id="stat-revenue">0€</div><div class="stat-card-sub">panier moyen : <span id="stat-panier-moyen">—</span></div></div>
   </div>
-
-  <!-- GRAPHIQUES -->
-  <div class="charts-grid">
-    <div class="chart-card">
-      <div class="chart-title">
-        Commandes par heure
-        <span class="chart-sub" id="peak-hour"></span>
-      </div>
-      <div class="chart-wrap">
-        <canvas id="hourly-chart"></canvas>
-      </div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-title">Répartition</div>
-      <div class="chart-wrap">
-        <canvas id="pie-chart"></canvas>
-      </div>
-    </div>
+  <div class="charts-row">
+    <div class="chart-card"><div class="chart-title">Commandes par heure</div><div class="chart-sub" id="peak-hour">Activité de la journée</div><div class="chart-wrap"><canvas id="hourly-chart"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title">Répartition des statuts</div><div class="chart-sub">Servies vs Refusées</div><div class="chart-wrap"><canvas id="pie-chart"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title">Catégories commandées</div><div class="chart-sub">Sandwichs, boissons, etc.</div><div class="chart-wrap"><canvas id="cat-chart"></canvas></div></div>
   </div>
-
-  <!-- TOP PRODUITS + DERNIÈRES COMMANDES -->
   <div class="bottom-grid">
+    <div class="list-card"><div class="list-title">Top produits<span class="list-count-badge" id="products-count">0</span></div><div id="top-produits"><div class="empty-analytics">Aucune donnée</div></div></div>
     <div class="list-card">
-      <div class="list-title">Top produits commandés</div>
-      <div id="top-produits"><div class="empty-analytics">Aucune donnée disponible</div></div>
+      <div class="list-title">Performance préparation</div>
+      <div id="perf-section">
+        <div class="perf-row"><span class="perf-label">Temps min</span><div class="perf-bar-wrap"><div class="perf-bar" id="perf-min-bar" style="width:0%;background:#3B6D11;"></div></div><span class="perf-val" id="perf-min">—</span></div>
+        <div class="perf-row"><span class="perf-label">Temps moyen</span><div class="perf-bar-wrap"><div class="perf-bar" id="perf-avg-bar" style="width:0%;background:#2a50aa;"></div></div><span class="perf-val" id="perf-avg">—</span></div>
+        <div class="perf-row"><span class="perf-label">Temps max</span><div class="perf-bar-wrap"><div class="perf-bar" id="perf-max-bar" style="width:0%;background:#906010;"></div></div><span class="perf-val" id="perf-max">—</span></div>
+        <div class="perf-row"><span class="perf-label">Temps médian</span><div class="perf-bar-wrap"><div class="perf-bar" id="perf-med-bar" style="width:0%;background:#6030aa;"></div></div><span class="perf-val" id="perf-med">—</span></div>
+        <div style="margin-top:14px;padding-top:14px;border-top:1px solid #f0f5ee;">
+          <div class="perf-row"><span class="perf-label">Rapide < 3min</span><div class="perf-bar-wrap"><div class="perf-bar" id="perf-fast-bar" style="width:0%;background:#3B6D11;"></div></div><span class="perf-val" id="perf-fast">0%</span></div>
+          <div class="perf-row"><span class="perf-label">Normal 3-5min</span><div class="perf-bar-wrap"><div class="perf-bar" id="perf-mid-bar" style="width:0%;background:#906010;"></div></div><span class="perf-val" id="perf-mid">0%</span></div>
+          <div class="perf-row"><span class="perf-label">Lent > 5min</span><div class="perf-bar-wrap"><div class="perf-bar" id="perf-slow-bar" style="width:0%;background:#b03030;"></div></div><span class="perf-val" id="perf-slow">0%</span></div>
+        </div>
+      </div>
     </div>
-    <div class="list-card">
-      <div class="list-title">Dernières commandes</div>
-      <div id="last-commandes"><div class="empty-analytics">Aucune commande</div></div>
-    </div>
+    <div class="list-card"><div class="list-title">Dernières commandes<span class="list-count-badge" id="last-count">0</span></div><div id="last-commandes"><div class="empty-analytics">Aucune commande</div></div></div>
   </div>
 </div>
-
 <script>
-  const user = sessionStorage.getItem('user');
-  if (!user) window.location.href = '/login.html';
-
-  document.getElementById('current-date').textContent = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-
-  function fmtTime(sec) {
-    if (!sec) return '—';
-    return Math.floor(sec / 60) + 'min ' + String(sec % 60).padStart(2, '0') + 's';
+const user = sessionStorage.getItem('user');
+if (!user) window.location.href = '/login.html';
+document.getElementById('current-date').textContent = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+function fmtTime(sec) { if (!sec && sec !== 0) return '—'; return Math.floor(sec / 60) + 'min ' + String(Math.round(sec % 60)).padStart(2, '0') + 's'; }
+let hourlyChart, pieChart, catChart;
+async function loadAnalytics() {
+  const [archRes, cmdRes] = await Promise.all([fetch('/archives'), fetch('/commandes')]);
+  const archives = await archRes.json();
+  const commandes = await cmdRes.json();
+  const allOrders = [...archives, ...commandes];
+  const total = allOrders.length, refused = archives.filter(a => a.state === 'refused').length, done = archives.filter(a => a.state === 'done').length, enCours = commandes.length;
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-done').textContent = done;
+  document.getElementById('stat-refused').textContent = refused;
+  document.getElementById('stat-completion').textContent = total ? Math.round((done / total) * 100) + '%' : '—';
+  const withTime = archives.filter(a => a.chronoStart && a.chronoEnd && a.state === 'done');
+  const times = withTime.map(a => Math.floor((a.chronoEnd - a.chronoStart) / 1000));
+  const avgSec = times.length ? Math.round(times.reduce((s, t) => s + t, 0) / times.length) : null;
+  document.getElementById('stat-avg').textContent = avgSec ? fmtTime(avgSec) : '—';
+  if (times.length) {
+    const sorted = [...times].sort((a, b) => a - b), minT = sorted[0], maxT = sorted[sorted.length - 1], medT = sorted[Math.floor(sorted.length / 2)], scale = maxT || 1;
+    document.getElementById('perf-min').textContent = fmtTime(minT);
+    document.getElementById('perf-avg').textContent = fmtTime(avgSec);
+    document.getElementById('perf-max').textContent = fmtTime(maxT);
+    document.getElementById('perf-med').textContent = fmtTime(medT);
+    document.getElementById('perf-min-bar').style.width = Math.round((minT / scale) * 100) + '%';
+    document.getElementById('perf-avg-bar').style.width = Math.round((avgSec / scale) * 100) + '%';
+    document.getElementById('perf-max-bar').style.width = '100%';
+    document.getElementById('perf-med-bar').style.width = Math.round((medT / scale) * 100) + '%';
+    const fast = times.filter(t => t < 180).length, mid = times.filter(t => t >= 180 && t <= 300).length, slow = times.filter(t => t > 300).length, totalT = times.length;
+    document.getElementById('perf-fast').textContent = Math.round((fast / totalT) * 100) + '%';
+    document.getElementById('perf-mid').textContent = Math.round((mid / totalT) * 100) + '%';
+    document.getElementById('perf-slow').textContent = Math.round((slow / totalT) * 100) + '%';
+    document.getElementById('perf-fast-bar').style.width = Math.round((fast / totalT) * 100) + '%';
+    document.getElementById('perf-mid-bar').style.width = Math.round((mid / totalT) * 100) + '%';
+    document.getElementById('perf-slow-bar').style.width = Math.round((slow / totalT) * 100) + '%';
   }
-
-  let hourlyChart, pieChart;
-
-  async function loadAnalytics() {
-    const res = await fetch('/archives');
-    const archives = await res.json();
-
-    // Stats de base
-    const total = archives.length;
-    const refused = archives.filter(a => a.state === 'refused').length;
-    const done = archives.filter(a => a.state === 'done').length;
-
-    document.getElementById('stat-total').textContent = total;
-    document.getElementById('stat-refused').textContent = refused;
-    document.getElementById('stat-completion').textContent = total ? Math.round((done / total) * 100) + '%' : '—';
-
-    // Temps moyen
-    const withTime = archives.filter(a => a.chronoStart && a.chronoEnd && a.state === 'done');
-    const avgSec = withTime.length ? Math.round(withTime.reduce((s, a) => s + Math.floor((a.chronoEnd - a.chronoStart) / 1000), 0) / withTime.length) : null;
-    document.getElementById('stat-avg').textContent = avgSec ? fmtTime(avgSec) : '—';
-
-    // Commandes par heure
-    const hourCounts = Array(24).fill(0);
-    archives.forEach(a => {
-      if (a.createdAt) {
-        const parts = a.createdAt.split(':');
-        if (parts.length >= 1) {
-          const h = parseInt(parts[0]);
-          if (!isNaN(h) && h >= 0 && h < 24) hourCounts[h]++;
-        }
-      }
-    });
-
-    const labels = Array.from({length: 24}, (_, i) => i + 'h');
-    const maxHour = hourCounts.indexOf(Math.max(...hourCounts));
-    if (Math.max(...hourCounts) > 0) {
-      document.getElementById('peak-hour').textContent = 'Pic : ' + maxHour + 'h';
-    }
-
-    if (hourlyChart) hourlyChart.destroy();
-    const ctx1 = document.getElementById('hourly-chart').getContext('2d');
-    hourlyChart = new Chart(ctx1, {
-      type: 'bar',
-      data: {
-        labels,
-        datasets: [{
-          data: hourCounts,
-          backgroundColor: hourCounts.map((_, i) => i === maxHour ? '#2d5c2d' : '#e8f5dc'),
-          borderRadius: 4,
-          borderSkipped: false
-        }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#aaa' } },
-          y: { grid: { color: '#f5f5f5' }, ticks: { font: { size: 10 }, color: '#aaa', stepSize: 1 } }
-        }
-      }
-    });
-
-    // Pie chart répartition
-    if (pieChart) pieChart.destroy();
-    const ctx2 = document.getElementById('pie-chart').getContext('2d');
-    pieChart = new Chart(ctx2, {
-      type: 'doughnut',
-      data: {
-        labels: ['Servies', 'Refusées'],
-        datasets: [{
-          data: [done, refused],
-          backgroundColor: ['#2d5c2d', '#fca5a5'],
-          borderWidth: 0,
-          hoverOffset: 4
-        }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: {
-          legend: { position: 'bottom', labels: { font: { size: 11 }, color: '#555', padding: 16 } }
-        },
-        cutout: '70%'
-      }
-    });
-
-    // Top produits
-    const prodCount = {};
-    archives.forEach(a => {
-      if (a.sandwich) prodCount[a.sandwich] = (prodCount[a.sandwich] || 0) + 1;
-    });
-    const sorted = Object.entries(prodCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
-    const maxCount = sorted[0]?.[1] || 1;
-    const topEl = document.getElementById('top-produits');
-    if (sorted.length) {
-      topEl.innerHTML = sorted.map(([name, count], i) => `
-        <div class="list-item">
-          <div class="list-rank">${i + 1}</div>
-          <div style="flex:1;">
-            <div class="list-name">${name}</div>
-            <div class="list-bar"><div class="list-bar-fill" style="width:${Math.round((count/maxCount)*100)}%"></div></div>
-          </div>
-          <div class="list-count">${count}</div>
-        </div>`).join('');
-    } else {
-      topEl.innerHTML = '<div class="empty-analytics">Aucune donnée disponible</div>';
-    }
-
-    // Dernières commandes
-    const lastEl = document.getElementById('last-commandes');
-    const last = [...archives].slice(0, 6);
-    if (last.length) {
-      lastEl.innerHTML = last.map(a => `
-        <div class="list-item">
-          <div style="flex:1;">
-            <div class="list-name">${a.name}</div>
-            <div class="list-detail">${a.sandwich || '—'} · ${a.boisson || '—'}</div>
-          </div>
-          <div style="text-align:right;">
-            <div class="stat-trend ${a.state === 'done' ? 'up' : 'down'}">${a.state === 'done' ? 'Servie' : 'Refusée'}</div>
-            <div class="list-detail" style="margin-top:3px;">${a.archivedAt || ''}</div>
-          </div>
-        </div>`).join('');
-    } else {
-      lastEl.innerHTML = '<div class="empty-analytics">Aucune commande</div>';
-    }
-  }
-
-  loadAnalytics();
-  setInterval(loadAnalytics, 30000); // Refresh toutes les 30s
+  let totalRevenue = 0;
+  archives.filter(a => a.state === 'done').forEach(a => { let rev = 0; if (a.sandwich) rev += 6; if (a.boisson) rev += 3; if (a.option && a.option !== 'rien') rev += 3; totalRevenue += rev; });
+  document.getElementById('stat-revenue').textContent = totalRevenue + '€';
+  document.getElementById('stat-panier-moyen').textContent = done ? (totalRevenue / done).toFixed(1) + '€' : '—';
+  const hourCounts = Array(24).fill(0);
+  allOrders.forEach(a => { if (a.createdAt) { const h = parseInt(a.createdAt.split(':')[0]); if (!isNaN(h) && h >= 0 && h < 24) hourCounts[h]++; } });
+  const labels = Array.from({length: 24}, (_, i) => i + 'h'), maxHour = hourCounts.indexOf(Math.max(...hourCounts));
+  if (Math.max(...hourCounts) > 0) document.getElementById('peak-hour').textContent = 'Pic d\'activité : ' + maxHour + 'h — ' + hourCounts[maxHour] + ' commandes';
+  if (hourlyChart) hourlyChart.destroy();
+  hourlyChart = new Chart(document.getElementById('hourly-chart').getContext('2d'), { type: 'bar', data: { labels, datasets: [{ data: hourCounts, backgroundColor: hourCounts.map((_, i) => i === maxHour ? '#2d5c2d' : '#e8f5dc'), borderRadius: 4, borderSkipped: false }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { font: { size: 9, family: 'Inter' }, color: '#9ab89a' } }, y: { grid: { color: '#f0f5ee' }, ticks: { font: { size: 10 }, color: '#9ab89a', stepSize: 1 } } } } });
+  if (pieChart) pieChart.destroy();
+  pieChart = new Chart(document.getElementById('pie-chart').getContext('2d'), { type: 'doughnut', data: { labels: ['Servies', 'Refusées', 'En cours'], datasets: [{ data: [done, refused, enCours], backgroundColor: ['#3B6D11', '#b03030', '#2a50aa'], borderWidth: 0, hoverOffset: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { size: 10, family: 'Inter' }, color: '#7aaa7a', padding: 12, usePointStyle: true, pointStyle: 'circle' } } }, cutout: '72%' } });
+  const catCount = { Sandwich: 0, Boisson: 0, Accompagnement: 0 };
+  allOrders.forEach(a => { if (a.sandwich) catCount.Sandwich++; if (a.boisson) catCount.Boisson++; if (a.option && a.option !== 'rien') catCount.Accompagnement++; });
+  if (catChart) catChart.destroy();
+  catChart = new Chart(document.getElementById('cat-chart').getContext('2d'), { type: 'polarArea', data: { labels: Object.keys(catCount), datasets: [{ data: Object.values(catCount), backgroundColor: ['rgba(59,109,17,0.3)', 'rgba(42,80,170,0.3)', 'rgba(144,96,16,0.3)'], borderColor: ['#3B6D11', '#2a50aa', '#906010'], borderWidth: 1.5 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { size: 10, family: 'Inter' }, color: '#7aaa7a', padding: 10, usePointStyle: true, pointStyle: 'circle' } } }, scales: { r: { grid: { color: '#f0f5ee' }, ticks: { display: false } } } } });
+  const prodCount = {};
+  allOrders.forEach(a => { if (a.sandwich) { a.sandwich.split(',').map(s => s.trim()).forEach(item => { if (item) prodCount[item] = (prodCount[item] || 0) + 1; }); } });
+  const sortedProds = Object.entries(prodCount).sort((a, b) => b[1] - a[1]).slice(0, 8), maxCount = sortedProds[0]?.[1] || 1;
+  document.getElementById('products-count').textContent = Object.keys(prodCount).length + ' produits';
+  const topEl = document.getElementById('top-produits');
+  if (sortedProds.length) {
+    const barColors = ['#3B6D11', '#4a8a1a', '#5ab52a', '#7bc44c', '#9ad870', '#c0e090', '#e0ecd8', '#f0f5ee'];
+    topEl.innerHTML = sortedProds.map(([name, count], i) => { const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : ''; return `<div class="list-item"><div class="list-rank ${rankClass}">${i + 1}</div><div class="list-bar-wrap"><div class="list-name">${name}</div><div class="list-bar"><div class="list-bar-fill" style="width:${Math.round((count/maxCount)*100)}%;background:${barColors[i] || '#e0ecd8'}"></div></div></div><div class="list-val">${count}</div></div>`; }).join('');
+  } else { topEl.innerHTML = '<div class="empty-analytics">Aucune donnée</div>'; }
+  document.getElementById('last-count').textContent = archives.length;
+  const lastEl = document.getElementById('last-commandes'), last = [...archives].slice(0, 8);
+  if (last.length) {
+    lastEl.innerHTML = last.map(a => { const isDone = a.state === 'done'; const dur = (a.chronoStart && a.chronoEnd) ? fmtTime(Math.floor((a.chronoEnd - a.chronoStart) / 1000)) : ''; return `<div class="list-item"><div style="flex:1;"><div class="list-name"><span class="status-dot ${isDone ? 'done' : 'refused'}"></span>${a.name}</div><div class="list-detail">${a.sandwich || '—'}</div></div><div style="text-align:right;"><div style="font-size:11px;font-weight:600;color:${isDone ? '#2d6a0a' : '#b03030'}">${isDone ? 'Servie' : 'Refusée'}</div><div class="list-detail">${a.archivedAt || ''} ${dur ? '· ' + dur : ''}</div></div></div>`; }).join('');
+  } else { lastEl.innerHTML = '<div class="empty-analytics">Aucune commande</div>'; }
+}
+async function exportPDF() {
+  const btn = document.getElementById('btn-pdf');
+  btn.disabled = true;
+  btn.innerHTML = '<svg viewBox="0 0 16 16" fill="none" width="14" height="14"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" stroke-dasharray="8 4"><animateTransform attributeName="transform" type="rotate" from="0 8 8" to="360 8 8" dur="1s" repeatCount="indefinite"/></circle></svg> Génération...';
+  try {
+    const element = document.getElementById('analytics-content');
+    const canvas = await html2canvas(element, { backgroundColor: '#f4f6f4', scale: 2, useCORS: true, logging: false });
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    const pageWidth = pdf.internal.pageSize.getWidth(), pageHeight = pdf.internal.pageSize.getHeight();
+    const scaledHeight = (canvas.height * pageWidth) / canvas.width;
+    if (scaledHeight > pageHeight) { const ratio = pageHeight / scaledHeight; pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pageWidth * ratio, pageHeight); }
+    else { pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pageWidth, scaledHeight); }
+    pdf.save('analytics_' + new Date().toLocaleDateString('fr-FR').replace(/\//g, '-') + '.pdf');
+  } catch (e) { console.error('Erreur export PDF:', e); alert('Erreur lors de la génération du PDF'); }
+  btn.disabled = false;
+  btn.innerHTML = '<svg viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M8 2v9M5 8l3 3 3-3M2 13h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Télécharger PDF';
+}
+loadAnalytics();
+setInterval(loadAnalytics, 30000);
 </script>
 </body>
 </html>

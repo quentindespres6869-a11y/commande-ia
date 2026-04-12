@@ -252,7 +252,9 @@ app.get('/mon-restaurant/:id', async (req, res) => {
       abonnement: props['Abonnement']?.select?.name,
       twilio: props['Numéro Twilio']?.rich_text?.[0]?.plain_text,
       horaires: props['Notes']?.rich_text?.[0]?.plain_text,
-      adresse: props['Adresse']?.rich_text?.[0]?.plain_text
+      adresse: props['Adresse']?.rich_text?.[0]?.plain_text,
+      onboarding: props['Onboarding']?.select?.name,
+      menuComplete: props['Menu complété']?.checkbox
     });
   } catch (e) { res.status(500).json({ error: 'Erreur' }); }
 });
