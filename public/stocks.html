@@ -4,152 +4,485 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Stocks — Commande-IA</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', system-ui, sans-serif; background: #f7f8f7; min-height: 100vh; color: #111; }
-    .topbar { background: #fff; border-bottom: 1px solid #eaeeea; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; height: 58px; }
-    .topbar-left { display: flex; align-items: center; gap: 12px; }
-    .logo { font-size: 16px; font-weight: 700; color: #111; display: flex; align-items: center; gap: 8px; }
-    .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: #3B6D11; }
-    .logo span { color: #3B6D11; }
-    .page-badge { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; background: #f0f7e8; color: #3B6D11; padding: 3px 8px; border-radius: 4px; border: 1px solid #d4eab8; }
-    .back-btn { font-size: 12px; font-weight: 500; color: #666; background: transparent; border: 1px solid #e0e0e0; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-family: 'Inter', sans-serif; text-decoration: none; }
-    .back-btn:hover { border-color: #3B6D11; color: #3B6D11; }
+    body { font-family: 'DM Sans', system-ui, sans-serif; background: #f0f2f0; min-height: 100vh; color: #111; }
 
-    .main { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
-    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
-    .page-title { font-size: 20px; font-weight: 700; color: #111; letter-spacing: -0.4px; }
-    .page-sub { font-size: 13px; color: #999; margin-top: 3px; }
+    /* ═══ TOPBAR ═══ */
+    .topbar {
+      background: #1a3a1a; display: flex; align-items: center; justify-content: space-between;
+      padding: 0 28px; height: 64px; position: sticky; top: 0; z-index: 100;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 16px; }
+    .logo { font-size: 17px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 9px; letter-spacing: -0.4px; }
+    .logo-icon { width: 32px; height: 32px; border-radius: 8px; background: #4a8a1a; display: flex; align-items: center; justify-content: center; }
+    .logo-icon svg { width: 16px; height: 16px; }
+    .page-badge { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; background: rgba(168,224,122,0.15); color: #a8e07a; padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(168,224,122,0.25); }
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+    .back-btn { font-size: 12px; font-weight: 600; color: #c8e8c8; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); padding: 7px 16px; border-radius: 8px; cursor: pointer; font-family: 'DM Sans', sans-serif; text-decoration: none; transition: all 0.15s; }
+    .back-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+    .resto-select { font-size: 12px; padding: 7px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08); font-family: 'DM Sans', sans-serif; color: #fff; outline: none; cursor: pointer; font-weight: 500; }
+    .resto-select option { background: #1a3a1a; color: #fff; }
 
-    .resto-select { font-size: 13px; padding: 8px 14px; border-radius: 8px; border: 1.5px solid #e0e0e0; background: #fff; font-family: 'Inter', sans-serif; color: #111; outline: none; cursor: pointer; }
-    .resto-select:focus { border-color: #3B6D11; }
+    /* ═══ ALERT BANNER ═══ */
+    .alert-banner {
+      display: none; padding: 12px 28px; gap: 12px; align-items: center;
+      animation: slideDown 0.3s ease;
+    }
+    @keyframes slideDown { from { opacity:0; transform: translateY(-8px); } }
+    .alert-banner.show { display: flex; }
+    .alert-banner.warning { background: linear-gradient(90deg, #fff8e8, #fffdf6); border-bottom: 2px solid #f0d898; }
+    .alert-banner.critical { background: linear-gradient(90deg, #fef0f0, #fff8f8); border-bottom: 2px solid #f0b0b0; }
+    .alert-banner-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .alert-banner.warning .alert-banner-icon { background: #fff0c8; }
+    .alert-banner.critical .alert-banner-icon { background: #fde0e0; }
+    .alert-banner-content { flex: 1; }
+    .alert-banner-title { font-size: 13px; font-weight: 700; }
+    .alert-banner.warning .alert-banner-title { color: #906010; }
+    .alert-banner.critical .alert-banner-title { color: #b03030; }
+    .alert-banner-text { font-size: 12px; color: #888; margin-top: 2px; }
+    .alert-banner-close { background: none; border: none; font-size: 18px; cursor: pointer; color: #ccc; padding: 4px; }
 
-    .add-btn { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; padding: 9px 18px; border-radius: 8px; border: none; background: #2d5c2d; color: #fff; cursor: pointer; font-family: 'Inter', sans-serif; }
-    .add-btn:hover { background: #1a3a1a; }
+    /* ═══ MAIN ═══ */
+    .main { max-width: 1200px; margin: 0 auto; padding: 24px; }
 
-    /* ALERTES */
-    .alerts-bar { display: none; background: #fff8ec; border: 1px solid #f0d898; border-radius: 10px; padding: 12px 16px; margin-bottom: 20px; }
-    .alerts-bar.show { display: flex; align-items: center; gap: 12px; }
-    .alert-icon { font-size: 16px; }
-    .alert-text { font-size: 13px; font-weight: 500; color: #906010; }
+    /* ═══ HEADER ═══ */
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; gap: 16px; flex-wrap: wrap; }
+    .page-title { font-size: 22px; font-weight: 800; color: #1a2a1a; letter-spacing: -0.5px; }
+    .page-sub { font-size: 13px; color: #7aaa7a; margin-top: 4px; }
+    .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .add-btn { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; padding: 9px 18px; border-radius: 10px; border: none; background: #3B6D11; color: #fff; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; box-shadow: 0 2px 8px rgba(59,109,17,0.2); }
+    .add-btn:hover { background: #2d5a0d; transform: translateY(-1px); }
+    .restock-all-btn { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; padding: 9px 18px; border-radius: 10px; border: 1.5px solid #e0ecd8; background: #fff; color: #3B6D11; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+    .restock-all-btn:hover { border-color: #3B6D11; background: #f8fdf4; }
+    .export-btn { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; padding: 9px 18px; border-radius: 10px; border: 1.5px solid #e0ecd8; background: #fff; color: #5a8a5a; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+    .export-btn:hover { border-color: #9ad870; }
 
-    /* STATS */
-    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
-    .stat-card { background: #fff; border: 1px solid #eaeeea; border-radius: 10px; padding: 16px; }
-    .stat-label { font-size: 10px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
-    .stat-val { font-size: 28px; font-weight: 700; color: #111; letter-spacing: -1px; }
+    /* ═══ STATS CARDS ═══ */
+    .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 20px; }
+    .stat-card {
+      background: #fff; border: 1.5px solid #e0ecd8; border-radius: 14px; padding: 16px;
+      transition: all 0.15s; cursor: default; position: relative; overflow: hidden;
+    }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+    .stat-card::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+    .stat-card.total::after { background: linear-gradient(90deg, #1a3a1a, #4a8a1a); }
+    .stat-card.dispo::after { background: linear-gradient(90deg, #3B6D11, #7bc44c); }
+    .stat-card.alerte::after { background: linear-gradient(90deg, #f0a020, #f8d070); }
+    .stat-card.rupture::after { background: linear-gradient(90deg, #d84040, #f0a0a0); }
+    .stat-card.valeur::after { background: linear-gradient(90deg, #2a50aa, #70a0f0); }
+    .stat-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+    .stat-card.total .stat-icon { background: #f0f5ee; }
+    .stat-card.dispo .stat-icon { background: #e8f5dc; }
+    .stat-card.alerte .stat-icon { background: #fff8e8; }
+    .stat-card.rupture .stat-icon { background: #fef0f0; }
+    .stat-card.valeur .stat-icon { background: #eef0ff; }
+    .stat-label { font-size: 10px; font-weight: 700; color: #9ab89a; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+    .stat-val { font-size: 30px; font-weight: 800; letter-spacing: -1.5px; line-height: 1; }
     .stat-val.green { color: #2d6a0a; }
-    .stat-val.orange { color: #906010; }
+    .stat-val.orange { color: #c08010; }
     .stat-val.red { color: #c03030; }
+    .stat-val.blue { color: #2a50aa; }
+    .stat-val.dark { color: #1a2a1a; }
+    .stat-change { font-size: 11px; font-weight: 600; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+    .stat-change.up { color: #2d6a0a; }
+    .stat-change.down { color: #c03030; }
+    .stat-change.neutral { color: #9ab89a; }
 
-    /* TABLE */
-    .table-card { background: #fff; border: 1px solid #eaeeea; border-radius: 12px; overflow: hidden; }
-    .table-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 100px; gap: 12px; padding: 12px 20px; background: #f7f8f7; border-bottom: 1px solid #eaeeea; font-size: 11px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.8px; }
-    .table-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 100px; gap: 12px; padding: 14px 20px; border-bottom: 1px solid #f5f5f5; align-items: center; transition: background 0.1s; }
+    /* ═══ TOOLBAR ═══ */
+    .toolbar {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      margin-bottom: 16px; flex-wrap: wrap;
+    }
+    .view-toggles { display: flex; gap: 2px; background: #fff; border: 1.5px solid #e0ecd8; border-radius: 10px; padding: 3px; }
+    .view-btn { font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 7px; border: none; background: transparent; color: #7aaa7a; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; display: flex; align-items: center; gap: 6px; }
+    .view-btn.active { background: #1a3a1a; color: #a8e07a; }
+    .view-btn:hover:not(.active) { background: #f4f8f0; }
+
+    .filter-pills { display: flex; gap: 6px; }
+    .pill { font-size: 11px; font-weight: 600; padding: 6px 12px; border-radius: 20px; border: 1.5px solid #e0ecd8; background: #fff; color: #5a8a5a; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+    .pill:hover { border-color: #9ad870; }
+    .pill.active { background: #1a3a1a; color: #a8e07a; border-color: #1a3a1a; }
+    .pill .pill-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+
+    .search-box { display: flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: 10px; border: 1.5px solid #e0ecd8; background: #fff; min-width: 200px; transition: border-color 0.15s; }
+    .search-box:focus-within { border-color: #4a8a1a; }
+    .search-box input { border: none; outline: none; font-size: 12px; font-family: 'DM Sans', sans-serif; color: #1a2a1a; width: 100%; background: transparent; }
+    .search-box input::placeholder { color: #b0c8b0; }
+
+    /* ═══ TABLE VIEW ═══ */
+    .table-card { background: #fff; border: 1.5px solid #e0ecd8; border-radius: 16px; overflow: hidden; }
+    .table-header {
+      display: grid; grid-template-columns: 2.5fr 1.2fr 0.8fr 0.8fr 0.8fr 160px;
+      gap: 8px; padding: 12px 20px; background: #f8faf6; border-bottom: 1.5px solid #e8f0e0;
+      font-size: 10px; font-weight: 700; color: #7aaa7a; text-transform: uppercase; letter-spacing: 0.8px;
+    }
+    .table-row {
+      display: grid; grid-template-columns: 2.5fr 1.2fr 0.8fr 0.8fr 0.8fr 160px;
+      gap: 8px; padding: 14px 20px; border-bottom: 1px solid #f0f5ee; align-items: center;
+      transition: all 0.15s; animation: rowIn 0.3s ease both;
+    }
+    @keyframes rowIn { from { opacity:0; transform: translateX(-8px); } }
     .table-row:last-child { border-bottom: none; }
-    .table-row:hover { background: #fafafa; }
+    .table-row:hover { background: #fafdf8; }
+    .table-row.alert-row { background: #fffdf6; }
+    .table-row.rupture-row { background: #fff8f8; }
 
-    .product-name { font-size: 14px; font-weight: 600; color: #111; }
-    .product-restaurant { font-size: 11px; color: #aaa; margin-top: 2px; }
+    .product-cell { display: flex; align-items: center; gap: 12px; }
+    .product-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .product-icon.food { background: #fff8e8; }
+    .product-icon.drink { background: #e8f0ff; }
+    .product-icon.ingredient { background: #f0f5ee; }
+    .product-name { font-size: 14px; font-weight: 700; color: #1a2a1a; }
+    .product-meta { font-size: 11px; color: #9ab89a; margin-top: 2px; display: flex; align-items: center; gap: 6px; }
+    .product-category { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: #f0f5ee; color: #7aaa7a; text-transform: uppercase; letter-spacing: 0.5px; }
 
-    .qty-display { font-size: 14px; font-weight: 600; color: #111; }
-    .qty-bar { height: 4px; background: #f0f0f0; border-radius: 2px; margin-top: 4px; }
-    .qty-bar-fill { height: 4px; border-radius: 2px; transition: width 0.3s; }
-    .qty-bar-fill.green { background: #3B6D11; }
-    .qty-bar-fill.orange { background: #f0a020; }
-    .qty-bar-fill.red { background: #e05555; }
+    .qty-cell { }
+    .qty-main { font-size: 16px; font-weight: 800; color: #1a2a1a; display: flex; align-items: baseline; gap: 4px; }
+    .qty-unit { font-size: 11px; font-weight: 500; color: #9ab89a; }
+    .qty-bar { height: 5px; background: #f0f5ee; border-radius: 3px; margin-top: 6px; overflow: hidden; }
+    .qty-bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+    .qty-bar-fill.green { background: linear-gradient(90deg, #3B6D11, #7bc44c); }
+    .qty-bar-fill.orange { background: linear-gradient(90deg, #e09010, #f8d070); }
+    .qty-bar-fill.red { background: linear-gradient(90deg, #c03030, #f08080); }
+    .qty-pct { font-size: 10px; font-weight: 600; margin-top: 2px; }
+    .qty-pct.green { color: #3B6D11; }
+    .qty-pct.orange { color: #c08010; }
+    .qty-pct.red { color: #c03030; }
 
-    .status-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 5px; display: inline-block; }
-    .status-badge.disponible { background: #f0f7e8; color: #2d6a0a; }
-    .status-badge.alerte { background: #fff8ec; color: #906010; }
-    .status-badge.rupture { background: #fef0f0; color: #c03030; }
+    .status-badge { font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px; }
+    .status-badge .status-dot { width: 6px; height: 6px; border-radius: 50%; }
+    .status-badge.disponible { background: #e8f5dc; color: #2d6a0a; }
+    .status-badge.disponible .status-dot { background: #3B6D11; }
+    .status-badge.alerte { background: #fff8e8; color: #906010; }
+    .status-badge.alerte .status-dot { background: #f0a020; animation: pulse 1.5s infinite; }
+    .status-badge.rupture { background: #fef0f0; color: #b03030; }
+    .status-badge.rupture .status-dot { background: #d84040; animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
 
-    .qty-input { width: 70px; padding: 6px 8px; border-radius: 6px; border: 1.5px solid #e0e0e0; font-size: 13px; font-family: 'Inter', sans-serif; text-align: center; outline: none; }
-    .qty-input:focus { border-color: #3B6D11; }
+    .actions-cell { display: flex; align-items: center; gap: 4px; }
+    .quick-btn {
+      width: 30px; height: 30px; border-radius: 8px; border: 1.5px solid #e0ecd8;
+      background: #fff; cursor: pointer; display: flex; align-items: center;
+      justify-content: center; font-size: 13px; font-weight: 700; color: #3B6D11;
+      font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+    }
+    .quick-btn:hover { background: #e8f5dc; border-color: #9ad870; transform: scale(1.05); }
+    .quick-btn.minus { color: #c03030; }
+    .quick-btn.minus:hover { background: #fef0f0; border-color: #f0c0c0; }
+    .qty-inline-input {
+      width: 52px; padding: 5px 4px; border-radius: 7px; border: 1.5px solid #e0ecd8;
+      font-size: 13px; font-weight: 700; font-family: 'DM Sans', sans-serif;
+      text-align: center; outline: none; background: #f8faf6; transition: all 0.15s;
+    }
+    .qty-inline-input:focus { border-color: #4a8a1a; background: #fff; }
+    .action-btn {
+      width: 30px; height: 30px; border-radius: 8px; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; transition: all 0.15s;
+    }
+    .action-btn.save { background: #3B6D11; color: #fff; }
+    .action-btn.save:hover { background: #2d5a0d; }
+    .action-btn.delete { background: #fef0f0; color: #c03030; border: 1px solid #f0c0c0; }
+    .action-btn.delete:hover { background: #fce0e0; }
+    .action-btn.history { background: #eef0ff; color: #4a50aa; border: 1px solid #c0c8f8; }
+    .action-btn.history:hover { background: #dde4ff; }
 
-    .row-actions { display: flex; gap: 5px; }
-    .btn-update { font-size: 11px; font-weight: 600; padding: 5px 9px; border-radius: 6px; border: none; background: #2d5c2d; color: #fff; cursor: pointer; font-family: 'Inter', sans-serif; }
-    .btn-update:hover { background: #1a3a1a; }
-    .btn-del { font-size: 11px; font-weight: 600; padding: 5px 8px; border-radius: 6px; border: 1px solid #f5c5c5; background: #fef0f0; color: #c03030; cursor: pointer; }
-    .btn-del:hover { background: #fce0e0; }
+    /* ═══ GRID VIEW ═══ */
+    .grid-view { display: none; }
+    .grid-view.active { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+    .grid-card {
+      background: #fff; border: 1.5px solid #e0ecd8; border-radius: 16px;
+      padding: 0; overflow: hidden; transition: all 0.2s;
+      animation: cardIn 0.35s cubic-bezier(0.22,1,0.36,1) both;
+    }
+    @keyframes cardIn { from { opacity:0; transform: translateY(10px) scale(0.97); } }
+    .grid-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+    .grid-card.alert { border-color: #f0d898; }
+    .grid-card.rupture { border-color: #f0b0b0; }
+    .grid-stripe { height: 4px; }
+    .grid-stripe.green { background: linear-gradient(90deg, #3B6D11, #7bc44c); }
+    .grid-stripe.orange { background: linear-gradient(90deg, #f0a020, #f8d070); }
+    .grid-stripe.red { background: linear-gradient(90deg, #d84040, #f0a0a0); }
+    .grid-inner { padding: 16px; }
+    .grid-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
+    .grid-product-name { font-size: 15px; font-weight: 700; color: #1a2a1a; }
+    .grid-qty-big { font-size: 28px; font-weight: 800; letter-spacing: -1px; text-align: center; margin: 8px 0; }
+    .grid-qty-big.green { color: #2d6a0a; }
+    .grid-qty-big.orange { color: #c08010; }
+    .grid-qty-big.red { color: #c03030; }
+    .grid-unit { font-size: 12px; font-weight: 500; color: #9ab89a; }
+    .grid-bar { height: 6px; background: #f0f5ee; border-radius: 4px; margin: 8px 0 12px; overflow: hidden; }
+    .grid-bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s; }
+    .grid-details { display: flex; justify-content: space-between; font-size: 11px; color: #9ab89a; margin-bottom: 10px; }
+    .grid-actions { display: flex; gap: 6px; }
+    .grid-actions .quick-btn { flex: 1; height: 34px; font-size: 14px; }
+    .grid-actions .action-btn { flex: 0; width: 34px; height: 34px; }
 
-    /* MODAL */
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 999; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
+    /* ═══ HISTORY PANEL ═══ */
+    .history-panel {
+      position: fixed; right: -420px; top: 0; bottom: 0; width: 400px;
+      background: #fff; border-left: 1.5px solid #e0ecd8; z-index: 200;
+      box-shadow: -8px 0 32px rgba(0,0,0,0.08); transition: right 0.3s cubic-bezier(0.22,1,0.36,1);
+      display: flex; flex-direction: column;
+    }
+    .history-panel.open { right: 0; }
+    .history-header {
+      padding: 20px; border-bottom: 1.5px solid #e8f0e0;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .history-title { font-size: 16px; font-weight: 700; color: #1a2a1a; }
+    .history-close { background: none; border: none; font-size: 20px; cursor: pointer; color: #9ab89a; padding: 4px; }
+    .history-body { flex: 1; overflow-y: auto; padding: 16px 20px; }
+    .history-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f0f5ee; }
+    .history-item:last-child { border-bottom: none; }
+    .history-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+    .history-dot.add { background: #3B6D11; }
+    .history-dot.remove { background: #c03030; }
+    .history-dot.restock { background: #2a50aa; }
+    .history-dot.auto { background: #f0a020; }
+    .history-content { flex: 1; }
+    .history-action { font-size: 13px; font-weight: 600; color: #1a2a1a; }
+    .history-detail { font-size: 11px; color: #9ab89a; margin-top: 2px; }
+    .history-time { font-size: 10px; color: #c0d0c0; margin-top: 4px; }
+    .history-empty { text-align: center; padding: 40px 20px; color: #c0d0c0; font-size: 13px; }
+
+    /* ═══ MODAL ═══ */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+      z-index: 300; align-items: center; justify-content: center;
+      backdrop-filter: blur(4px); animation: fadeIn 0.15s;
+    }
+    @keyframes fadeIn { from{opacity:0;} }
     .modal-overlay.open { display: flex; }
-    .modal { background: #fff; border-radius: 16px; padding: 32px; width: 100%; max-width: 440px; box-shadow: 0 24px 60px rgba(0,0,0,0.12); }
-    .modal-title { font-size: 17px; font-weight: 700; color: #111; margin-bottom: 24px; }
+    .modal {
+      background: #fff; border-radius: 20px; padding: 28px; width: 100%;
+      max-width: 480px; box-shadow: 0 24px 60px rgba(0,0,0,0.15);
+      animation: modalIn 0.25s cubic-bezier(0.22,1,0.36,1);
+    }
+    @keyframes modalIn { from { opacity:0; transform: scale(0.93) translateY(10px); } }
+    .modal-title { font-size: 18px; font-weight: 800; color: #1a2a1a; margin-bottom: 6px; }
+    .modal-sub { font-size: 12px; color: #9ab89a; margin-bottom: 20px; }
     .form-group { margin-bottom: 14px; }
-    .form-label { font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 7px; display: block; }
-    .form-input { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1.5px solid #e8e8e8; background: #fafafa; font-size: 13px; font-family: 'Inter', sans-serif; color: #111; outline: none; }
-    .form-input:focus { border-color: #3B6D11; background: #fff; }
-    .form-select { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1.5px solid #e8e8e8; background: #fafafa; font-size: 13px; font-family: 'Inter', sans-serif; color: #111; outline: none; }
+    .form-label { font-size: 11px; font-weight: 700; color: #7aaa7a; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 7px; display: block; }
+    .form-input { width: 100%; padding: 10px 14px; border-radius: 10px; border: 1.5px solid #e0ecd8; background: #f8faf6; font-size: 13px; font-family: 'DM Sans', sans-serif; color: #1a2a1a; outline: none; transition: all 0.15s; }
+    .form-input:focus { border-color: #4a8a1a; background: #fff; }
+    .form-select { width: 100%; padding: 10px 14px; border-radius: 10px; border: 1.5px solid #e0ecd8; background: #f8faf6; font-size: 13px; font-family: 'DM Sans', sans-serif; color: #1a2a1a; outline: none; }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .modal-footer { display: flex; gap: 10px; margin-top: 24px; }
-    .modal-btn { flex: 1; padding: 11px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; }
-    .modal-btn.primary { background: #2d5c2d; color: #fff; }
-    .modal-btn.secondary { background: #f5f5f5; color: #555; }
+    .modal-footer { display: flex; gap: 10px; margin-top: 20px; }
+    .modal-btn { flex: 1; padding: 12px; border-radius: 10px; border: none; font-size: 13px; font-weight: 700; font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all 0.15s; }
+    .modal-btn.primary { background: #3B6D11; color: #fff; }
+    .modal-btn.primary:hover { background: #2d5a0d; }
+    .modal-btn.secondary { background: #f0f5ee; color: #5a8a5a; }
+    .modal-btn.secondary:hover { background: #e8f0e0; }
 
-    .loading { text-align: center; padding: 48px; color: #aaa; font-size: 13px; }
-    .empty { text-align: center; padding: 48px; color: #ccc; font-size: 13px; }
+    /* Category picker */
+    .category-picker { display: flex; gap: 8px; flex-wrap: wrap; }
+    .cat-btn {
+      font-size: 12px; font-weight: 600; padding: 8px 14px; border-radius: 10px;
+      border: 1.5px solid #e0ecd8; background: #fff; color: #5a8a5a;
+      cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .cat-btn:hover { border-color: #9ad870; }
+    .cat-btn.active { background: #1a3a1a; color: #a8e07a; border-color: #1a3a1a; }
+
+    /* ═══ RESTOCK MODAL ═══ */
+    .restock-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f0f5ee; }
+    .restock-item:last-child { border-bottom: none; }
+    .restock-name { flex: 1; font-size: 13px; font-weight: 600; color: #1a2a1a; }
+    .restock-current { font-size: 12px; color: #9ab89a; min-width: 60px; }
+    .restock-input { width: 60px; padding: 6px 8px; border-radius: 8px; border: 1.5px solid #e0ecd8; font-size: 13px; font-weight: 700; font-family: 'DM Sans', sans-serif; text-align: center; outline: none; }
+    .restock-input:focus { border-color: #4a8a1a; }
+
+    /* ═══ TOAST ═══ */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: #1a3a1a; color: #fff; padding: 12px 24px; border-radius: 12px;
+      font-size: 13px; font-weight: 600; z-index: 400;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 10px;
+      animation: toastIn 0.3s ease, toastOut 0.3s 2.5s forwards;
+    }
+    @keyframes toastIn { from { opacity:0; transform: translateX(-50%) translateY(20px); } }
+    @keyframes toastOut { to { opacity:0; transform: translateX(-50%) translateY(20px); } }
+    .toast-icon { font-size: 16px; }
+
+    .loading { text-align: center; padding: 60px; color: #9ab89a; font-size: 13px; }
+    .empty-state { text-align: center; padding: 60px 20px; }
+    .empty-icon { width: 64px; height: 64px; border-radius: 16px; background: #f4f8f0; border: 2px solid #e0ecd8; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+    .empty-title { font-size: 15px; font-weight: 700; color: #3a5a3a; margin-bottom: 6px; }
+    .empty-sub { font-size: 12px; color: #9ab89a; }
+
+    /* History backdrop */
+    .history-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.2); z-index: 150; }
+    .history-backdrop.open { display: block; }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .stats-row { grid-template-columns: repeat(3, 1fr); }
+      .table-header, .table-row { grid-template-columns: 2fr 1fr 1fr 140px; }
+      .table-header > *:nth-child(3), .table-row > *:nth-child(3),
+      .table-header > *:nth-child(4), .table-row > *:nth-child(4) { display: none; }
+    }
   </style>
 </head>
 <body>
 
+<!-- TOPBAR -->
 <div class="topbar">
   <div class="topbar-left">
-    <div class="logo"><div class="logo-dot"></div>Commande<span>IA</span></div>
-    <div class="page-badge">Stocks</div>
+    <div class="logo" id="burger-anchor">
+      <span style="color:#a8e07a">Commande</span><span style="color:#fff">IA</span>
+    </div>
+    <div class="page-badge">Gestion des stocks</div>
   </div>
-  <div style="display:flex;align-items:center;gap:12px;">
+  <div class="topbar-right">
     <select class="resto-select" id="resto-select" onchange="loadStocks()">
       <option value="">Sélectionner un restaurant</option>
     </select>
     <a href="/" class="back-btn">← Dashboard</a>
   </div>
 </div>
+<script src="/burger-menu.js"></script>
+<div class="alert-banner" id="alert-banner">
+  <div class="alert-banner-icon" id="alert-icon">
+    <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 3l7.5 13H2.5L10 3z" stroke="#906010" stroke-width="1.5" fill="none"/><path d="M10 9v3M10 14v1" stroke="#906010" stroke-width="1.5" stroke-linecap="round"/></svg>
+  </div>
+  <div class="alert-banner-content">
+    <div class="alert-banner-title" id="alert-title"></div>
+    <div class="alert-banner-text" id="alert-text"></div>
+  </div>
+  <button class="alert-banner-close" onclick="this.parentElement.classList.remove('show')">&times;</button>
+</div>
 
 <div class="main">
+  <!-- HEADER -->
   <div class="page-header">
     <div>
       <div class="page-title">Gestion des stocks</div>
-      <div class="page-sub">Suivi en temps réel des ingrédients et produits</div>
+      <div class="page-sub" id="page-sub">Suivi en temps réel · Sélectionne un restaurant</div>
     </div>
-    <button class="add-btn" onclick="openModal()">
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
-      Ajouter un produit
-    </button>
+    <div class="header-actions">
+      <button class="export-btn" onclick="exportCSV()">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2M8 2v8M5 7l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Export CSV
+      </button>
+      <button class="restock-all-btn" onclick="openRestockModal()">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 8a6 6 0 0111.5-2M14 8a6 6 0 01-11.5 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M13 3v3h-3M3 13v-3h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Réapprovisionner
+      </button>
+      <button class="add-btn" onclick="openAddModal()">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+        Nouveau produit
+      </button>
+    </div>
   </div>
 
-  <div class="alerts-bar" id="alerts-bar">
-    <span class="alert-icon">⚠️</span>
-    <span class="alert-text" id="alerts-text"></span>
-  </div>
-
+  <!-- STATS -->
   <div class="stats-row">
-    <div class="stat-card"><div class="stat-label">Total produits</div><div class="stat-val" id="stat-total">—</div></div>
-    <div class="stat-card"><div class="stat-label">Disponibles</div><div class="stat-val green" id="stat-dispo">—</div></div>
-    <div class="stat-card"><div class="stat-label">En alerte</div><div class="stat-val orange" id="stat-alerte">—</div></div>
-    <div class="stat-card"><div class="stat-label">Rupture</div><div class="stat-val red" id="stat-rupture">—</div></div>
+    <div class="stat-card total">
+      <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="2" y="2" width="16" height="16" rx="3" stroke="#1a3a1a" stroke-width="1.5"/><path d="M6 10h8M6 7h5M6 13h6" stroke="#1a3a1a" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+      <div class="stat-label">Total produits</div>
+      <div class="stat-val dark" id="stat-total">—</div>
+      <div class="stat-change neutral" id="stat-total-change">Aucune donnée</div>
+    </div>
+    <div class="stat-card dispo">
+      <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="#3B6D11" stroke-width="1.5"/><path d="M7 10l2 2 4-4" stroke="#3B6D11" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="stat-label">Disponibles</div>
+      <div class="stat-val green" id="stat-dispo">—</div>
+      <div class="stat-change neutral" id="stat-dispo-pct">—</div>
+    </div>
+    <div class="stat-card alerte">
+      <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 3l7 12H3L10 3z" stroke="#c08010" stroke-width="1.5"/><path d="M10 9v2.5M10 13.5v.5" stroke="#c08010" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+      <div class="stat-label">En alerte</div>
+      <div class="stat-val orange" id="stat-alerte">—</div>
+      <div class="stat-change neutral" id="stat-alerte-info">—</div>
+    </div>
+    <div class="stat-card rupture">
+      <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="#c03030" stroke-width="1.5"/><path d="M7 7l6 6M13 7l-6 6" stroke="#c03030" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+      <div class="stat-label">Rupture</div>
+      <div class="stat-val red" id="stat-rupture">—</div>
+      <div class="stat-change neutral" id="stat-rupture-info">—</div>
+    </div>
+    <div class="stat-card valeur">
+      <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="3" y="5" width="14" height="10" rx="2" stroke="#2a50aa" stroke-width="1.5"/><path d="M7 10h6M10 8v4" stroke="#2a50aa" stroke-width="1.3" stroke-linecap="round"/></svg></div>
+      <div class="stat-label">Taux remplissage</div>
+      <div class="stat-val blue" id="stat-fill">—</div>
+      <div class="stat-change neutral" id="stat-fill-info">Stock moyen</div>
+    </div>
   </div>
 
-  <div class="table-card">
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+      <div class="view-toggles">
+        <button class="view-btn active" onclick="setView('table', this)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Liste
+        </button>
+        <button class="view-btn" onclick="setView('grid', this)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="2" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/></svg>
+          Grille
+        </button>
+      </div>
+      <div class="filter-pills">
+        <button class="pill active" onclick="setFilter('all', this)">Tous</button>
+        <button class="pill" onclick="setFilter('Disponible', this)"><span class="pill-dot" style="background:#3B6D11"></span>OK</button>
+        <button class="pill" onclick="setFilter('Alerte', this)"><span class="pill-dot" style="background:#f0a020"></span>Alerte</button>
+        <button class="pill" onclick="setFilter('Rupture', this)"><span class="pill-dot" style="background:#d84040"></span>Rupture</button>
+      </div>
+    </div>
+    <div class="search-box">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="#9ab89a" stroke-width="1.5"/><path d="M11 11l3 3" stroke="#9ab89a" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <input type="text" placeholder="Rechercher un produit..." id="search-input" oninput="renderStocks()">
+    </div>
+  </div>
+
+  <!-- TABLE VIEW -->
+  <div class="table-card" id="table-view">
     <div class="table-header">
       <div>Produit</div>
       <div>Stock actuel</div>
-      <div>Stock initial</div>
-      <div>Seuil alerte</div>
+      <div>Initial</div>
+      <div>Seuil</div>
       <div>Statut</div>
       <div>Actions</div>
     </div>
     <div id="stocks-list"><div class="loading">Sélectionne un restaurant pour voir ses stocks.</div></div>
+  </div>
+
+  <!-- GRID VIEW -->
+  <div class="grid-view" id="grid-view"></div>
+</div>
+
+<!-- HISTORY PANEL -->
+<div class="history-backdrop" id="history-backdrop" onclick="closeHistory()"></div>
+<div class="history-panel" id="history-panel">
+  <div class="history-header">
+    <div class="history-title">Historique mouvements</div>
+    <button class="history-close" onclick="closeHistory()">&times;</button>
+  </div>
+  <div class="history-body" id="history-body">
+    <div class="history-empty">Aucun mouvement enregistré</div>
   </div>
 </div>
 
 <!-- MODAL AJOUT -->
 <div class="modal-overlay" id="modal-add">
   <div class="modal">
-    <div class="modal-title">Ajouter un produit au stock</div>
+    <div class="modal-title">Nouveau produit</div>
+    <div class="modal-sub">Ajouter un produit au stock de votre restaurant</div>
+    <div class="form-group">
+      <label class="form-label">Catégorie</label>
+      <div class="category-picker" id="cat-picker">
+        <button class="cat-btn active" onclick="setCat(this,'ingredient')" data-cat="ingredient">🥬 Ingrédient</button>
+        <button class="cat-btn" onclick="setCat(this,'pain')" data-cat="pain">🍞 Pain</button>
+        <button class="cat-btn" onclick="setCat(this,'viande')" data-cat="viande">🥩 Viande</button>
+        <button class="cat-btn" onclick="setCat(this,'boisson')" data-cat="boisson">🥤 Boisson</button>
+        <button class="cat-btn" onclick="setCat(this,'sauce')" data-cat="sauce">🫙 Sauce</button>
+        <button class="cat-btn" onclick="setCat(this,'emballage')" data-cat="emballage">📦 Emballage</button>
+      </div>
+    </div>
     <div class="form-group">
       <label class="form-label">Nom du produit</label>
       <input class="form-input" id="s-nom" placeholder="Ex: Pain brioché" />
@@ -157,7 +490,7 @@
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">Quantité initiale</label>
-        <input class="form-input" id="s-qty" type="number" placeholder="50" />
+        <input class="form-input" id="s-qty" type="number" placeholder="100" />
       </div>
       <div class="form-group">
         <label class="form-label">Seuil d'alerte</label>
@@ -171,147 +504,470 @@
         <option value="kg">Kilogramme</option>
         <option value="litre">Litre</option>
         <option value="portion">Portion</option>
+        <option value="carton">Carton</option>
+        <option value="sachet">Sachet</option>
       </select>
     </div>
     <div class="modal-footer">
-      <button class="modal-btn secondary" onclick="closeModal()">Annuler</button>
-      <button class="modal-btn primary" onclick="ajouterStock()">Ajouter</button>
+      <button class="modal-btn secondary" onclick="closeAddModal()">Annuler</button>
+      <button class="modal-btn primary" onclick="ajouterStock()">Ajouter au stock</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RESTOCK -->
+<div class="modal-overlay" id="modal-restock">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-title">Réapprovisionnement rapide</div>
+    <div class="modal-sub">Remettre à niveau les produits en alerte ou rupture</div>
+    <div id="restock-list" style="max-height:340px;overflow-y:auto;"></div>
+    <div class="modal-footer">
+      <button class="modal-btn secondary" onclick="closeRestockModal()">Annuler</button>
+      <button class="modal-btn primary" onclick="executeRestock()">Réapprovisionner tout</button>
     </div>
   </div>
 </div>
 
 <script>
-  const user = sessionStorage.getItem('user');
-  if (!user) window.location.href = '/login.html';
-  const currentUser = JSON.parse(user || '{}');
+// ═══ AUTH ═══
+const user = sessionStorage.getItem('user');
+if (!user) window.location.href = '/login.html';
+const currentUser = JSON.parse(user || '{}');
+const isAdmin = currentUser.email === 'quentin@commande-ia.fr' || currentUser.role === 'Admin';
 
-  let stocks = [];
-  let selectedRestoId = '';
-  let selectedRestoNom = '';
+// ═══ STATE ═══
+let stocks = [];
+let selectedRestoId = '';
+let selectedRestoNom = '';
+let activeFilter = 'all';
+let activeView = 'table';
+let selectedCategory = 'ingredient';
+let stockHistory = []; // Local history tracking
 
-  async function loadRestaurants() {
-    const res = await fetch('/admin/restaurants');
-    const data = await res.json();
-    const sel = document.getElementById('resto-select');
-    data.forEach(r => {
-      const opt = document.createElement('option');
-      opt.value = r.id;
-      opt.textContent = r.nom;
-      sel.appendChild(opt);
-    });
-    if (currentUser.role !== 'Admin' && currentUser.restaurantId) {
-      sel.value = currentUser.restaurantId;
-      loadStocks();
-    }
+// ═══ LOAD ═══
+async function loadRestaurants() {
+  const sel = document.getElementById('resto-select');
+
+  if (!isAdmin && currentUser.restaurantId) {
+    // Non-admin : masquer le sélecteur, charger directement son restaurant
+    sel.style.display = 'none';
+    selectedRestoId = currentUser.restaurantId;
+    selectedRestoNom = currentUser.restaurant || 'Mon restaurant';
+    // Afficher le nom du restaurant à la place du sélecteur
+    const badge = document.createElement('div');
+    badge.style.cssText = 'font-size:12px;font-weight:600;color:#a8e07a;padding:7px 14px;background:rgba(255,255,255,0.08);border-radius:8px;border:1px solid rgba(168,224,122,0.25);';
+    badge.textContent = selectedRestoNom;
+    sel.parentElement.insertBefore(badge, sel);
+    loadStocks();
+    return;
   }
 
-  async function loadStocks() {
+  // Admin : charger la liste de tous les restaurants
+  const res = await fetch('/admin/restaurants');
+  const data = await res.json();
+  data.forEach(r => {
+    const opt = document.createElement('option');
+    opt.value = r.id; opt.textContent = r.nom;
+    sel.appendChild(opt);
+  });
+}
+
+async function loadStocks() {
+  if (isAdmin) {
     const sel = document.getElementById('resto-select');
     selectedRestoId = sel.value;
     selectedRestoNom = sel.options[sel.selectedIndex]?.text || '';
-    if (!selectedRestoId) return;
-    document.getElementById('stocks-list').innerHTML = '<div class="loading">Chargement...</div>';
-    const res = await fetch('/stocks/' + selectedRestoId);
-    stocks = await res.json();
-    renderStocks();
   }
+  if (!selectedRestoId) return;
+  document.getElementById('stocks-list').innerHTML = '<div class="loading">Chargement...</div>';
+  document.getElementById('page-sub').textContent = 'Suivi en temps réel · ' + selectedRestoNom;
+  loadHistory();
+  const res = await fetch('/stocks/' + selectedRestoId);
+  stocks = await res.json();
+  renderStocks();
+  updateAlerts();
+}
 
-  function renderStocks() {
-    const list = document.getElementById('stocks-list');
-    const total = stocks.length;
-    const dispo = stocks.filter(s => s.statut === 'Disponible').length;
-    const alerte = stocks.filter(s => s.statut === 'Alerte').length;
-    const rupture = stocks.filter(s => s.statut === 'Rupture').length;
+// ═══ FILTERS & VIEW ═══
+function setFilter(f, btn) {
+  activeFilter = f;
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  renderStocks();
+}
+function setView(v, btn) {
+  activeView = v;
+  document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('table-view').style.display = v === 'table' ? 'block' : 'none';
+  document.getElementById('grid-view').className = v === 'grid' ? 'grid-view active' : 'grid-view';
+  renderStocks();
+}
+function setCat(btn, cat) {
+  selectedCategory = cat;
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
 
-    document.getElementById('stat-total').textContent = total || '—';
-    document.getElementById('stat-dispo').textContent = total ? dispo : '—';
-    document.getElementById('stat-alerte').textContent = total ? alerte : '—';
-    document.getElementById('stat-rupture').textContent = total ? rupture : '—';
+// ═══ HELPERS ═══
+function getColor(s) { return s.statut === 'Rupture' ? 'red' : s.statut === 'Alerte' ? 'orange' : 'green'; }
+function getPct(s) { return s.quantiteInitiale ? Math.max(0, Math.round((s.quantiteActuelle / s.quantiteInitiale) * 100)) : 0; }
+function getEmoji(name) {
+  const n = (name || '').toLowerCase();
+  if (n.includes('pain') || n.includes('bun')) return '🍞';
+  if (n.includes('viande') || n.includes('steak') || n.includes('poulet') || n.includes('chicken') || n.includes('boeuf')) return '🥩';
+  if (n.includes('salade') || n.includes('laitue') || n.includes('tomate') || n.includes('oignon') || n.includes('légume')) return '🥬';
+  if (n.includes('coca') || n.includes('fanta') || n.includes('eau') || n.includes('jus') || n.includes('boisson') || n.includes('sprite')) return '🥤';
+  if (n.includes('sauce') || n.includes('ketchup') || n.includes('mayo')) return '🫙';
+  if (n.includes('frite') || n.includes('fries')) return '🍟';
+  if (n.includes('fromage') || n.includes('cheese')) return '🧀';
+  if (n.includes('emballage') || n.includes('carton') || n.includes('sac') || n.includes('serviette')) return '📦';
+  return '🏷️';
+}
 
-    const alertBar = document.getElementById('alerts-bar');
-    const alertes = stocks.filter(s => s.statut === 'Alerte' || s.statut === 'Rupture');
-    if (alertes.length) {
-      alertBar.classList.add('show');
-      document.getElementById('alerts-text').textContent = alertes.length + ' produit(s) nécessitent attention : ' + alertes.map(a => a.produit + ' (' + a.statut + ')').join(', ');
-    } else {
-      alertBar.classList.remove('show');
-    }
+// ═══ RENDER ═══
+function renderStocks() {
+  const search = (document.getElementById('search-input')?.value || '').toLowerCase();
+  let filtered = stocks;
+  if (activeFilter !== 'all') filtered = filtered.filter(s => s.statut === activeFilter);
+  if (search) filtered = filtered.filter(s => (s.produit || '').toLowerCase().includes(search));
 
-    if (!stocks.length) { list.innerHTML = '<div class="empty">Aucun produit en stock. Ajoutez-en un.</div>'; return; }
+  // Stats
+  const total = stocks.length;
+  const dispo = stocks.filter(s => s.statut === 'Disponible').length;
+  const alerte = stocks.filter(s => s.statut === 'Alerte').length;
+  const rupture = stocks.filter(s => s.statut === 'Rupture').length;
+  const avgFill = total ? Math.round(stocks.reduce((a, s) => a + getPct(s), 0) / total) : 0;
 
+  document.getElementById('stat-total').textContent = total || '—';
+  document.getElementById('stat-dispo').textContent = total ? dispo : '—';
+  document.getElementById('stat-alerte').textContent = total ? alerte : '—';
+  document.getElementById('stat-rupture').textContent = total ? rupture : '—';
+  document.getElementById('stat-fill').textContent = total ? avgFill + '%' : '—';
+
+  document.getElementById('stat-total-change').textContent = total ? total + ' références' : 'Aucune donnée';
+  document.getElementById('stat-dispo-pct').textContent = total ? Math.round(dispo/total*100) + '% du stock' : '—';
+  document.getElementById('stat-alerte-info').textContent = alerte ? 'À réapprovisionner' : 'Aucune alerte';
+  document.getElementById('stat-alerte-info').className = 'stat-change ' + (alerte ? 'down' : 'up');
+  document.getElementById('stat-rupture-info').textContent = rupture ? 'Action immédiate requise' : 'Aucune rupture';
+  document.getElementById('stat-rupture-info').className = 'stat-change ' + (rupture ? 'down' : 'up');
+  document.getElementById('stat-fill-info').textContent = total ? 'Moyenne de remplissage' : 'Stock moyen';
+
+  // TABLE VIEW
+  const list = document.getElementById('stocks-list');
+  if (!filtered.length) {
+    list.innerHTML = `<div class="empty-state">
+      <div class="empty-icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="4" y="4" width="20" height="20" rx="4" stroke="#c0e090" stroke-width="1.5"/><path d="M10 14h8M14 10v8" stroke="#c0e090" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+      <div class="empty-title">${stocks.length ? 'Aucun résultat' : 'Aucun produit en stock'}</div>
+      <div class="empty-sub">${stocks.length ? 'Modifie le filtre ou la recherche' : 'Commence par ajouter des produits'}</div>
+    </div>`;
+  } else {
     list.innerHTML = '';
-    stocks.forEach(s => {
-      const pct = s.quantiteInitiale ? Math.max(0, Math.round((s.quantiteActuelle / s.quantiteInitiale) * 100)) : 0;
-      const color = s.statut === 'Rupture' ? 'red' : s.statut === 'Alerte' ? 'orange' : 'green';
+    filtered.forEach((s, i) => {
+      const pct = getPct(s);
+      const color = getColor(s);
+      const emoji = getEmoji(s.produit);
+      const rowClass = s.statut === 'Alerte' ? 'alert-row' : s.statut === 'Rupture' ? 'rupture-row' : '';
       const row = document.createElement('div');
-      row.className = 'table-row';
+      row.className = 'table-row ' + rowClass;
+      row.style.animationDelay = (i * 0.03) + 's';
       row.innerHTML = `
-        <div>
-          <div class="product-name">${s.produit}</div>
-          <div class="product-restaurant">${s.restaurant || '—'} · Màj: ${s.derniereMaj || '—'}</div>
+        <div class="product-cell">
+          <div class="product-icon ${color === 'red' ? '' : color === 'orange' ? '' : 'food'}" style="background:${color === 'red' ? '#fef0f0' : color === 'orange' ? '#fff8e8' : '#f0f7e8'}">
+            <span style="font-size:18px">${emoji}</span>
+          </div>
+          <div>
+            <div class="product-name">${s.produit}</div>
+            <div class="product-meta">
+              <span>${s.unite || 'unité'}</span> · <span>Màj: ${s.derniereMaj || '—'}</span>
+            </div>
+          </div>
         </div>
-        <div>
-          <div class="qty-display">${s.quantiteActuelle ?? '—'} ${s.unite || ''}</div>
+        <div class="qty-cell">
+          <div class="qty-main">${s.quantiteActuelle ?? 0}<span class="qty-unit">${s.unite || ''}</span></div>
           <div class="qty-bar"><div class="qty-bar-fill ${color}" style="width:${pct}%"></div></div>
+          <div class="qty-pct ${color}">${pct}%</div>
         </div>
-        <div class="qty-display">${s.quantiteInitiale ?? '—'} ${s.unite || ''}</div>
-        <div class="qty-display">${s.seuilAlerte ?? '—'} ${s.unite || ''}</div>
-        <div><span class="status-badge ${(s.statut || '').toLowerCase()}">${s.statut || '—'}</span></div>
-        <div class="row-actions">
-          <input class="qty-input" id="qty-${s.id}" type="number" value="${s.quantiteActuelle ?? 0}" min="0" />
-          <button class="btn-update" onclick="updateStock('${s.id}', ${s.seuilAlerte || 5})">✓</button>
-          <button class="btn-del" onclick="supprimerStock('${s.id}')">✕</button>
+        <div class="qty-main" style="font-size:13px;color:#9ab89a;">${s.quantiteInitiale ?? '—'}</div>
+        <div class="qty-main" style="font-size:13px;color:#9ab89a;">${s.seuilAlerte ?? '—'}</div>
+        <div><span class="status-badge ${(s.statut||'').toLowerCase()}"><span class="status-dot"></span>${s.statut || '—'}</span></div>
+        <div class="actions-cell">
+          <button class="quick-btn minus" onclick="quickAdjust('${s.id}',-1,${s.seuilAlerte||5})" title="-1">−</button>
+          <input class="qty-inline-input" id="qty-${s.id}" type="number" value="${s.quantiteActuelle ?? 0}" min="0" />
+          <button class="quick-btn" onclick="quickAdjust('${s.id}',1,${s.seuilAlerte||5})" title="+1">+</button>
+          <button class="action-btn save" onclick="saveQty('${s.id}',${s.seuilAlerte||5})" title="Sauvegarder">
+            <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M3 7l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="action-btn history" onclick="showHistory('${s.id}','${(s.produit||'').replace(/'/g,"\\'")}')" title="Historique">
+            <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.3"/><path d="M7 4v3l2 1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          </button>
+          <button class="action-btn delete" onclick="supprimerStock('${s.id}')" title="Supprimer">
+            <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M4 4l6 6M10 4l-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </button>
         </div>`;
       list.appendChild(row);
     });
   }
 
-  async function updateStock(id, seuil) {
-    const qty = parseFloat(document.getElementById('qty-' + id).value);
+  // GRID VIEW
+  const grid = document.getElementById('grid-view');
+  grid.innerHTML = '';
+  filtered.forEach((s, i) => {
+    const pct = getPct(s);
+    const color = getColor(s);
+    const emoji = getEmoji(s.produit);
+    const card = document.createElement('div');
+    card.className = 'grid-card' + (s.statut === 'Alerte' ? ' alert' : '') + (s.statut === 'Rupture' ? ' rupture' : '');
+    card.style.animationDelay = (i * 0.04) + 's';
+    card.innerHTML = `
+      <div class="grid-stripe ${color}"></div>
+      <div class="grid-inner">
+        <div class="grid-top">
+          <div class="grid-product-name">${emoji} ${s.produit}</div>
+          <span class="status-badge ${(s.statut||'').toLowerCase()}"><span class="status-dot"></span>${s.statut}</span>
+        </div>
+        <div class="grid-qty-big ${color}">${s.quantiteActuelle ?? 0}<span class="grid-unit"> ${s.unite || ''}</span></div>
+        <div class="grid-bar"><div class="grid-bar-fill qty-bar-fill ${color}" style="width:${pct}%"></div></div>
+        <div class="grid-details">
+          <span>Initial: ${s.quantiteInitiale ?? '—'}</span>
+          <span>Seuil: ${s.seuilAlerte ?? '—'}</span>
+          <span>${pct}%</span>
+        </div>
+        <div class="grid-actions">
+          <button class="quick-btn minus" onclick="quickAdjust('${s.id}',-5,${s.seuilAlerte||5})">−5</button>
+          <button class="quick-btn minus" onclick="quickAdjust('${s.id}',-1,${s.seuilAlerte||5})">−1</button>
+          <button class="quick-btn" onclick="quickAdjust('${s.id}',1,${s.seuilAlerte||5})">+1</button>
+          <button class="quick-btn" onclick="quickAdjust('${s.id}',5,${s.seuilAlerte||5})">+5</button>
+          <button class="action-btn delete" onclick="supprimerStock('${s.id}')">
+            <svg width="10" height="10" viewBox="0 0 14 14" fill="none"><path d="M4 4l6 6M10 4l-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+// ═══ ALERTS ═══
+function updateAlerts() {
+  const banner = document.getElementById('alert-banner');
+  const ruptures = stocks.filter(s => s.statut === 'Rupture');
+  const alertes = stocks.filter(s => s.statut === 'Alerte');
+
+  if (ruptures.length) {
+    banner.className = 'alert-banner critical show';
+    document.getElementById('alert-title').textContent = `${ruptures.length} produit(s) en rupture de stock !`;
+    document.getElementById('alert-text').textContent = ruptures.map(r => r.produit).join(', ');
+    document.getElementById('alert-icon').innerHTML = '<svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="#c03030" stroke-width="1.5"/><path d="M7 7l6 6M13 7l-6 6" stroke="#c03030" stroke-width="1.5" stroke-linecap="round"/></svg>';
+  } else if (alertes.length) {
+    banner.className = 'alert-banner warning show';
+    document.getElementById('alert-title').textContent = `${alertes.length} produit(s) bientôt en rupture`;
+    document.getElementById('alert-text').textContent = alertes.map(a => a.produit + ' (' + a.quantiteActuelle + ' restants)').join(', ');
+    document.getElementById('alert-icon').innerHTML = '<svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 3l7.5 13H2.5L10 3z" stroke="#906010" stroke-width="1.5"/><path d="M10 9v3M10 14v1" stroke="#906010" stroke-width="1.5" stroke-linecap="round"/></svg>';
+  } else {
+    banner.className = 'alert-banner';
+  }
+}
+
+// ═══ ACTIONS ═══
+async function quickAdjust(id, delta, seuil) {
+  const s = stocks.find(x => x.id === id);
+  if (!s) return;
+  const newQty = Math.max(0, (s.quantiteActuelle || 0) + delta);
+  const input = document.getElementById('qty-' + id);
+  if (input) input.value = newQty;
+
+  // Add to history
+  addHistory(s.produit, delta > 0 ? 'add' : 'remove', Math.abs(delta), newQty, id);
+
+  await fetch('/stocks/' + id, {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ quantite: newQty, seuilAlerte: seuil })
+  });
+  showToast(delta > 0 ? `+${delta} ${s.produit}` : `${delta} ${s.produit}`);
+  loadStocks();
+}
+
+async function saveQty(id, seuil) {
+  const input = document.getElementById('qty-' + id);
+  const qty = parseFloat(input.value);
+  const s = stocks.find(x => x.id === id);
+  const oldQty = s ? s.quantiteActuelle : 0;
+  const diff = qty - oldQty;
+
+  if (s && diff !== 0) {
+    addHistory(s.produit, diff > 0 ? 'restock' : 'remove', Math.abs(diff), qty, id);
+  }
+
+  await fetch('/stocks/' + id, {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ quantite: qty, seuilAlerte: seuil })
+  });
+  showToast('Stock mis à jour');
+  loadStocks();
+}
+
+async function supprimerStock(id) {
+  if (!confirm('Supprimer ce produit du stock ?')) return;
+  const s = stocks.find(x => x.id === id);
+  if (s) addHistory(s.produit, 'remove', s.quantiteActuelle, 0, id);
+  await fetch('/stocks/' + id, { method: 'DELETE' });
+  showToast('Produit supprimé');
+  loadStocks();
+}
+
+async function ajouterStock() {
+  const nom = document.getElementById('s-nom').value.trim();
+  if (!nom || !selectedRestoId) { alert('Nom requis et restaurant sélectionné'); return; }
+  const qty = document.getElementById('s-qty').value || 0;
+  await fetch('/stocks', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      produit: nom, quantite: qty,
+      seuilAlerte: document.getElementById('s-seuil').value || 5,
+      unite: document.getElementById('s-unite').value,
+      restaurant: selectedRestoNom, restaurantId: selectedRestoId
+    })
+  });
+  addHistory(nom, 'add', parseFloat(qty), parseFloat(qty), null);
+  closeAddModal();
+  showToast('Produit ajouté : ' + nom);
+  loadStocks();
+}
+
+// ═══ RESTOCK ═══
+function openRestockModal() {
+  if (!selectedRestoId) { alert("Sélectionne d'abord un restaurant"); return; }
+  const lowStock = stocks.filter(s => s.statut === 'Alerte' || s.statut === 'Rupture');
+  const list = document.getElementById('restock-list');
+  if (!lowStock.length) {
+    list.innerHTML = '<div style="padding:20px;text-align:center;color:#9ab89a;font-size:13px;">Tous les stocks sont OK ! Aucun réapprovisionnement nécessaire.</div>';
+  } else {
+    list.innerHTML = lowStock.map(s => `
+      <div class="restock-item">
+        <span style="font-size:16px">${getEmoji(s.produit)}</span>
+        <div class="restock-name">${s.produit}</div>
+        <div class="restock-current" style="color:${s.statut==='Rupture'?'#c03030':'#c08010'}">${s.quantiteActuelle} / ${s.quantiteInitiale}</div>
+        <input class="restock-input" id="restock-${s.id}" type="number" value="${s.quantiteInitiale}" data-id="${s.id}" data-seuil="${s.seuilAlerte||5}" />
+      </div>
+    `).join('');
+  }
+  document.getElementById('modal-restock').classList.add('open');
+}
+
+async function executeRestock() {
+  const inputs = document.querySelectorAll('.restock-input');
+  let count = 0;
+  for (const input of inputs) {
+    const id = input.dataset.id;
+    const seuil = parseFloat(input.dataset.seuil);
+    const qty = parseFloat(input.value);
+    if (!id || isNaN(qty)) continue;
+    const s = stocks.find(x => x.id === id);
+    if (s) addHistory(s.produit, 'restock', qty - (s.quantiteActuelle||0), qty, id);
     await fetch('/stocks/' + id, {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ quantite: qty, seuilAlerte: seuil })
     });
-    loadStocks();
+    count++;
+  }
+  closeRestockModal();
+  showToast(`${count} produit(s) réapprovisionné(s)`);
+  loadStocks();
+}
+
+function closeRestockModal() { document.getElementById('modal-restock').classList.remove('open'); }
+
+// ═══ HISTORY ═══
+function addHistory(product, type, qty, newTotal, stockId) {
+  stockHistory.unshift({
+    product, type, qty, newTotal, stockId,
+    time: new Date().toLocaleString('fr-FR'),
+    timestamp: Date.now()
+  });
+  if (stockHistory.length > 200) stockHistory = stockHistory.slice(0, 200);
+  // Save to localStorage
+  try { localStorage.setItem('stock-history-' + selectedRestoId, JSON.stringify(stockHistory)); } catch(e) {}
+}
+
+function loadHistory() {
+  try {
+    const saved = localStorage.getItem('stock-history-' + selectedRestoId);
+    if (saved) stockHistory = JSON.parse(saved);
+  } catch(e) { stockHistory = []; }
+}
+
+function showHistory(stockId, productName) {
+  loadHistory();
+  const filtered = stockId ? stockHistory.filter(h => h.stockId === stockId || h.product === productName) : stockHistory;
+  const body = document.getElementById('history-body');
+  
+  if (!filtered.length) {
+    body.innerHTML = `<div class="history-empty">
+      <div style="font-size:32px;margin-bottom:12px;">📋</div>
+      Aucun mouvement enregistré${productName ? ' pour ' + productName : ''}
+    </div>`;
+  } else {
+    body.innerHTML = filtered.slice(0, 50).map(h => {
+      const typeLabel = h.type === 'add' ? 'Ajout' : h.type === 'remove' ? 'Retrait' : h.type === 'restock' ? 'Réappro.' : h.type === 'auto' ? 'Auto (commande)' : 'Modif.';
+      const sign = h.type === 'remove' ? '−' : '+';
+      return `<div class="history-item">
+        <div class="history-dot ${h.type}"></div>
+        <div class="history-content">
+          <div class="history-action">${typeLabel} — ${h.product}</div>
+          <div class="history-detail">${sign}${h.qty} → Nouveau total: ${h.newTotal}</div>
+          <div class="history-time">${h.time}</div>
+        </div>
+      </div>`;
+    }).join('');
   }
 
-  async function supprimerStock(id) {
-    if (!confirm('Supprimer ce produit du stock ?')) return;
-    await fetch('/stocks/' + id, { method: 'DELETE' });
-    loadStocks();
-  }
+  document.getElementById('history-panel').classList.add('open');
+  document.getElementById('history-backdrop').classList.add('open');
+}
 
-  async function ajouterStock() {
-    const nom = document.getElementById('s-nom').value.trim();
-    if (!nom || !selectedRestoId) { alert('Nom requis et restaurant sélectionné'); return; }
-    await fetch('/stocks', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        produit: nom,
-        quantite: document.getElementById('s-qty').value || 0,
-        seuilAlerte: document.getElementById('s-seuil').value || 5,
-        unite: document.getElementById('s-unite').value,
-        restaurant: selectedRestoNom,
-        restaurantId: selectedRestoId
-      })
-    });
-    closeModal();
-    loadStocks();
-  }
+function closeHistory() {
+  document.getElementById('history-panel').classList.remove('open');
+  document.getElementById('history-backdrop').classList.remove('open');
+}
 
-  function openModal() {
-    if (!selectedRestoId) { alert('Sélectionne d\'abord un restaurant'); return; }
-    document.getElementById('modal-add').classList.add('open');
-  }
-  function closeModal() {
-    document.getElementById('modal-add').classList.remove('open');
-    document.getElementById('s-nom').value = '';
-    document.getElementById('s-qty').value = '';
-    document.getElementById('s-seuil').value = '';
-  }
+// ═══ EXPORT CSV ═══
+function exportCSV() {
+  if (!stocks.length) { alert('Aucun stock à exporter'); return; }
+  const headers = ['Produit', 'Quantité actuelle', 'Quantité initiale', 'Seuil alerte', 'Unité', 'Statut', 'Dernière MAJ'];
+  const rows = stocks.map(s => [s.produit, s.quantiteActuelle, s.quantiteInitiale, s.seuilAlerte, s.unite, s.statut, s.derniereMaj]);
+  const csv = [headers.join(';'), ...rows.map(r => r.join(';'))].join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `stocks_${selectedRestoNom}_${new Date().toLocaleDateString('fr-FR')}.csv`;
+  a.click();
+  showToast('Export CSV téléchargé');
+}
 
-  loadRestaurants();
-  setInterval(() => { if (selectedRestoId) loadStocks(); }, 60000);
+// ═══ MODALS ═══
+function openAddModal() {
+  if (!selectedRestoId) { alert("Sélectionne d'abord un restaurant"); return; }
+  document.getElementById('modal-add').classList.add('open');
+}
+function closeAddModal() {
+  document.getElementById('modal-add').classList.remove('open');
+  document.getElementById('s-nom').value = '';
+  document.getElementById('s-qty').value = '';
+  document.getElementById('s-seuil').value = '';
+}
+
+// ═══ TOAST ═══
+function showToast(text) {
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML = `<span class="toast-icon">✓</span>${text}`;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+// ═══ INIT ═══
+loadRestaurants();
+setInterval(() => { if (selectedRestoId) loadStocks(); }, 60000);
 </script>
 </body>
 </html>

@@ -5,11 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Commande-IA</title>
   <script src="/socket.io/socket.io.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', system-ui, sans-serif; background: #f0f2f0; min-height: 100vh; color: #111; }
+    body { font-family: 'DM Sans', system-ui, sans-serif; background: #f0f2f0; min-height: 100vh; color: #111; }
 
+    /* ═══ TOPBAR ═══ */
     .topbar {
       background: #1a3a1a;
       display: flex; align-items: center; justify-content: space-between;
@@ -18,7 +19,8 @@
     .topbar-left { display: flex; align-items: center; gap: 24px; flex-shrink: 0; }
 
     .logo { font-size: 18px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 10px; letter-spacing: -0.4px; position: relative; }
-    .logo-icon { width: 36px; height: 36px; border-radius: 9px; background: #4a8a1a; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+    .logo-icon { width: 36px; height: 36px; border-radius: 9px; background: #4a8a1a; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: transform 0.15s; }
+    .logo-icon:hover { transform: scale(1.08); }
     .logo-icon svg { width: 20px; height: 20px; }
 
     .burger-menu {
@@ -26,7 +28,9 @@
       width: 260px; background: #fff;
       border: 1.5px solid #e0ecd8; border-radius: 14px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 999; overflow: hidden;
+      animation: menuIn 0.15s ease;
     }
+    @keyframes menuIn { from { opacity:0; transform: translateY(-6px); } to { opacity:1; transform: translateY(0); } }
     .burger-menu-inner { padding: 8px 0; }
     .burger-section { padding: 8px 16px 4px; font-size: 10px; font-weight: 700; color: #9ab89a; text-transform: uppercase; letter-spacing: 1px; }
     .burger-divider { height: 1px; background: #f0f5ee; margin: 6px 0; }
@@ -47,14 +51,62 @@
     .stat-value.small { font-size: 14px; padding-top: 5px; color: #c8e8c8; }
 
     .topbar-right { display: flex; align-items: center; gap: 4px; background: rgba(0,0,0,0.2); padding: 4px; border-radius: 10px; }
-    .tab { font-size: 13px; padding: 7px 20px; border-radius: 7px; border: none; background: transparent; color: rgba(200,232,200,0.6); cursor: pointer; font-weight: 500; font-family: 'Inter', sans-serif; transition: all 0.15s; white-space: nowrap; }
+    .tab { font-size: 13px; padding: 7px 20px; border-radius: 7px; border: none; background: transparent; color: rgba(200,232,200,0.6); cursor: pointer; font-weight: 500; font-family: 'DM Sans', sans-serif; transition: all 0.15s; white-space: nowrap; }
     .tab:hover { color: #fff; background: rgba(255,255,255,0.08); }
     .tab.active { background: #fff; color: #1c3a1c; font-weight: 600; }
 
-    .main { display: grid; grid-template-columns: 1fr 290px; min-height: calc(100vh - 72px); }
+    /* ═══ TOOLBAR (filtres + contrôles) ═══ */
+    .toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 24px; background: #fff; border-bottom: 1.5px solid #e8f0e0;
+      gap: 16px; flex-wrap: wrap;
+    }
+    .filter-pills { display: flex; gap: 6px; }
+    .pill {
+      font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 20px;
+      border: 1.5px solid #e0ecd8; background: #fff; color: #5a8a5a;
+      cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .pill:hover { border-color: #9ad870; background: #f8fdf4; }
+    .pill.active { background: #1a3a1a; color: #a8e07a; border-color: #1a3a1a; }
+    .pill .pill-count {
+      font-size: 10px; font-weight: 700; background: rgba(0,0,0,0.1);
+      padding: 1px 6px; border-radius: 10px; min-width: 18px; text-align: center;
+    }
+    .pill.active .pill-count { background: rgba(168,224,122,0.2); }
 
-    .commands-panel { padding: 24px; display: flex; flex-direction: column; }
-    .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .toolbar-actions { display: flex; align-items: center; gap: 10px; }
+    .sound-toggle {
+      width: 36px; height: 36px; border-radius: 10px; border: 1.5px solid #e0ecd8;
+      background: #fff; cursor: pointer; display: flex; align-items: center;
+      justify-content: center; transition: all 0.15s; position: relative;
+    }
+    .sound-toggle:hover { border-color: #9ad870; }
+    .sound-toggle.muted svg { opacity: 0.3; }
+    .sound-toggle .mute-line {
+      position: absolute; width: 24px; height: 2px; background: #b03030;
+      transform: rotate(-45deg); display: none;
+    }
+    .sound-toggle.muted .mute-line { display: block; }
+
+    .search-box {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 14px; border-radius: 10px; border: 1.5px solid #e0ecd8;
+      background: #fff; transition: border-color 0.15s; min-width: 200px;
+    }
+    .search-box:focus-within { border-color: #4a8a1a; }
+    .search-box input {
+      border: none; outline: none; font-size: 13px; font-family: 'DM Sans', sans-serif;
+      color: #1a2a1a; width: 100%; background: transparent;
+    }
+    .search-box input::placeholder { color: #b0c8b0; }
+
+    /* ═══ MAIN LAYOUT ═══ */
+    .main { display: grid; grid-template-columns: 1fr 320px; min-height: calc(100vh - 72px - 56px); }
+
+    .commands-panel { padding: 20px 24px; display: flex; flex-direction: column; }
+    .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
     .panel-title { font-size: 11px; font-weight: 700; color: #7aaa7a; text-transform: uppercase; letter-spacing: 1.2px; }
     .panel-count { font-size: 11px; font-weight: 600; color: #3B6D11; background: #e8f5dc; padding: 4px 12px; border-radius: 20px; border: 1px solid #c0e090; }
 
@@ -65,40 +117,102 @@
     .empty-title { font-size: 17px; font-weight: 600; color: #3a5a3a; }
     .empty-sub { font-size: 13px; color: #9ab89a; text-align: center; max-width: 280px; line-height: 1.8; }
 
-    .cmd-card { background: #fff; border: 1.5px solid #e0ecd8; border-radius: 14px; padding: 16px; cursor: pointer; transition: all 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
-    .cmd-card:hover { border-color: #9ad870; box-shadow: 0 4px 16px rgba(59,109,17,0.08); transform: translateY(-1px); }
-    .cmd-card.selected { border-color: #3B6D11; border-width: 2px; box-shadow: 0 4px 20px rgba(59,109,17,0.12); }
-    .cmd-card.urgent { border-left: 4px solid #d84040; border-radius: 0 14px 14px 0; background: #fffbfb; }
-    .cmd-card.validated { border-left: 4px solid #3B6D11; border-radius: 0 14px 14px 0; background: #f8fdf4; }
+    /* ═══ ORDER CARDS (redesign) ═══ */
+    .cmd-card {
+      background: #fff; border: 1.5px solid #e0ecd8; border-radius: 16px;
+      padding: 0; cursor: pointer; transition: all 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04); overflow: hidden;
+      animation: cardIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+      position: relative;
+    }
+    @keyframes cardIn { from { opacity:0; transform: translateY(14px) scale(0.97); } to { opacity:1; transform: none; } }
+    .cmd-card:hover { border-color: #9ad870; box-shadow: 0 8px 24px rgba(59,109,17,0.1); transform: translateY(-2px); }
+    .cmd-card.selected { border-color: #3B6D11; border-width: 2px; box-shadow: 0 8px 28px rgba(59,109,17,0.15); }
 
-    .cmd-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-    .cmd-avatar { width: 38px; height: 38px; border-radius: 10px; background: #e8f5dc; border: 1.5px solid #c0e090; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #2d6a0a; flex-shrink: 0; }
+    /* Bande de couleur en haut de la carte */
+    .card-stripe { height: 4px; width: 100%; }
+    .card-stripe.new { background: linear-gradient(90deg, #4a8a1a, #a8e07a); }
+    .card-stripe.urgent { background: linear-gradient(90deg, #d84040, #f0a0a0); }
+    .card-stripe.validated { background: linear-gradient(90deg, #2a50aa, #70a0f0); }
+
+    .card-inner { padding: 14px 16px 16px; }
+
+    .cmd-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .cmd-number { font-size: 11px; font-weight: 800; color: #9ab89a; font-variant-numeric: tabular-nums; }
+    .cmd-avatar { width: 36px; height: 36px; border-radius: 10px; background: #e8f5dc; border: 1.5px solid #c0e090; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #2d6a0a; flex-shrink: 0; }
     .cmd-avatar.urgent-av { background: #fef0f0; border-color: #f0c0c0; color: #b03030; }
+    .cmd-avatar.ai-av { background: #eef0ff; border-color: #c0c8f8; color: #4a50aa; }
     .cmd-name-block { flex: 1; min-width: 0; }
-    .cmd-name { font-size: 14px; font-weight: 700; color: #1a2a1a; }
-    .cmd-time { font-size: 11px; color: #9ab89a; margin-top: 2px; }
+    .cmd-name { font-size: 14px; font-weight: 700; color: #1a2a1a; display: flex; align-items: center; gap: 6px; }
+    .cmd-source {
+      font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .cmd-source.ai { background: #eef0ff; color: #4a50aa; }
+    .cmd-source.manual { background: #f0f5ee; color: #7aaa7a; }
+    .cmd-time { font-size: 11px; color: #9ab89a; margin-top: 2px; display: flex; align-items: center; gap: 6px; }
+    .wait-badge {
+      font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px;
+      animation: fadeBlink 2s infinite;
+    }
+    .wait-badge.ok { background: #e8f5dc; color: #3B6D11; }
+    .wait-badge.warn { background: #fff8e8; color: #906010; }
+    .wait-badge.danger { background: #fef0f0; color: #b03030; }
+    @keyframes fadeBlink { 0%,100%{opacity:1;} 50%{opacity:0.6;} }
+
     .cmd-badge { font-size: 10px; font-weight: 700; padding: 4px 9px; border-radius: 6px; letter-spacing: 0.2px; flex-shrink: 0; }
     .cmd-badge.new { background: #e8f5dc; color: #2d6a0a; border: 1px solid #c0e090; }
     .cmd-badge.prep { background: #e8f0ff; color: #2a50aa; border: 1px solid #b0c8f8; }
     .cmd-badge.urgent { background: #fef0f0; color: #b03030; border: 1px solid #f0c0c0; }
 
-    .cmd-divider { height: 1px; background: #f0f5ee; margin: 0 0 12px; }
-    .cmd-body { display: flex; flex-direction: column; gap: 6px; }
-    .cmd-row { display: flex; justify-content: space-between; align-items: baseline; }
-    .cmd-key { font-size: 11px; color: #9ab89a; font-weight: 500; }
-    .cmd-val { font-size: 13px; font-weight: 600; color: #1a2a1a; text-align: right; }
-    .cmd-tag { font-size: 10px; font-weight: 600; padding: 3px 9px; border-radius: 6px; margin-top: 6px; display: inline-block; }
+    .cmd-divider { height: 1px; background: #f0f5ee; margin: 0 0 10px; }
+
+    /* Items de commande redesign */
+    .cmd-items { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+    .cmd-item { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+    .cmd-item-icon { width: 22px; height: 22px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .cmd-item-icon.sandwich { background: #fff8e8; }
+    .cmd-item-icon.boisson { background: #e8f0ff; }
+    .cmd-item-icon.option { background: #f0f5ee; }
+    .cmd-item-label { font-size: 12px; font-weight: 600; color: #1a2a1a; }
+
+    .cmd-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+    .cmd-tag { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 6px; }
     .cmd-tag.modif { background: #fff8e8; color: #906010; border: 1px solid #e8d090; }
     .cmd-tag.allergy { background: #fef0f0; color: #b03030; border: 1px solid #f0c0c0; }
-    .cmd-chrono { font-size: 12px; font-weight: 700; color: #3B6D11; margin-top: 8px; background: #e8f5dc; padding: 4px 8px; border-radius: 6px; display: inline-block; }
+    .cmd-tag.note { background: #eef0ff; color: #4a50aa; border: 1px solid #c0c8f8; }
 
-    .cmd-footer { display: flex; gap: 8px; margin-top: 14px; }
-    .btn { font-size: 12px; padding: 9px 10px; border-radius: 8px; border: none; background: #3B6D11; color: #fff; cursor: pointer; flex: 1; font-weight: 600; font-family: 'Inter', sans-serif; transition: background 0.15s; }
-    .btn:hover { background: #2d5a0d; }
+    /* Progress bar pour les commandes validées */
+    .prep-progress { margin-top: 10px; }
+    .prep-progress-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .prep-progress-text { font-size: 11px; font-weight: 600; color: #2a50aa; }
+    .prep-progress-time { font-size: 12px; font-weight: 700; color: #2a50aa; font-variant-numeric: tabular-nums; }
+    .prep-bar { height: 4px; background: #e8f0ff; border-radius: 4px; overflow: hidden; }
+    .prep-bar-fill { height: 100%; background: linear-gradient(90deg, #4a8aff, #70a0f0); border-radius: 4px; transition: width 1s linear; }
+
+    .cmd-footer { display: flex; gap: 6px; margin-top: 12px; }
+    .btn { font-size: 12px; padding: 8px 8px; border-radius: 8px; border: none; background: #3B6D11; color: #fff; cursor: pointer; flex: 1; font-weight: 600; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+    .btn:hover { background: #2d5a0d; transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
     .btn-refuse { background: #fef0f0; color: #b03030; border: 1.5px solid #f0c0c0; }
     .btn-refuse:hover { background: #fce0e0; }
+    .btn-note { background: #eef0ff; color: #4a50aa; border: 1.5px solid #c0c8f8; flex: 0; padding: 8px 10px; }
+    .btn-note:hover { background: #dde4ff; }
+    .btn-urgent-mark { background: #fff8e8; color: #906010; border: 1.5px solid #e8d090; flex: 0; padding: 8px 10px; }
+    .btn-urgent-mark:hover { background: #fff0d0; }
 
-    .detail-panel { background: #fff; border-left: 1.5px solid #e0ecd8; padding: 24px 20px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; }
+    /* ═══ DETAIL PANEL (redesign) ═══ */
+    .detail-panel { background: #fff; border-left: 1.5px solid #e0ecd8; padding: 0; display: flex; flex-direction: column; overflow-y: auto; }
+    .detail-header-bar {
+      padding: 18px 20px; background: linear-gradient(135deg, #1a3a1a, #2d5a2d);
+      color: #fff; display: flex; flex-direction: column; gap: 8px;
+    }
+    .detail-header-number { font-size: 12px; font-weight: 700; color: #a8e07a; }
+    .detail-header-name { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+    .detail-header-meta { font-size: 12px; color: #c8e8c8; display: flex; gap: 12px; }
+
+    .detail-body { padding: 20px; flex: 1; display: flex; flex-direction: column; gap: 18px; }
+
     .detail-section-title { font-size: 10px; font-weight: 700; color: #7aaa7a; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 10px; }
     .detail-block { background: #f8faf6; border-radius: 12px; padding: 14px; border: 1.5px solid #e8f0e0; }
     .detail-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid #f0f5ee; }
@@ -109,7 +223,7 @@
     .detail-tag.modif { background: #fff8e8; color: #906010; border: 1px solid #e8d090; }
     .detail-tag.allergy { background: #fef0f0; color: #b03030; border: 1px solid #f0c0c0; }
 
-    .chrono-big { font-size: 38px; font-weight: 700; color: #3B6D11; letter-spacing: -2px; line-height: 1; }
+    .chrono-big { font-size: 42px; font-weight: 800; color: #3B6D11; letter-spacing: -2px; line-height: 1; font-variant-numeric: tabular-nums; }
     .chrono-big.waiting { color: #d0e0d0; }
     .chrono-sub { font-size: 11px; color: #9ab89a; margin-top: 6px; }
     .chrono-active { font-size: 11px; font-weight: 600; color: #3B6D11; margin-top: 10px; display: flex; align-items: center; gap: 7px; background: #e8f5dc; padding: 6px 10px; border-radius: 7px; }
@@ -119,12 +233,41 @@
     .detail-empty-icon { width: 64px; height: 64px; border-radius: 16px; background: #f4f8f0; border: 2px solid #e0ecd8; display: flex; align-items: center; justify-content: center; }
     .detail-empty-text { font-size: 13px; color: #9ab89a; line-height: 1.8; }
 
-    .pdf-btn { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 10px; border: none; background: #3B6D11; color: #fff; font-size: 13px; cursor: pointer; text-decoration: none; font-weight: 600; font-family: 'Inter', sans-serif; transition: background 0.15s; }
+    /* Quick notes dans le detail */
+    .note-input-wrap {
+      display: flex; gap: 6px; margin-top: 8px;
+    }
+    .note-input {
+      flex: 1; font-size: 12px; padding: 8px 12px; border-radius: 8px;
+      border: 1.5px solid #e0ecd8; font-family: 'DM Sans', sans-serif;
+      outline: none; transition: border-color 0.15s;
+    }
+    .note-input:focus { border-color: #4a8a1a; }
+    .note-add-btn {
+      padding: 8px 14px; border-radius: 8px; border: none;
+      background: #3B6D11; color: #fff; font-size: 12px; font-weight: 600;
+      cursor: pointer; font-family: 'DM Sans', sans-serif;
+    }
+
+    /* Timeline dans le detail */
+    .timeline { display: flex; flex-direction: column; gap: 0; }
+    .timeline-item { display: flex; gap: 10px; padding: 6px 0; }
+    .timeline-dot-wrap { display: flex; flex-direction: column; align-items: center; width: 16px; }
+    .timeline-dot { width: 8px; height: 8px; border-radius: 50%; background: #c0e090; flex-shrink: 0; }
+    .timeline-dot.active { background: #3B6D11; box-shadow: 0 0 0 3px #e8f5dc; }
+    .timeline-line { flex: 1; width: 2px; background: #e0ecd8; margin: 2px 0; }
+    .timeline-text { font-size: 12px; color: #5a8a5a; }
+    .timeline-text strong { color: #1a2a1a; font-weight: 600; }
+    .timeline-time { font-size: 10px; color: #9ab89a; }
+
+    .pdf-btn { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 10px; border: none; background: #3B6D11; color: #fff; font-size: 13px; cursor: pointer; text-decoration: none; font-weight: 600; font-family: 'DM Sans', sans-serif; transition: background 0.15s; }
     .pdf-btn:hover { background: #2d5a0d; }
 
+    /* ═══ ARCHIVES ═══ */
     .archive-panel { display: none; padding: 24px; grid-column: 1/-1; }
     .archive-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 20px; }
-    .archive-card { background: #fff; border: 1.5px solid #e0ecd8; border-radius: 14px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+    .archive-card { background: #fff; border: 1.5px solid #e0ecd8; border-radius: 14px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); transition: all 0.15s; }
+    .archive-card:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
     .archive-tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 6px; margin-bottom: 10px; }
     .archive-tag.refused { background: #fef0f0; color: #b03030; border: 1px solid #f0c0c0; }
     .archive-tag.done { background: #e8f5dc; color: #2d6a0a; border: 1px solid #c0e090; }
@@ -133,26 +276,83 @@
     .archive-phone { font-size: 12px; font-weight: 600; color: #3B6D11; margin-top: 8px; }
     .archive-dur { font-size: 11px; color: #9ab89a; margin-top: 3px; }
 
+    /* ═══ CUISINE ═══ */
     .cuisine-panel { display: none; padding: 24px; gap: 14px; flex-wrap: wrap; align-content: flex-start; grid-column: 1/-1; }
     .kitchen-card { background: #fff; border: 1.5px solid #e0ecd8; border-radius: 14px; padding: 18px; width: calc(33.33% - 10px); box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
     .kitchen-name { font-size: 16px; font-weight: 700; color: #1a2a1a; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1.5px solid #f0f5ee; }
     .kitchen-item { font-size: 13px; color: #5a8a5a; padding: 4px 0; }
+
     .clear-btn {
-     font-size: 12px; font-weight: 600; padding: 8px 16px;
-    border-radius: 8px; border: 1.5px solid #f0c0c0;
-    background: #fef0f0; color: #b03030;
-    cursor: pointer; font-family: 'Inter', sans-serif;
-    transition: all 0.15s;
-}
-.clear-btn:hover { background: #fce0e0; border-color: #e09090; }
+      font-size: 12px; font-weight: 600; padding: 8px 16px;
+      border-radius: 8px; border: 1.5px solid #f0c0c0;
+      background: #fef0f0; color: #b03030;
+      cursor: pointer; font-family: 'DM Sans', sans-serif;
+      transition: all 0.15s;
+    }
+    .clear-btn:hover { background: #fce0e0; border-color: #e09090; }
+
+    /* ═══ FLASH NOTIFICATION ═══ */
+    .flash-overlay {
+      position: fixed; inset: 0; background: rgba(74,138,26,0.06);
+      pointer-events: none; z-index: 9999;
+      animation: flashIn 0.6s ease forwards;
+    }
+    @keyframes flashIn { 0%{opacity:1;} 100%{opacity:0;} }
+
+    .toast-notification {
+      position: fixed; top: 80px; right: 24px; z-index: 9998;
+      background: #1a3a1a; color: #fff; padding: 14px 20px;
+      border-radius: 14px; box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      display: flex; align-items: center; gap: 12px;
+      animation: toastIn 0.4s cubic-bezier(0.22,1,0.36,1), toastOut 0.3s 3.5s forwards;
+      max-width: 340px;
+    }
+    @keyframes toastIn { from { opacity:0; transform: translateX(40px); } to { opacity:1; transform: none; } }
+    @keyframes toastOut { to { opacity:0; transform: translateX(40px); } }
+    .toast-icon { width: 36px; height: 36px; border-radius: 10px; background: #4a8a1a; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .toast-body { flex: 1; }
+    .toast-title { font-size: 13px; font-weight: 700; }
+    .toast-sub { font-size: 11px; color: #a8e07a; margin-top: 2px; }
+
+    /* ═══ NOTE MODAL ═══ */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+      z-index: 10000; display: flex; align-items: center; justify-content: center;
+      animation: fadeIn 0.15s;
+    }
+    @keyframes fadeIn { from{opacity:0;} }
+    .modal-box {
+      background: #fff; border-radius: 18px; padding: 24px; width: 340px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      animation: modalIn 0.25s cubic-bezier(0.22,1,0.36,1);
+    }
+    @keyframes modalIn { from { opacity:0; transform: scale(0.92) translateY(10px); } }
+    .modal-title { font-size: 16px; font-weight: 700; color: #1a2a1a; margin-bottom: 4px; }
+    .modal-sub { font-size: 12px; color: #9ab89a; margin-bottom: 16px; }
+    .modal-textarea {
+      width: 100%; height: 80px; border-radius: 10px; border: 1.5px solid #e0ecd8;
+      padding: 10px 12px; font-size: 13px; font-family: 'DM Sans', sans-serif;
+      outline: none; resize: none; transition: border-color 0.15s;
+    }
+    .modal-textarea:focus { border-color: #4a8a1a; }
+    .modal-actions { display: flex; gap: 8px; margin-top: 14px; }
+    .modal-actions .btn { flex: 1; padding: 10px; }
+
+    /* Quick preset notes */
+    .preset-notes { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .preset-btn {
+      font-size: 11px; padding: 5px 10px; border-radius: 8px;
+      border: 1.5px solid #e0ecd8; background: #f8faf6; color: #5a8a5a;
+      cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+    }
+    .preset-btn:hover { background: #e8f5dc; border-color: #c0e090; }
   </style>
 </head>
 <body>
 
-  
+
 <div class="topbar">
   <div class="topbar-left">
-
     <div class="logo">
       <div class="logo-icon" onclick="toggleMenu()">
         <svg viewBox="0 0 20 20" fill="none"><path d="M3 6h14M3 10h9M3 14h11" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
@@ -167,13 +367,13 @@
             Tableau de bord
           </div>
           <div class="menu-item" onclick="window.location.href='/analytics.html';toggleMenu()">
-  <svg width="16" height="16" viewBox="0 0 15 15" fill="none"><path d="M1.5 11.5l3.5-4 3 2.5 3-5.5 2.5 2" stroke="#3B6D11" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-  Analytics
-</div>
-<div class="menu-item" onclick="window.location.href='/stocks.html';toggleMenu()">
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="4" rx="1" stroke="#3B6D11" stroke-width="1.3"/><rect x="2" y="8" width="12" height="4" rx="1" stroke="#3B6D11" stroke-width="1.3"/><path d="M5 4h6M5 10h6" stroke="#3B6D11" stroke-width="1" stroke-linecap="round"/></svg>
-  Gestion des stocks
-</div>
+            <svg width="16" height="16" viewBox="0 0 15 15" fill="none"><path d="M1.5 11.5l3.5-4 3 2.5 3-5.5 2.5 2" stroke="#3B6D11" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Analytics
+          </div>
+          <div class="menu-item" onclick="window.location.href='/stocks.html';toggleMenu()">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="4" rx="1" stroke="#3B6D11" stroke-width="1.3"/><rect x="2" y="8" width="12" height="4" rx="1" stroke="#3B6D11" stroke-width="1.3"/><path d="M5 4h6M5 10h6" stroke="#3B6D11" stroke-width="1" stroke-linecap="round"/></svg>
+            Gestion des stocks
+          </div>
           <div class="menu-item" onclick="switchView('archive',document.querySelectorAll('.tab')[2]);toggleMenu()">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 5h12v8a1 1 0 01-1 1H3a1 1 0 01-1-1V5z" stroke="#3B6D11" stroke-width="1.5"/><path d="M1 3h14v2H1z" stroke="#3B6D11" stroke-width="1.5"/></svg>
             Historique / Archives
@@ -183,9 +383,9 @@
             Vue cuisine
           </div>
           <div class="menu-item" onclick="window.location.href='/voice-client.html';toggleMenu()">
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v4M5 6h6a1 1 0 011 1v2a4 4 0 01-8 0V7a1 1 0 011-1z" stroke="#3B6D11" stroke-width="1.3" stroke-linecap="round"/><path d="M5 13h6" stroke="#3B6D11" stroke-width="1.3" stroke-linecap="round"/></svg>
-  Commande IA (client)
-</div>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v4M5 6h6a1 1 0 011 1v2a4 4 0 01-8 0V7a1 1 0 011-1z" stroke="#3B6D11" stroke-width="1.3" stroke-linecap="round"/><path d="M5 13h6" stroke="#3B6D11" stroke-width="1.3" stroke-linecap="round"/></svg>
+            Commande IA (client)
+          </div>
           <div class="burger-divider"></div>
           <div class="burger-section">Restaurant</div>
           <div class="menu-item" onclick="window.location.href='/restaurant.html';toggleMenu()">
@@ -238,6 +438,35 @@
   </div>
 </div>
 
+<!-- ═══ TOOLBAR ═══ -->
+<div class="toolbar" id="toolbar">
+  <div class="filter-pills">
+    <button class="pill active" onclick="setFilter('all', this)">Toutes <span class="pill-count" id="filter-all-count">0</span></button>
+    <button class="pill" onclick="setFilter('new', this)">
+      <svg width="10" height="10"><circle cx="5" cy="5" r="4" fill="#4a8a1a"/></svg>
+      Nouvelles <span class="pill-count" id="filter-new-count">0</span>
+    </button>
+    <button class="pill" onclick="setFilter('validated', this)">
+      <svg width="10" height="10"><circle cx="5" cy="5" r="4" fill="#2a50aa"/></svg>
+      En prépa <span class="pill-count" id="filter-prep-count">0</span>
+    </button>
+    <button class="pill" onclick="setFilter('urgent', this)">
+      <svg width="10" height="10"><circle cx="5" cy="5" r="4" fill="#d84040"/></svg>
+      Urgentes <span class="pill-count" id="filter-urgent-count">0</span>
+    </button>
+  </div>
+  <div class="toolbar-actions">
+    <div class="search-box">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="#9ab89a" stroke-width="1.5"/><path d="M11 11l3 3" stroke="#9ab89a" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <input type="text" placeholder="Rechercher un client..." id="search-input" oninput="renderCards()">
+    </div>
+    <button class="sound-toggle" id="sound-toggle" onclick="toggleSound()" title="Son des notifications">
+      <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 8v4h3l4 4V4L6 8H3z" fill="#3B6D11"/><path d="M14 6.5a4 4 0 010 7" stroke="#3B6D11" stroke-width="1.5" stroke-linecap="round"/><path d="M16 4a7 7 0 010 12" stroke="#3B6D11" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <div class="mute-line"></div>
+    </button>
+  </div>
+</div>
+
 <div class="main" id="main">
   <div class="commands-panel" id="hote-panel">
     <div class="panel-header">
@@ -260,12 +489,12 @@
 
   <div class="archive-panel" id="archive-panel">
     <div style="display:flex;justify-content:space-between;align-items:center;">
-  <span class="panel-title">Historique de la journée</span>
-  <div style="display:flex;gap:10px;align-items:center;">
-    <a class="pdf-btn" href="#" style="width:auto;padding:8px 20px;" onclick="exportPDF(event)">Exporter PDF</a>
-    <button class="clear-btn" onclick="clearArchives()">Tout supprimer</button>
-  </div>
-</div>
+      <span class="panel-title">Historique de la journée</span>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <a class="pdf-btn" href="#" style="width:auto;padding:8px 20px;" onclick="exportPDF(event)">Exporter PDF</a>
+        <button class="clear-btn" onclick="clearArchives()">Tout supprimer</button>
+      </div>
+    </div>
     <div class="archive-grid" id="archive-container">
       <div style="grid-column:1/-1;font-size:13px;color:#9ab89a;padding:24px 0;">Aucune commande archivée.</div>
     </div>
@@ -276,20 +505,25 @@
   </div>
 </div>
 
+<!-- INSTALL BTN -->
+<div id="install-btn" onclick="installerApp()" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a3a1a;color:#fff;padding:12px 24px;border-radius:24px;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;align-items:center;gap:8px;box-shadow:0 4px 20px rgba(0,0,0,0.2);z-index:999;">
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v9M5 8l3 3 3-3M2 13h12" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  Installer l'application
+</div>
+
 <script>
-  function deconnexion() {
+// ═══ AUTH ═══
+function deconnexion() {
   sessionStorage.removeItem('user');
   window.location.href = '/login.html';
 }
-  const user = sessionStorage.getItem('user');
+const user = sessionStorage.getItem('user');
 if (!user) window.location.href = '/login.html';
 const currentUser = JSON.parse(user || '{}');
 document.getElementById('user-email').textContent = currentUser.email || '';
-// Affiche le lien admin uniquement pour le compte admin
 if (currentUser.email === 'quentin@commande-ia.fr') {
   document.getElementById('admin-link').style.display = 'flex';
 }
-// Si gérant/hôte et setup pas encore fait → page setup
 if (currentUser.role !== 'Admin' && currentUser.restaurantId) {
   fetch('/mon-restaurant/' + currentUser.restaurantId)
     .then(r => r.json())
@@ -300,128 +534,299 @@ if (currentUser.role !== 'Admin' && currentUser.restaurantId) {
     })
     .catch(() => {});
 }
-  const socket = io();
-  let commandes = [], archives = [], selected = null;
-  let chronoInterval = null, doneCount = 0, totalDuration = 0;
 
-  socket.on('nouvelle_commande', cmd => { commandes.push(cmd); renderCards(); });
-  socket.on('commande_mise_a_jour', cmd => {
-    const idx = commandes.findIndex(c => c.id === cmd.id);
-    if (idx !== -1) commandes[idx] = cmd;
-    renderCards();
-  });
-  socket.on('commande_terminee', cmd => {
-    commandes = commandes.filter(c => c.id !== cmd.id);
-    archives.unshift(cmd);
-    if (cmd.state === 'done' && cmd.chronoStart && cmd.chronoEnd) {
-      doneCount++;
-      totalDuration += Math.floor((cmd.chronoEnd - cmd.chronoStart) / 1000);
-      updateAvg();
-    }
-    document.getElementById('done-count').textContent = archives.filter(a => a.state === 'done').length;
-    renderCards(); renderArchive();
-  });
+// ═══ STATE ═══
+const socket = io();
+let commandes = [], archives = [], selected = null;
+let chronoInterval = null, doneCount = 0, totalDuration = 0;
+let activeFilter = 'all';
+let soundEnabled = true;
 
-  fetch('/commandes').then(r => r.json()).then(d => { commandes = d; renderCards(); });
-  fetch('/archives').then(r => r.json()).then(d => { archives = d; renderArchive(); });
+// Notification sound (Web Audio API)
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playNotifSound() {
+  if (!soundEnabled) return;
+  try {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+    osc.frequency.setValueAtTime(1100, audioCtx.currentTime + 0.1);
+    osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.2);
+    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+    osc.start(audioCtx.currentTime);
+    osc.stop(audioCtx.currentTime + 0.4);
+  } catch(e) {}
+}
 
-  function fmtTime(sec) {
-    if (sec == null) return '—';
-    return Math.floor(sec / 60) + 'min ' + String(sec % 60).padStart(2, '0') + 's';
-  }
-  function getElapsed(cmd) {
-    if (!cmd.chronoStart) return null;
-    return Math.floor(((cmd.chronoEnd || Date.now()) - cmd.chronoStart) / 1000);
-  }
-  function updateAvg() {
-    document.getElementById('avg-time').textContent = doneCount ? fmtTime(Math.round(totalDuration / doneCount)) : '—';
-  }
-  function initials(name) {
-    return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-  }
-  function toggleMenu() {
-    const m = document.getElementById('burger-menu');
-    m.style.display = m.style.display === 'none' ? 'block' : 'none';
-  }
-  document.addEventListener('click', e => {
-    if (!e.target.closest('.logo')) {
-      document.getElementById('burger-menu').style.display = 'none';
-    }
-  });
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  document.getElementById('sound-toggle').classList.toggle('muted', !soundEnabled);
+}
 
-  function renderCards() {
-    const c = document.getElementById('cards-container');
-    c.innerHTML = '';
-    document.getElementById('cmd-count').textContent = commandes.length;
-    document.getElementById('panel-count').textContent = commandes.length + ' active' + (commandes.length > 1 ? 's' : '');
-    if (!commandes.length) {
-      c.innerHTML = `<div class="empty-state">
-        <div class="empty-icon"><svg width="36" height="36" viewBox="0 0 36 36" fill="none"><path d="M8 12h20M8 18h14M8 24h16" stroke="#c0e090" stroke-width="2" stroke-linecap="round"/></svg></div>
-        <div class="empty-title">Aucune commande active</div>
-        <div class="empty-sub">Les nouvelles commandes apparaîtront ici en temps réel dès qu'un client appellera.</div>
-      </div>`;
-      return;
-    }
-    clearInterval(chronoInterval);
-    commandes.forEach(cmd => {
-      const el = document.createElement('div');
-      const stateClass = cmd.state === 'urgent' ? 'urgent' : cmd.state === 'validated' ? 'validated' : '';
-      el.className = 'cmd-card' + (cmd.id === selected ? ' selected' : '') + (stateClass ? ' ' + stateClass : '');
-      el.onclick = () => { selected = cmd.id; renderCards(); renderDetail(); };
-      const badgeClass = cmd.state === 'validated' ? 'prep' : cmd.state === 'urgent' ? 'urgent' : 'new';
-      const badgeLabel = cmd.state === 'validated' ? 'En prépa' : cmd.state === 'urgent' ? 'Urgent' : 'Nouveau';
-      el.innerHTML = `
+// ═══ SOCKET EVENTS ═══
+socket.on('nouvelle_commande', cmd => {
+  cmd.arrivedAt = Date.now(); // Timestamp d'arrivée
+  commandes.push(cmd);
+  renderCards();
+  // Flash + Toast + Son
+  showFlash();
+  showToast(cmd);
+  playNotifSound();
+});
+
+socket.on('commande_mise_a_jour', cmd => {
+  const idx = commandes.findIndex(c => c.id === cmd.id);
+  if (idx !== -1) {
+    cmd.arrivedAt = commandes[idx].arrivedAt;
+    cmd.notes = commandes[idx].notes;
+    commandes[idx] = cmd;
+  }
+  renderCards();
+});
+
+socket.on('commande_terminee', cmd => {
+  commandes = commandes.filter(c => c.id !== cmd.id);
+  archives.unshift(cmd);
+  if (cmd.state === 'done' && cmd.chronoStart && cmd.chronoEnd) {
+    doneCount++;
+    totalDuration += Math.floor((cmd.chronoEnd - cmd.chronoStart) / 1000);
+    updateAvg();
+  }
+  document.getElementById('done-count').textContent = archives.filter(a => a.state === 'done').length;
+  renderCards(); renderArchive();
+});
+
+fetch('/commandes').then(r => r.json()).then(d => {
+  commandes = d.map(c => ({ ...c, arrivedAt: c.arrivedAt || Date.now() }));
+  renderCards();
+});
+fetch('/archives').then(r => r.json()).then(d => { archives = d; renderArchive(); });
+
+// ═══ HELPERS ═══
+function fmtTime(sec) {
+  if (sec == null) return '—';
+  return Math.floor(sec / 60) + 'min ' + String(sec % 60).padStart(2, '0') + 's';
+}
+function fmtTimeShort(sec) {
+  if (sec == null) return '—';
+  const m = Math.floor(sec / 60), s = sec % 60;
+  return m > 0 ? m + 'm' + String(s).padStart(2,'0') : s + 's';
+}
+function getElapsed(cmd) {
+  if (!cmd.chronoStart) return null;
+  return Math.floor(((cmd.chronoEnd || Date.now()) - cmd.chronoStart) / 1000);
+}
+function getWaitTime(cmd) {
+  if (!cmd.arrivedAt) return 0;
+  return Math.floor((Date.now() - cmd.arrivedAt) / 1000);
+}
+function updateAvg() {
+  document.getElementById('avg-time').textContent = doneCount ? fmtTime(Math.round(totalDuration / doneCount)) : '—';
+}
+function initials(name) {
+  return (name || '?').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+}
+function cmdNumber(id) { return '#' + String(id).padStart(3, '0'); }
+function toggleMenu() {
+  const m = document.getElementById('burger-menu');
+  m.style.display = m.style.display === 'none' ? 'block' : 'none';
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.logo')) document.getElementById('burger-menu').style.display = 'none';
+});
+
+// ═══ FLASH + TOAST ═══
+function showFlash() {
+  const flash = document.createElement('div');
+  flash.className = 'flash-overlay';
+  document.body.appendChild(flash);
+  setTimeout(() => flash.remove(), 700);
+}
+function showToast(cmd) {
+  const toast = document.createElement('div');
+  toast.className = 'toast-notification';
+  toast.innerHTML = `
+    <div class="toast-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 2a8 8 0 100 16 8 8 0 000-16z" stroke="#fff" stroke-width="1.5"/><path d="M10 6v4l3 2" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+    <div class="toast-body">
+      <div class="toast-title">${cmdNumber(cmd.id)} — ${cmd.name}</div>
+      <div class="toast-sub">${cmd.sandwich} · ${cmd.boisson}</div>
+    </div>`;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 4000);
+}
+
+// ═══ FILTERS ═══
+function setFilter(f, btn) {
+  activeFilter = f;
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  renderCards();
+}
+function updateFilterCounts() {
+  document.getElementById('filter-all-count').textContent = commandes.length;
+  document.getElementById('filter-new-count').textContent = commandes.filter(c => c.state === 'new').length;
+  document.getElementById('filter-prep-count').textContent = commandes.filter(c => c.state === 'validated').length;
+  document.getElementById('filter-urgent-count').textContent = commandes.filter(c => c.state === 'urgent').length;
+}
+
+// ═══ RENDER CARDS ═══
+function renderCards() {
+  const c = document.getElementById('cards-container');
+  c.innerHTML = '';
+  updateFilterCounts();
+
+  const search = (document.getElementById('search-input')?.value || '').toLowerCase();
+  let filtered = commandes;
+  if (activeFilter !== 'all') filtered = filtered.filter(cmd => cmd.state === activeFilter);
+  if (search) filtered = filtered.filter(cmd => (cmd.name || '').toLowerCase().includes(search) || (cmd.sandwich || '').toLowerCase().includes(search));
+
+  document.getElementById('cmd-count').textContent = commandes.length;
+  document.getElementById('panel-count').textContent = filtered.length + ' active' + (filtered.length > 1 ? 's' : '');
+
+  if (!filtered.length) {
+    c.innerHTML = `<div class="empty-state">
+      <div class="empty-icon"><svg width="36" height="36" viewBox="0 0 36 36" fill="none"><path d="M8 12h20M8 18h14M8 24h16" stroke="#c0e090" stroke-width="2" stroke-linecap="round"/></svg></div>
+      <div class="empty-title">${commandes.length ? 'Aucun résultat' : 'Aucune commande active'}</div>
+      <div class="empty-sub">${commandes.length ? 'Modifie le filtre ou la recherche.' : 'Les nouvelles commandes apparaîtront ici en temps réel.'}</div>
+    </div>`;
+    return;
+  }
+
+  clearInterval(chronoInterval);
+  filtered.forEach((cmd, i) => {
+    const el = document.createElement('div');
+    const stripeClass = cmd.state === 'urgent' ? 'urgent' : cmd.state === 'validated' ? 'validated' : 'new';
+    el.className = 'cmd-card' + (cmd.id === selected ? ' selected' : '');
+    el.style.animationDelay = (i * 0.04) + 's';
+    el.onclick = () => { selected = cmd.id; renderCards(); renderDetail(); };
+
+    const badgeClass = cmd.state === 'validated' ? 'prep' : cmd.state === 'urgent' ? 'urgent' : 'new';
+    const badgeLabel = cmd.state === 'validated' ? 'En prépa' : cmd.state === 'urgent' ? 'Urgent' : 'Nouveau';
+    const avatarClass = cmd.state === 'urgent' ? 'urgent-av' : (cmd.source === 'ai' ? 'ai-av' : '');
+    const isAI = cmd.source === 'ai' || cmd.phone;
+    const waitSec = cmd.state === 'new' ? getWaitTime(cmd) : 0;
+    const waitClass = waitSec > 300 ? 'danger' : waitSec > 120 ? 'warn' : 'ok';
+
+    // Progress bar pour commandes en prépa (objectif ~10min)
+    const elapsed = getElapsed(cmd);
+    const progressPct = cmd.state === 'validated' && elapsed != null ? Math.min(100, (elapsed / 600) * 100) : 0;
+
+    el.innerHTML = `
+      <div class="card-stripe ${stripeClass}"></div>
+      <div class="card-inner">
         <div class="cmd-header">
-          <div class="cmd-avatar ${cmd.state === 'urgent' ? 'urgent-av' : ''}">${initials(cmd.name)}</div>
+          <div class="cmd-avatar ${avatarClass}">${initials(cmd.name)}</div>
           <div class="cmd-name-block">
-            <div class="cmd-name">${cmd.name}</div>
-            <div class="cmd-time">${cmd.createdAt}</div>
+            <div class="cmd-name">
+              ${cmd.name}
+              ${isAI ? '<span class="cmd-source ai">IA</span>' : '<span class="cmd-source manual">Manuel</span>'}
+            </div>
+            <div class="cmd-time">
+              <span class="cmd-number">${cmdNumber(cmd.id)}</span> · ${cmd.createdAt}
+              ${cmd.state === 'new' && waitSec > 60 ? `<span class="wait-badge ${waitClass}">${fmtTimeShort(waitSec)} attente</span>` : ''}
+            </div>
           </div>
           <div class="cmd-badge ${badgeClass}">${badgeLabel}</div>
         </div>
         <div class="cmd-divider"></div>
-        <div class="cmd-body">
-          <div class="cmd-row"><span class="cmd-key">Sandwich</span><span class="cmd-val">${cmd.sandwich}</span></div>
-          <div class="cmd-row"><span class="cmd-key">Boisson</span><span class="cmd-val">${cmd.boisson}</span></div>
-          <div class="cmd-row"><span class="cmd-key">Option</span><span class="cmd-val">${cmd.option}</span></div>
-          ${cmd.modif ? `<div><span class="cmd-tag modif">Modif : ${cmd.modif}</span></div>` : ''}
-          ${cmd.allergy ? `<div><span class="cmd-tag allergy">Allergie : ${cmd.allergy}</span></div>` : ''}
-          ${cmd.state === 'validated' ? `<div><span class="cmd-chrono" id="card-chrono-${cmd.id}">${fmtTime(getElapsed(cmd))}</span></div>` : ''}
+        <div class="cmd-items">
+          <div class="cmd-item">
+            <div class="cmd-item-icon sandwich"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><rect x="2" y="5" width="12" height="6" rx="3" stroke="#906010" stroke-width="1.3"/></svg></div>
+            <span class="cmd-item-label">${cmd.sandwich || '—'}</span>
+          </div>
+          <div class="cmd-item">
+            <div class="cmd-item-icon boisson"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M5 3h6l-1 10H6L5 3z" stroke="#2a50aa" stroke-width="1.3"/></svg></div>
+            <span class="cmd-item-label">${cmd.boisson || '—'}</span>
+          </div>
+          <div class="cmd-item">
+            <div class="cmd-item-icon option"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5" stroke="#5a8a5a" stroke-width="1.3"/></svg></div>
+            <span class="cmd-item-label">${cmd.option || '—'}</span>
+          </div>
         </div>
+        <div class="cmd-tags">
+          ${cmd.modif ? `<span class="cmd-tag modif">Modif : ${cmd.modif}</span>` : ''}
+          ${cmd.allergy ? `<span class="cmd-tag allergy">Allergie : ${cmd.allergy}</span>` : ''}
+          ${(cmd.notes || []).map(n => `<span class="cmd-tag note">${n}</span>`).join('')}
+        </div>
+        ${cmd.state === 'validated' ? `
+          <div class="prep-progress">
+            <div class="prep-progress-label">
+              <span class="prep-progress-text">Préparation</span>
+              <span class="prep-progress-time" id="card-chrono-${cmd.id}">${fmtTime(elapsed)}</span>
+            </div>
+            <div class="prep-bar"><div class="prep-bar-fill" style="width:${progressPct}%"></div></div>
+          </div>
+        ` : ''}
         <div class="cmd-footer">
           ${cmd.state !== 'validated'
             ? `<button class="btn" onclick="action(event,${cmd.id},'valider')">Valider</button>`
             : `<button class="btn" onclick="action(event,${cmd.id},'prete')">Prête</button>`}
+          <button class="btn btn-note" onclick="openNoteModal(event,${cmd.id})" title="Ajouter une note">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 13h2l7-7-2-2-7 7v2z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          </button>
+          ${cmd.state === 'new' ? `<button class="btn btn-urgent-mark" onclick="markUrgent(event,${cmd.id})" title="Marquer urgent">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 3v6M8 11v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </button>` : ''}
           ${cmd.state !== 'validated'
             ? `<button class="btn btn-refuse" onclick="action(event,${cmd.id},'refuser')">Refuser</button>`
             : ''}
-        </div>`;
-      c.appendChild(el);
-    });
-    chronoInterval = setInterval(() => {
-      commandes.filter(c => c.state === 'validated').forEach(c => {
-        const el = document.getElementById('card-chrono-' + c.id);
-        if (el) el.textContent = fmtTime(getElapsed(c));
-      });
-      if (selected) renderDetail();
-    }, 1000);
-    renderDetail();
-  }
-
-  function renderDetail() {
-    const cmd = commandes.find(c => c.id === selected);
-    const container = document.getElementById('detail-content');
-    if (!cmd) {
-      container.innerHTML = `<div class="detail-empty">
-        <div class="detail-empty-icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="3" y="3" width="22" height="22" rx="5" stroke="#c0e090" stroke-width="1.5"/><path d="M9 14h10M14 9v10" stroke="#c0e090" stroke-width="1.5" stroke-linecap="round"/></svg></div>
-        <div class="detail-empty-text">Sélectionne une commande<br>pour voir le détail</div>
+        </div>
       </div>`;
-      return;
-    }
-    const elapsed = getElapsed(cmd);
-    container.innerHTML = `
-      <div style="margin-bottom:18px;">
-        <div class="detail-section-title">Commande</div>
+    c.appendChild(el);
+  });
+
+  chronoInterval = setInterval(() => {
+    commandes.filter(c => c.state === 'validated').forEach(c => {
+      const el = document.getElementById('card-chrono-' + c.id);
+      if (el) el.textContent = fmtTime(getElapsed(c));
+      // Update progress bar
+      const bar = el?.closest('.prep-progress')?.querySelector('.prep-bar-fill');
+      if (bar) {
+        const e = getElapsed(c);
+        bar.style.width = Math.min(100, (e / 600) * 100) + '%';
+      }
+    });
+    // Update wait badges
+    commandes.filter(c => c.state === 'new').forEach(c => {
+      const card = document.querySelector(`.cmd-card[data-id="${c.id}"]`);
+      // Re-render less frequently for wait badges is fine
+    });
+    if (selected) renderDetail();
+  }, 1000);
+  renderDetail();
+}
+
+// ═══ DETAIL PANEL ═══
+function renderDetail() {
+  const cmd = commandes.find(c => c.id === selected);
+  const container = document.getElementById('detail-content');
+  if (!cmd) {
+    container.innerHTML = `<div class="detail-empty">
+      <div class="detail-empty-icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="3" y="3" width="22" height="22" rx="5" stroke="#c0e090" stroke-width="1.5"/><path d="M9 14h10M14 9v10" stroke="#c0e090" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+      <div class="detail-empty-text">Sélectionne une commande<br>pour voir le détail</div>
+    </div>`;
+    return;
+  }
+  const elapsed = getElapsed(cmd);
+  const isAI = cmd.source === 'ai' || cmd.phone;
+  const stateLabel = cmd.state === 'validated' ? 'En préparation' : cmd.state === 'urgent' ? 'Urgente' : 'Nouvelle';
+
+  container.innerHTML = `
+    <div class="detail-header-bar">
+      <div class="detail-header-number">${cmdNumber(cmd.id)} · ${stateLabel}</div>
+      <div class="detail-header-name">${cmd.name || 'Client'}</div>
+      <div class="detail-header-meta">
+        <span>${cmd.createdAt}</span>
+        <span>${isAI ? 'Commande IA' : 'Commande manuelle'}</span>
+        ${cmd.phone ? `<span>${cmd.phone}</span>` : ''}
+      </div>
+    </div>
+    <div class="detail-body">
+      <div>
+        <div class="detail-section-title">Articles commandés</div>
         <div class="detail-block">
           <div class="detail-row"><span class="detail-key">Sandwich</span><span class="detail-val">${cmd.sandwich || '—'}</span></div>
           <div class="detail-row"><span class="detail-key">Boisson</span><span class="detail-val">${cmd.boisson || '—'}</span></div>
@@ -430,7 +835,8 @@ if (currentUser.role !== 'Admin' && currentUser.restaurantId) {
           ${cmd.allergy ? `<div><span class="detail-tag allergy">Allergie : ${cmd.allergy}</span></div>` : ''}
         </div>
       </div>
-      <div style="margin-bottom:18px;">
+
+      <div>
         <div class="detail-section-title">Chrono préparation</div>
         <div class="detail-block">
           <div class="chrono-big ${elapsed === null ? 'waiting' : ''}">${elapsed !== null ? fmtTime(elapsed) : '—'}</div>
@@ -440,94 +846,203 @@ if (currentUser.role !== 'Admin' && currentUser.restaurantId) {
             : `<div class="chrono-sub" style="margin-top:8px;">En attente de validation</div>`}
         </div>
       </div>
-      <div style="margin-bottom:20px;">
-        <div class="detail-section-title">Client</div>
+
+      <div>
+        <div class="detail-section-title">Timeline</div>
         <div class="detail-block">
-          <div class="detail-row"><span class="detail-key">Nom</span><span class="detail-val">${cmd.name || '—'}</span></div>
-          <div class="detail-row"><span class="detail-key">Tél</span><span class="detail-val">${cmd.phone || '—'}</span></div>
+          <div class="timeline">
+            <div class="timeline-item">
+              <div class="timeline-dot-wrap"><div class="timeline-dot active"></div><div class="timeline-line"></div></div>
+              <div><div class="timeline-text"><strong>Commande reçue</strong></div><div class="timeline-time">${cmd.createdAt}</div></div>
+            </div>
+            ${cmd.state === 'validated' || cmd.state === 'done' ? `
+            <div class="timeline-item">
+              <div class="timeline-dot-wrap"><div class="timeline-dot active"></div><div class="timeline-line"></div></div>
+              <div><div class="timeline-text"><strong>Validée — préparation lancée</strong></div></div>
+            </div>` : ''}
+            <div class="timeline-item">
+              <div class="timeline-dot-wrap"><div class="timeline-dot ${cmd.state === 'done' ? 'active' : ''}"></div></div>
+              <div><div class="timeline-text" style="${cmd.state !== 'done' ? 'color:#c0d0c0' : ''}"><strong>Prête — à retirer</strong></div></div>
+            </div>
+          </div>
         </div>
       </div>
-      <a class="pdf-btn" href="#" onclick="exportPDF(event)">Ticket PDF</a>`;
-  }
 
-  function action(e, id, type) {
-    e.stopPropagation();
-    if (type === 'refuser') {
-      if (!confirm('Êtes-vous sûr de vouloir refuser cette commande ?')) return;
-    }
-    fetch(`/commandes/${id}/${type}`, { method: 'PATCH' })
-      .then(r => r.json())
-      .then(() => { if (type !== 'valider') selected = null; });
-  }
+      <div>
+        <div class="detail-section-title">Notes internes</div>
+        <div class="detail-block">
+          ${(cmd.notes || []).length ? (cmd.notes || []).map(n => `<div style="font-size:12px;color:#4a50aa;padding:3px 0;">• ${n}</div>`).join('') : '<div style="font-size:12px;color:#c0d0c0;">Aucune note</div>'}
+          <div class="note-input-wrap">
+            <input class="note-input" id="detail-note-input" placeholder="Ajouter une note..." onkeydown="if(event.key==='Enter')addNoteFromDetail(${cmd.id})">
+            <button class="note-add-btn" onclick="addNoteFromDetail(${cmd.id})">+</button>
+          </div>
+        </div>
+      </div>
 
-  function renderArchive() {
-    const c = document.getElementById('archive-container');
-    if (!archives.length) { c.innerHTML = '<div style="grid-column:1/-1;font-size:13px;color:#9ab89a;padding:24px 0;">Aucune commande archivée.</div>'; return; }
-    c.innerHTML = '';
-    archives.forEach(cmd => {
-      const dur = cmd.chronoStart && cmd.chronoEnd ? fmtTime(Math.floor((cmd.chronoEnd - cmd.chronoStart) / 1000)) : null;
-      const el = document.createElement('div');
-      el.className = 'archive-card';
-      el.innerHTML = `
-        <div class="archive-tag ${cmd.state === 'refused' ? 'refused' : 'done'}">${cmd.state === 'refused' ? 'Refusée' : 'Prête'} — ${cmd.archivedAt}</div>
-        <div class="archive-name">${cmd.name}</div>
-        <div class="archive-detail">${cmd.sandwich} · ${cmd.boisson} · ${cmd.option}</div>
-        ${cmd.modif ? `<div class="archive-detail" style="color:#906010;">Modif : ${cmd.modif}</div>` : ''}
-        ${cmd.allergy ? `<div class="archive-detail" style="color:#b03030;">Allergie : ${cmd.allergy}</div>` : ''}
-        <div class="archive-phone">${cmd.phone || '—'}</div>
-        ${dur ? `<div class="archive-dur">Préparation : ${dur}</div>` : ''}`;
-      c.appendChild(el);
-    });
-  }
+      <a class="pdf-btn" href="#" onclick="exportPDF(event)">Ticket PDF</a>
+    </div>`;
+}
 
-  function switchView(view, tab) {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    if (tab) tab.classList.add('active');
-    ['hote-panel','detail-panel','archive-panel','cuisine-panel'].forEach(id => {
-      document.getElementById(id).style.display = 'none';
-    });
-    if (view === 'hote') {
-      document.getElementById('hote-panel').style.display = 'flex';
-      document.getElementById('detail-panel').style.display = 'flex';
-    } else if (view === 'cuisine') {
-      document.getElementById('cuisine-panel').style.display = 'flex';
-      renderCuisine();
-    } else {
-      document.getElementById('archive-panel').style.display = 'block';
-    }
+// ═══ ACTIONS ═══
+function action(e, id, type) {
+  e.stopPropagation();
+  if (type === 'refuser') {
+    if (!confirm('Êtes-vous sûr de vouloir refuser cette commande ?')) return;
   }
+  fetch(`/commandes/${id}/${type}`, { method: 'PATCH' })
+    .then(r => r.json())
+    .then(() => { if (type !== 'valider') selected = null; });
+}
 
-  function renderCuisine() {
-    const c = document.getElementById('cuisine-container');
-    const validated = commandes.filter(x => x.state === 'validated');
-    if (!validated.length) { c.innerHTML = '<div style="font-size:13px;color:#9ab89a;">Aucune commande en préparation.</div>'; return; }
-    c.innerHTML = '';
-    validated.forEach(cmd => {
-      const el = document.createElement('div');
-      el.className = 'kitchen-card';
-      el.innerHTML = `
-        <div class="kitchen-name">${cmd.name}</div>
-        <div class="kitchen-item">${cmd.sandwich} — ${cmd.option}</div>
-        <div class="kitchen-item">${cmd.boisson}</div>
-        ${cmd.modif ? `<div class="kitchen-item" style="color:#906010;">Modif : ${cmd.modif}</div>` : ''}
-        ${cmd.allergy ? `<div class="kitchen-item" style="color:#b03030;">Allergie : ${cmd.allergy}</div>` : ''}`;
-      c.appendChild(el);
-    });
+function markUrgent(e, id) {
+  e.stopPropagation();
+  const cmd = commandes.find(c => c.id === id);
+  if (cmd) {
+    cmd.state = 'urgent';
+    socket.emit('commande_mise_a_jour', cmd);
+    renderCards();
   }
+}
 
-  function exportPDF(e) {
-    e.preventDefault();
-    const lines = ['COMMANDE-IA — EXPORT JOURNÉE', new Date().toLocaleDateString('fr-FR'), ''];
-    archives.forEach(c => {
-      lines.push(`[${c.state === 'refused' ? 'REFUSÉE' : 'PRÊTE'}] ${c.name} | ${c.createdAt} | ${c.sandwich} / ${c.boisson} / ${c.option}${c.modif ? ' / Modif: ' + c.modif : ''}${c.allergy ? ' / Allergie: ' + c.allergy : ''}`);
-    });
-    const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'commandes_journee.txt';
-    a.click();
+// ═══ NOTES ═══
+function openNoteModal(e, id) {
+  e.stopPropagation();
+  const cmd = commandes.find(c => c.id === id);
+  if (!cmd) return;
+
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop';
+  backdrop.onclick = (ev) => { if (ev.target === backdrop) backdrop.remove(); };
+  backdrop.innerHTML = `
+    <div class="modal-box">
+      <div class="modal-title">Note pour ${cmd.name}</div>
+      <div class="modal-sub">${cmdNumber(cmd.id)} · ${cmd.sandwich}</div>
+      <div class="preset-notes">
+        <button class="preset-btn" onclick="quickNote(${id},'Sans oignon',this)">Sans oignon</button>
+        <button class="preset-btn" onclick="quickNote(${id},'Bien cuit',this)">Bien cuit</button>
+        <button class="preset-btn" onclick="quickNote(${id},'Extra sauce',this)">Extra sauce</button>
+        <button class="preset-btn" onclick="quickNote(${id},'Client régulier',this)">Client régulier</button>
+        <button class="preset-btn" onclick="quickNote(${id},'Prioritaire',this)">Prioritaire</button>
+      </div>
+      <textarea class="modal-textarea" id="modal-note-text" placeholder="Ajouter une note personnalisée..."></textarea>
+      <div class="modal-actions">
+        <button class="btn btn-refuse" onclick="this.closest('.modal-backdrop').remove()">Annuler</button>
+        <button class="btn" onclick="addNoteFromModal(${id})">Ajouter</button>
+      </div>
+    </div>`;
+  document.body.appendChild(backdrop);
+  setTimeout(() => backdrop.querySelector('textarea').focus(), 100);
+}
+
+function quickNote(id, text, btn) {
+  const cmd = commandes.find(c => c.id === id);
+  if (!cmd) return;
+  if (!cmd.notes) cmd.notes = [];
+  cmd.notes.push(text);
+  btn.style.background = '#e8f5dc';
+  btn.style.borderColor = '#4a8a1a';
+  btn.style.color = '#2d6a0a';
+  renderCards();
+}
+
+function addNoteFromModal(id) {
+  const text = document.getElementById('modal-note-text').value.trim();
+  if (!text) return;
+  const cmd = commandes.find(c => c.id === id);
+  if (!cmd) return;
+  if (!cmd.notes) cmd.notes = [];
+  cmd.notes.push(text);
+  document.querySelector('.modal-backdrop').remove();
+  renderCards();
+}
+
+function addNoteFromDetail(id) {
+  const input = document.getElementById('detail-note-input');
+  const text = input.value.trim();
+  if (!text) return;
+  const cmd = commandes.find(c => c.id === id);
+  if (!cmd) return;
+  if (!cmd.notes) cmd.notes = [];
+  cmd.notes.push(text);
+  renderCards();
+}
+
+// ═══ ARCHIVES ═══
+function renderArchive() {
+  const c = document.getElementById('archive-container');
+  if (!archives.length) { c.innerHTML = '<div style="grid-column:1/-1;font-size:13px;color:#9ab89a;padding:24px 0;">Aucune commande archivée.</div>'; return; }
+  c.innerHTML = '';
+  archives.forEach(cmd => {
+    const dur = cmd.chronoStart && cmd.chronoEnd ? fmtTime(Math.floor((cmd.chronoEnd - cmd.chronoStart) / 1000)) : null;
+    const el = document.createElement('div');
+    el.className = 'archive-card';
+    el.innerHTML = `
+      <div class="archive-tag ${cmd.state === 'refused' ? 'refused' : 'done'}">${cmd.state === 'refused' ? 'Refusée' : 'Prête'} — ${cmd.archivedAt}</div>
+      <div class="archive-name">${cmd.name}</div>
+      <div class="archive-detail">${cmd.sandwich} · ${cmd.boisson} · ${cmd.option}</div>
+      ${cmd.modif ? `<div class="archive-detail" style="color:#906010;">Modif : ${cmd.modif}</div>` : ''}
+      ${cmd.allergy ? `<div class="archive-detail" style="color:#b03030;">Allergie : ${cmd.allergy}</div>` : ''}
+      <div class="archive-phone">${cmd.phone || '—'}</div>
+      ${dur ? `<div class="archive-dur">Préparation : ${dur}</div>` : ''}`;
+    c.appendChild(el);
+  });
+}
+
+// ═══ VIEWS ═══
+function switchView(view, tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  if (tab) tab.classList.add('active');
+  ['hote-panel','detail-panel','archive-panel','cuisine-panel'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+  const toolbar = document.getElementById('toolbar');
+  if (view === 'hote') {
+    document.getElementById('hote-panel').style.display = 'flex';
+    document.getElementById('detail-panel').style.display = 'flex';
+    toolbar.style.display = 'flex';
+  } else if (view === 'cuisine') {
+    document.getElementById('cuisine-panel').style.display = 'flex';
+    toolbar.style.display = 'none';
+    renderCuisine();
+  } else {
+    document.getElementById('archive-panel').style.display = 'block';
+    toolbar.style.display = 'none';
   }
-  function clearArchives() {
+}
+
+function renderCuisine() {
+  const c = document.getElementById('cuisine-container');
+  const validated = commandes.filter(x => x.state === 'validated');
+  if (!validated.length) { c.innerHTML = '<div style="font-size:13px;color:#9ab89a;">Aucune commande en préparation.</div>'; return; }
+  c.innerHTML = '';
+  validated.forEach(cmd => {
+    const el = document.createElement('div');
+    el.className = 'kitchen-card';
+    el.innerHTML = `
+      <div class="kitchen-name">${cmd.name}</div>
+      <div class="kitchen-item">${cmd.sandwich} — ${cmd.option}</div>
+      <div class="kitchen-item">${cmd.boisson}</div>
+      ${cmd.modif ? `<div class="kitchen-item" style="color:#906010;">Modif : ${cmd.modif}</div>` : ''}
+      ${cmd.allergy ? `<div class="kitchen-item" style="color:#b03030;">Allergie : ${cmd.allergy}</div>` : ''}
+      ${(cmd.notes || []).map(n => `<div class="kitchen-item" style="color:#4a50aa;">Note : ${n}</div>`).join('')}`;
+    c.appendChild(el);
+  });
+}
+
+function exportPDF(e) {
+  e.preventDefault();
+  const lines = ['COMMANDE-IA — EXPORT JOURNÉE', new Date().toLocaleDateString('fr-FR'), ''];
+  archives.forEach(c => {
+    lines.push(`[${c.state === 'refused' ? 'REFUSÉE' : 'PRÊTE'}] ${c.name} | ${c.createdAt} | ${c.sandwich} / ${c.boisson} / ${c.option}${c.modif ? ' / Modif: ' + c.modif : ''}${c.allergy ? ' / Allergie: ' + c.allergy : ''}`);
+  });
+  const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'commandes_journee.txt';
+  a.click();
+}
+
+function clearArchives() {
   if (!confirm('Supprimer toutes les commandes archivées ? Cette action est irréversible.')) return;
   archives = [];
   doneCount = 0;
@@ -536,25 +1051,22 @@ if (currentUser.role !== 'Admin' && currentUser.restaurantId) {
   document.getElementById('avg-time').textContent = '—';
   renderArchive();
 }
-// Enregistrement PWA
+
+// ═══ PWA ═══
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js').then(reg => {
     console.log('SW enregistré:', reg.scope);
   }).catch(err => console.log('SW erreur:', err));
 }
 
-// Notifications push pour nouvelles commandes
 async function demanderNotifications() {
   if ('Notification' in window) {
     const perm = await Notification.requestPermission();
-    if (perm === 'granted') {
-      console.log('Notifications activées');
-    }
+    if (perm === 'granted') console.log('Notifications activées');
   }
 }
 demanderNotifications();
 
-// Notification à chaque nouvelle commande
 socket.on('nouvelle_commande', cmd => {
   if (Notification.permission === 'granted' && document.hidden) {
     new Notification('Nouvelle commande — ' + cmd.name, {
@@ -565,7 +1077,6 @@ socket.on('nouvelle_commande', cmd => {
   }
 });
 
-// Bouton install PWA
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
@@ -582,10 +1093,5 @@ function installerApp() {
   }
 }
 </script>
-<div id="install-btn" onclick="installerApp()" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a3a1a;color:#fff;padding:12px 24px;border-radius:24px;font-size:13px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;align-items:center;gap:8px;box-shadow:0 4px 20px rgba(0,0,0,0.2);z-index:999;">
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v9M5 8l3 3 3-3M2 13h12" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-  Installer l'application
-</div>
-
 </body>
 </html>
