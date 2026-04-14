@@ -346,6 +346,21 @@
       cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s;
     }
     .preset-btn:hover { background: #e8f5dc; border-color: #c0e090; }
+    /* ═══ SUR PLACE — reflets orange ═══ */
+.cmd-card.sur-place { border-color: #f0c870; background: linear-gradient(135deg, #fff 85%, #fff8e8 100%); }
+.cmd-card.sur-place:hover { border-color: #e0a830; box-shadow: 0 8px 24px rgba(200,140,20,0.12); }
+.cmd-card.sur-place.selected { border-color: #c08010; box-shadow: 0 8px 28px rgba(200,140,20,0.18); }
+.cmd-card.sur-place .card-stripe.new { background: linear-gradient(90deg, #e09010, #f8d070); }
+.cmd-card.sur-place .card-stripe.validated { background: linear-gradient(90deg, #c08010, #f0c050); }
+.cmd-card.sur-place .cmd-avatar { background: #fff8e8; border-color: #f0d090; color: #906010; }
+
+.lieu-badge { font-size: 9px; font-weight: 700; padding: 3px 8px; border-radius: 5px; display: inline-flex; align-items: center; gap: 4px; }
+.lieu-badge.sur-place { background: #fff4e0; color: #906010; border: 1px solid #f0d090; }
+.lieu-badge.emporter { background: #f0f5ee; color: #5a8a5a; border: 1px solid #d0e0c8; }
+
+.btn-lieu { flex: 0; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 700; transition: all 0.15s; border: 1.5px solid #e8d090; background: #fff8e8; color: #906010; }
+.btn-lieu:hover { background: #fff0d0; }
+.btn-lieu.active { background: #e09010; color: #fff; border-color: #e09010; }
   </style>
 </head>
 <body>
@@ -695,7 +710,7 @@ function renderCards() {
   filtered.forEach((cmd, i) => {
     const el = document.createElement('div');
     const stripeClass = cmd.state === 'urgent' ? 'urgent' : cmd.state === 'validated' ? 'validated' : 'new';
-    el.className = 'cmd-card' + (cmd.id === selected ? ' selected' : '');
+    el.className = 'cmd-card' + (cmd.id === selected ? ' selected' : '') + (cmd.surPlace ? ' sur-place' : '');
     el.style.animationDelay = (i * 0.04) + 's';
     el.onclick = () => { selected = cmd.id; renderCards(); renderDetail(); };
 
@@ -726,6 +741,7 @@ function renderCards() {
             </div>
           </div>
           <div class="cmd-badge ${badgeClass}">${badgeLabel}</div>
+<span class="lieu-badge ${cmd.surPlace ? 'sur-place' : 'emporter'}">${cmd.surPlace ? '🍽 Sur place' : '📦 Emporter'}</span>
         </div>
         <div class="cmd-divider"></div>
         <div class="cmd-items">
@@ -769,9 +785,12 @@ function renderCards() {
           ${cmd.state !== 'validated'
             ? `<button class="btn btn-refuse" onclick="action(event,${cmd.id},'refuser')">Refuser</button>`
             : ''}
+            <button class="btn btn-lieu ${cmd.surPlace ? 'active' : ''}" onclick="toggleLieu(event,${cmd.id})" title="Sur place / Emporter">
+  ${cmd.surPlace ? '🍽' : '📦'}
+</button>
         </div>
       </div>`;
-    c.appendChild(el);
+   c.appendChild(el);
   });
 
   chronoInterval = setInterval(() => {
@@ -794,6 +813,16 @@ function renderCards() {
   }, 1000);
   renderDetail();
 }
+
+function toggleLieu(e, id) {
+  e.stopPropagation();
+  const cmd = commandes.find(c => c.id === id);
+  if (!cmd) return;
+  cmd.surPlace = !cmd.surPlace;
+  renderCards();
+}
+
+
 
 // ═══ DETAIL PANEL ═══
 function renderDetail() {
@@ -823,6 +852,12 @@ function renderDetail() {
     <div class="detail-body">
       <div>
         <div class="detail-section-title">Articles commandés</div>
+        <div class="detail-row">
+  <span class="detail-key">Mode</span>
+  <span class="detail-val">
+    <span class="lieu-badge ${cmd.surPlace ? 'sur-place' : 'emporter'}">${cmd.surPlace ? '🍽 Sur place' : '📦 À emporter'}</span>
+  </span>
+</div>
         <div class="detail-block">
           <div class="detail-row"><span class="detail-key">Sandwich</span><span class="detail-val">${cmd.sandwich || '—'}</span></div>
           <div class="detail-row"><span class="detail-key">Boisson</span><span class="detail-val">${cmd.boisson || '—'}</span></div>
@@ -1016,6 +1051,7 @@ function renderCuisine() {
     el.className = 'kitchen-card';
     el.innerHTML = `
       <div class="kitchen-name">${cmd.name}</div>
+      ${cmd.surPlace ? '<div class="kitchen-item" style="color:#906010;font-weight:700;">🍽 SUR PLACE</div>' : ''}
       <div class="kitchen-item">${cmd.sandwich} — ${cmd.option}</div>
       <div class="kitchen-item">${cmd.boisson}</div>
       ${cmd.modif ? `<div class="kitchen-item" style="color:#906010;">Modif : ${cmd.modif}</div>` : ''}

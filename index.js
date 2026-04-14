@@ -579,7 +579,7 @@ app.post('/twilio/traiter', async (req, res) => {
           max_tokens: 500,
           messages: [{
             role: 'user',
-            content: `Tu es un assistant de restaurant. Extrait les informations de cette commande vocale et réponds UNIQUEMENT en JSON valide sans markdown.
+content: `Tu es un assistant de restaurant. Extrait les informations de cette commande vocale et réponds UNIQUEMENT en JSON valide sans markdown.
 Commande vocale: "${transcription}"
 Format de réponse:
 {
@@ -589,7 +589,8 @@ Format de réponse:
   "boisson": "boisson commandée ou Eau",
   "option": "frites ou salade ou rien",
   "modif": "modifications demandées ou vide",
-  "allergy": "allergies mentionnées ou vide"
+  "allergy": "allergies mentionnées ou vide",
+  "surPlace": true ou false (true si le client dit sur place, false si à emporter ou non précisé)
 }`
           }]
         })
@@ -717,6 +718,7 @@ RÈGLES :
 - Note les modifications (sans cornichon, sans oignon, etc.) dans le champ modifications
 - Si le client dit "c'est tout", "valider", "confirmer", mets commandePrete à true
 - Sois naturel et sympa, comme un vrai employé de fast-food
+- Demander au client sur place ou emporter et le faire apparaitre dans le dashboard
 
 Réponds UNIQUEMENT en JSON valide (pas de markdown, pas de backticks).
 Format :
