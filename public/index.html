@@ -171,9 +171,11 @@
     .cmd-items { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
     .cmd-item { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
     .cmd-item-icon { width: 22px; height: 22px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .cmd-item-icon.sandwich { background: #fff8e8; }
-    .cmd-item-icon.boisson { background: #e8f0ff; }
-    .cmd-item-icon.option { background: #f0f5ee; }
+    .cmd-item-icon.sandwich      { background: #fff8e8; }
+    .cmd-item-icon.boisson       { background: #e8f0ff; }
+    .cmd-item-icon.option        { background: #f0f5ee; }
+    .cmd-item-icon.accompagnement{ background: #fdf5e8; }
+    .cmd-item-icon.dessert       { background: #fdf0ff; }
     .cmd-item-label { font-size: 12px; font-weight: 600; color: #1a2a1a; }
 
     .cmd-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
@@ -263,18 +265,148 @@
     .pdf-btn { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 10px; border: none; background: #3B6D11; color: #fff; font-size: 13px; cursor: pointer; text-decoration: none; font-weight: 600; font-family: 'DM Sans', sans-serif; transition: background 0.15s; }
     .pdf-btn:hover { background: #2d5a0d; }
 
-    /* ═══ ARCHIVES ═══ */
-    .archive-panel { display: none; padding: 24px; grid-column: 1/-1; }
-    .archive-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 20px; }
-    .archive-card { background: #fff; border: 1.5px solid #e0ecd8; border-radius: 14px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); transition: all 0.15s; }
-    .archive-card:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
-    .archive-tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 6px; margin-bottom: 10px; }
-    .archive-tag.refused { background: #fef0f0; color: #b03030; border: 1px solid #f0c0c0; }
-    .archive-tag.done { background: #e8f5dc; color: #2d6a0a; border: 1px solid #c0e090; }
-    .archive-name { font-size: 15px; font-weight: 700; color: #1a2a1a; margin-bottom: 6px; }
-    .archive-detail { font-size: 12px; color: #7aaa7a; line-height: 1.7; }
-    .archive-phone { font-size: 12px; font-weight: 600; color: #3B6D11; margin-top: 8px; }
-    .archive-dur { font-size: 11px; color: #9ab89a; margin-top: 3px; }
+    /* ═══ ARCHIVES (refonte) ═══ */
+    .archive-panel { display: none; padding: 0; grid-column: 1/-1; flex-direction: column; min-height: calc(100vh - 128px); }
+    .archive-panel.visible { display: flex; }
+
+    /* Header */
+    .arch-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 28px; background: #fff; border-bottom: 1.5px solid #e0ecd8; gap: 16px; flex-wrap: wrap; }
+    .arch-date-nav { display: flex; align-items: center; gap: 8px; }
+    .arch-nav-btn { width: 34px; height: 34px; border-radius: 8px; border: 1.5px solid #e0ecd8; background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #5a7a5a; transition: all 0.15s; }
+    .arch-nav-btn:hover { background: #f0f5ee; border-color: #9ad870; }
+    .arch-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .arch-date-display { display: flex; flex-direction: column; align-items: center; min-width: 160px; cursor: pointer; padding: 6px 14px; border-radius: 10px; border: 1.5px solid #e0ecd8; background: #f8faf6; transition: all 0.15s; position: relative; }
+    .arch-date-display:hover { border-color: #9ad870; background: #f0f5ee; }
+    .arch-date-label { font-size: 14px; font-weight: 700; color: #1a2a1a; }
+    .arch-date-sub { font-size: 10px; color: #9ab89a; margin-top: 1px; }
+    .arch-date-picker { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+    .arch-today-btn { font-size: 11px; font-weight: 600; padding: 6px 14px; border-radius: 8px; border: 1.5px solid #3B6D11; background: #e8f5dc; color: #2d6a0a; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; white-space: nowrap; }
+    .arch-today-btn:hover { background: #d8edc8; }
+    .arch-date-dots { display: flex; gap: 4px; align-items: center; }
+    .arch-dot { width: 7px; height: 7px; border-radius: 50%; background: #c0e090; cursor: pointer; transition: all 0.15s; }
+    .arch-dot.has-data { background: #3B6D11; }
+    .arch-dot:hover { transform: scale(1.4); }
+    .arch-header-actions { display: flex; gap: 8px; align-items: center; }
+    .arch-action-btn { font-size: 12px; font-weight: 600; padding: 8px 16px; border-radius: 9px; border: 1.5px solid #e0ecd8; background: #fff; color: #5a7a5a; cursor: pointer; font-family: 'DM Sans', sans-serif; display: flex; align-items: center; gap: 6px; transition: all 0.15s; }
+    .arch-action-btn:hover { border-color: #9ad870; background: #f0f5ee; color: #3B6D11; }
+    .arch-action-btn.danger:hover { border-color: #f0c0c0; background: #fef0f0; color: #b03030; }
+    .arch-action-btn.primary { background: #3B6D11; color: #fff; border-color: #3B6D11; }
+    .arch-action-btn.primary:hover { background: #2d5a0d; }
+
+    /* Stats bar */
+    .arch-stats-bar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; background: #fff; border-bottom: 1.5px solid #e0ecd8; }
+    .arch-stat { padding: 16px 24px; display: flex; flex-direction: column; gap: 4px; border-right: 1px solid #f0f5ee; }
+    .arch-stat:last-child { border-right: none; }
+    .arch-stat-label { font-size: 10px; font-weight: 700; color: #9ab89a; text-transform: uppercase; letter-spacing: 1px; }
+    .arch-stat-value { font-size: 26px; font-weight: 800; color: #1a2a1a; line-height: 1; letter-spacing: -1px; }
+    .arch-stat-value.green { color: #2d6a0a; }
+    .arch-stat-value.red { color: #b03030; }
+    .arch-stat-value.blue { color: #2a50aa; }
+    .arch-stat-sub { font-size: 11px; color: #9ab89a; }
+
+    /* Toolbar */
+    .arch-toolbar { display: flex; align-items: center; gap: 10px; padding: 12px 28px; background: #fff; border-bottom: 1.5px solid #e0ecd8; flex-wrap: wrap; }
+    .arch-search { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 10px; border: 1.5px solid #e0ecd8; background: #f8faf6; flex: 1; max-width: 280px; transition: all 0.15s; }
+    .arch-search:focus-within { border-color: #4a8a1a; background: #fff; }
+    .arch-search input { border: none; outline: none; font-size: 12px; font-family: 'DM Sans', sans-serif; color: #1a2a1a; background: transparent; width: 100%; }
+    .arch-filter-pills { display: flex; gap: 5px; flex-wrap: wrap; flex: 1; }
+    .arch-pill { font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: 20px; border: 1.5px solid #e0ecd8; background: #fff; color: #5a7a5a; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; display: flex; align-items: center; gap: 4px; }
+    .arch-pill:hover { border-color: #9ad870; }
+    .arch-pill.active { background: #1a3a1a; color: #a8e07a; border-color: #1a3a1a; }
+    .arch-pill .pc { font-size: 9px; background: rgba(0,0,0,0.08); padding: 1px 5px; border-radius: 8px; }
+    .arch-pill.active .pc { background: rgba(168,224,122,0.2); }
+    .arch-view-toggle { display: flex; gap: 2px; background: #f0f5ee; padding: 3px; border-radius: 9px; margin-left: auto; }
+    .arch-view-btn { padding: 6px 12px; border-radius: 6px; border: none; background: transparent; cursor: pointer; font-size: 12px; font-weight: 600; color: #7aaa7a; font-family: 'DM Sans', sans-serif; transition: all 0.15s; display: flex; align-items: center; gap: 5px; }
+    .arch-view-btn:hover { color: #3B6D11; }
+    .arch-view-btn.active { background: #fff; color: #1a3a1a; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+
+    /* Content */
+    .arch-content { flex: 1; overflow-y: auto; padding: 24px 28px; }
+
+    /* Grid view */
+    .arch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+    .arch-card { background: #fff; border: 1.5px solid #e0ecd8; border-radius: 16px; padding: 16px; cursor: pointer; transition: all 0.2s; animation: cardIn 0.3s ease both; }
+    .arch-card:hover { border-color: #9ad870; box-shadow: 0 6px 20px rgba(59,109,17,0.1); transform: translateY(-2px); }
+    .arch-card.refused { border-left: 3px solid #f0c0c0; }
+    .arch-card.done { border-left: 3px solid #c0e090; }
+    .arch-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .arch-card-name { font-size: 14px; font-weight: 700; color: #1a2a1a; }
+    .arch-card-time { font-size: 11px; color: #9ab89a; }
+    .arch-card-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
+    .arch-card-badge.done { background: #e8f5dc; color: #2d6a0a; border: 1px solid #c0e090; }
+    .arch-card-badge.refused { background: #fef0f0; color: #b03030; border: 1px solid #f0c0c0; }
+    .arch-card-items { font-size: 12px; color: #5a7a5a; line-height: 1.7; margin: 8px 0; }
+    .arch-card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px solid #f0f5ee; }
+    .arch-card-dur { font-size: 11px; color: #9ab89a; display: flex; align-items: center; gap: 4px; }
+    .arch-card-lieu { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; }
+    .arch-card-lieu.sp { background: #fff4e0; color: #906010; }
+    .arch-card-lieu.em { background: #f0f5ee; color: #5a8a5a; }
+    .arch-card-id { font-size: 10px; color: #c0d0c0; font-weight: 700; }
+
+    /* Table view */
+    .arch-table { width: 100%; border-collapse: separate; border-spacing: 0 4px; }
+    .arch-table th { font-size: 10px; font-weight: 700; color: #9ab89a; text-transform: uppercase; letter-spacing: 1px; padding: 8px 14px; text-align: left; cursor: pointer; user-select: none; white-space: nowrap; }
+    .arch-table th:hover { color: #3B6D11; }
+    .arch-table th .sort-arrow { opacity: 0.4; margin-left: 4px; }
+    .arch-table th.sorted .sort-arrow { opacity: 1; color: #3B6D11; }
+    .arch-table td { padding: 11px 14px; background: #fff; font-size: 12px; border-top: 1.5px solid #e8f0e0; border-bottom: 1.5px solid #e8f0e0; vertical-align: middle; }
+    .arch-table tr td:first-child { border-left: 1.5px solid #e8f0e0; border-radius: 10px 0 0 10px; }
+    .arch-table tr td:last-child { border-right: 1.5px solid #e8f0e0; border-radius: 0 10px 10px 0; }
+    .arch-table tr:hover td { background: #f8fdf4; border-color: #9ad870; cursor: pointer; }
+    .arch-table tr.refused td { background: #fffafa; }
+    .arch-table .t-name { font-weight: 700; color: #1a2a1a; }
+    .arch-table .t-items { color: #5a7a5a; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .arch-table .t-dur { font-variant-numeric: tabular-nums; color: #5a7a5a; }
+    .arch-table .t-badge { display: inline-block; font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 5px; }
+
+    /* Timeline view */
+    .arch-timeline-wrap { background: #fff; border-radius: 16px; border: 1.5px solid #e0ecd8; padding: 24px; margin-bottom: 20px; }
+    .arch-timeline-title { font-size: 11px; font-weight: 700; color: #7aaa7a; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+    .arch-timeline-hours { display: flex; gap: 0; align-items: flex-end; height: 80px; border-bottom: 1.5px solid #f0f5ee; padding-bottom: 6px; }
+    .arch-hour-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 2px; min-width: 0; }
+    .arch-hour-bar { width: 100%; max-width: 28px; border-radius: 4px 4px 0 0; transition: height 0.4s ease; cursor: pointer; position: relative; }
+    .arch-hour-bar.has-done { background: #4a8a1a; }
+    .arch-hour-bar.has-refused { background: #f0c0c0; }
+    .arch-hour-bar.has-mixed { background: linear-gradient(180deg, #f0c0c0 40%, #4a8a1a 40%); }
+    .arch-hour-bar:hover { opacity: 0.75; }
+    .arch-hour-label { font-size: 8px; color: #c0d0c0; margin-top: 4px; font-weight: 600; }
+    .arch-hour-label.active { color: #5a7a5a; }
+    .arch-timeline-list { margin-top: 20px; display: flex; flex-direction: column; gap: 6px; }
+    .arch-tl-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: #f8faf6; border-radius: 10px; border: 1px solid #e8f0e0; cursor: pointer; transition: all 0.15s; }
+    .arch-tl-row:hover { background: #f0f5ee; border-color: #9ad870; }
+    .arch-tl-row.refused { background: #fffafa; border-color: #f0c0c0; }
+    .arch-tl-time { font-size: 13px; font-weight: 700; color: #3B6D11; font-variant-numeric: tabular-nums; width: 46px; flex-shrink: 0; }
+    .arch-tl-row.refused .arch-tl-time { color: #b03030; }
+    .arch-tl-sep { width: 2px; height: 32px; background: #e0ecd8; border-radius: 2px; flex-shrink: 0; }
+    .arch-tl-sep.done { background: #c0e090; }
+    .arch-tl-sep.refused { background: #f0c0c0; }
+    .arch-tl-name { font-size: 13px; font-weight: 600; color: #1a2a1a; min-width: 100px; }
+    .arch-tl-items { font-size: 11px; color: #7aaa7a; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .arch-tl-dur { font-size: 11px; color: #9ab89a; white-space: nowrap; margin-left: auto; }
+    .arch-tl-badge { font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 5px; white-space: nowrap; }
+
+    /* Archive detail modal */
+    .arch-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 10000; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.15s; backdrop-filter: blur(3px); }
+    .arch-modal { background: #fff; border-radius: 22px; width: 480px; max-height: 85vh; overflow-y: auto; box-shadow: 0 32px 80px rgba(0,0,0,0.2); animation: modalIn 0.25s cubic-bezier(0.22,1,0.36,1); }
+    .arch-modal-top { padding: 24px 26px 16px; background: linear-gradient(135deg, #1a3a1a, #2d5a2d); border-radius: 22px 22px 0 0; color: #fff; }
+    .arch-modal-id { font-size: 11px; font-weight: 700; color: #a8e07a; margin-bottom: 4px; }
+    .arch-modal-name { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+    .arch-modal-meta { font-size: 12px; color: #c8e8c8; margin-top: 6px; display: flex; gap: 12px; flex-wrap: wrap; }
+    .arch-modal-body { padding: 20px 26px; display: flex; flex-direction: column; gap: 16px; }
+    .arch-modal-section { font-size: 10px; font-weight: 700; color: #7aaa7a; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .arch-modal-block { background: #f8faf6; border-radius: 12px; padding: 14px; border: 1.5px solid #e8f0e0; }
+    .arch-modal-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #f0f5ee; font-size: 13px; }
+    .arch-modal-row:last-child { border-bottom: none; }
+    .arch-modal-key { color: #7aaa7a; font-size: 11px; }
+    .arch-modal-val { font-weight: 600; color: #1a2a1a; text-align: right; }
+    .arch-modal-close { width: 100%; padding: 14px; border-radius: 0 0 22px 22px; border: none; border-top: 1.5px solid #f0f5ee; background: #f8faf6; color: #5a7a5a; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background 0.15s; }
+    .arch-modal-close:hover { background: #f0f5ee; }
+
+    /* Empty archive */
+    .arch-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 20px; gap: 16px; color: #9ab89a; }
+    .arch-empty-icon { font-size: 40px; opacity: 0.4; }
+    .arch-empty-title { font-size: 16px; font-weight: 600; color: #5a7a5a; }
+    .arch-empty-sub { font-size: 13px; text-align: center; max-width: 280px; line-height: 1.8; }
 
     /* ═══ CUISINE ═══ */
     .cuisine-panel { display: none; padding: 24px; gap: 14px; flex-wrap: wrap; align-content: flex-start; grid-column: 1/-1; }
@@ -499,16 +631,71 @@
   </div>
 
   <div class="archive-panel" id="archive-panel">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <span class="panel-title">Historique de la journée</span>
-      <div style="display:flex;gap:10px;align-items:center;">
-        <a class="pdf-btn" href="#" style="width:auto;padding:8px 20px;" onclick="exportPDF(event)">Exporter PDF</a>
-        <button class="clear-btn" onclick="clearArchives()">Tout supprimer</button>
+    <!-- Header : navigation date + actions -->
+    <div class="arch-header">
+      <div class="arch-date-nav">
+        <button class="arch-nav-btn" id="arch-prev" onclick="archNavDay(-1)" title="Jour précédent">‹</button>
+        <div class="arch-date-display" title="Choisir une date">
+          <span class="arch-date-label" id="arch-date-label">Aujourd'hui</span>
+          <span class="arch-date-sub" id="arch-date-sub">—</span>
+          <input type="date" class="arch-date-picker" id="arch-date-picker" onchange="archSetDate(this.value)">
+        </div>
+        <button class="arch-nav-btn" id="arch-next" onclick="archNavDay(1)" title="Jour suivant">›</button>
+        <button class="arch-today-btn" onclick="archGoToday()">Aujourd'hui</button>
+        <div class="arch-date-dots" id="arch-date-dots" title="Jours avec des données"></div>
+      </div>
+      <div class="arch-header-actions">
+        <button class="arch-action-btn primary" onclick="exportCSV()">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 2v9M5 8l3 3 3-3M2 13h12" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Export CSV
+        </button>
+        <button class="arch-action-btn danger" onclick="clearArchivesDay()">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M3 4h10M6 4V2h4v2M5 4v9a1 1 0 001 1h4a1 1 0 001-1V4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          Vider ce jour
+        </button>
       </div>
     </div>
-    <div class="archive-grid" id="archive-container">
-      <div style="grid-column:1/-1;font-size:13px;color:#9ab89a;padding:24px 0;">Aucune commande archivée.</div>
+
+    <!-- Stats bar -->
+    <div class="arch-stats-bar" id="arch-stats-bar">
+      <div class="arch-stat"><div class="arch-stat-label">Total</div><div class="arch-stat-value" id="as-total">0</div><div class="arch-stat-sub">commandes</div></div>
+      <div class="arch-stat"><div class="arch-stat-label">Acceptées</div><div class="arch-stat-value green" id="as-done">0</div><div class="arch-stat-sub" id="as-done-pct">—</div></div>
+      <div class="arch-stat"><div class="arch-stat-label">Refusées</div><div class="arch-stat-value red" id="as-refused">0</div><div class="arch-stat-sub" id="as-ref-pct">—</div></div>
+      <div class="arch-stat"><div class="arch-stat-label">Tps moyen prépa</div><div class="arch-stat-value blue" id="as-avg">—</div><div class="arch-stat-sub">min:sec</div></div>
+      <div class="arch-stat"><div class="arch-stat-label">Heure de pointe</div><div class="arch-stat-value" id="as-peak">—</div><div class="arch-stat-sub" id="as-peak-sub">commandes</div></div>
     </div>
+
+    <!-- Toolbar : recherche + filtres + vues -->
+    <div class="arch-toolbar">
+      <div class="arch-search">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="#9ab89a" stroke-width="1.5"/><path d="M11 11l3 3" stroke="#9ab89a" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <input type="text" id="arch-search-input" placeholder="Nom, produit..." oninput="renderArchive()">
+      </div>
+      <div class="arch-filter-pills">
+        <button class="arch-pill active" data-filter="all" onclick="setArchFilter('all',this)">Toutes <span class="pc" id="af-all">0</span></button>
+        <button class="arch-pill" data-filter="done" onclick="setArchFilter('done',this)">✅ Acceptées <span class="pc" id="af-done">0</span></button>
+        <button class="arch-pill" data-filter="refused" onclick="setArchFilter('refused',this)">❌ Refusées <span class="pc" id="af-refused">0</span></button>
+        <button class="arch-pill" data-filter="surplace" onclick="setArchFilter('surplace',this)">🍽 Sur place <span class="pc" id="af-sp">0</span></button>
+        <button class="arch-pill" data-filter="emporter" onclick="setArchFilter('emporter',this)">📦 Emporter <span class="pc" id="af-em">0</span></button>
+      </div>
+      <div class="arch-view-toggle">
+        <button class="arch-view-btn active" id="avb-grid" onclick="setArchView('grid')">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="0" y="0" width="5" height="5" rx="1" fill="currentColor"/><rect x="7" y="0" width="5" height="5" rx="1" fill="currentColor"/><rect x="0" y="7" width="5" height="5" rx="1" fill="currentColor"/><rect x="7" y="7" width="5" height="5" rx="1" fill="currentColor"/></svg>
+          Grille
+        </button>
+        <button class="arch-view-btn" id="avb-table" onclick="setArchView('table')">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 3h10M1 6h10M1 9h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          Tableau
+        </button>
+        <button class="arch-view-btn" id="avb-timeline" onclick="setArchView('timeline')">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.4"/><path d="M6 3v3l2 2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          Timeline
+        </button>
+      </div>
+    </div>
+
+    <!-- Zone de contenu -->
+    <div class="arch-content" id="arch-content"></div>
   </div>
 
   <div class="cuisine-panel" id="cuisine-panel">
@@ -548,7 +735,7 @@ if (currentUser.role !== 'Admin' && currentUser.restaurantId) {
 
 // ═══ STATE ═══
 const socket = io();
-let commandes = [], archives = [], selected = null;
+let commandes = [], archives = [], archDisplayedList = [], selected = null;
 let chronoInterval = null, doneCount = 0, totalDuration = 0;
 let activeFilter = 'all';
 let soundEnabled = true;
@@ -601,6 +788,11 @@ socket.on('commande_mise_a_jour', cmd => {
 socket.on('commande_terminee', cmd => {
   commandes = commandes.filter(c => c.id !== cmd.id);
   archives.unshift(cmd);
+  // Si le panel archives est ouvert sur aujourd'hui, synchroniser archDisplayedList
+  const today = new Date().toISOString().split('T')[0];
+  if (archCurrentDate === today) {
+    archDisplayedList = [...archives];
+  }
   if (cmd.state === 'done' && cmd.chronoStart && cmd.chronoEnd) {
     doneCount++;
     totalDuration += Math.floor((cmd.chronoEnd - cmd.chronoStart) / 1000);
@@ -614,7 +806,12 @@ fetch('/commandes').then(r => r.json()).then(d => {
   commandes = d.map(c => ({ ...c, arrivedAt: c.arrivedAt || Date.now() }));
   renderCards();
 });
-fetch('/archives').then(r => r.json()).then(d => { archives = d; renderArchive(); });
+const _rid = currentUser.restaurantId || '';
+fetch('/archives?restaurantId=' + _rid).then(r => r.json()).then(d => {
+  archives = d;
+  archDisplayedList = [...d];
+  fetch('/archives/dates?restaurantId=' + _rid).then(r=>r.json()).then(dates => { archDatesWithData = dates; }).catch(()=>{});
+});
 
 // ═══ HELPERS ═══
 function fmtTime(sec) {
@@ -753,10 +950,17 @@ function renderCards() {
             <div class="cmd-item-icon boisson"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M5 3h6l-1 10H6L5 3z" stroke="#2a50aa" stroke-width="1.3"/></svg></div>
             <span class="cmd-item-label">${cmd.boisson || '—'}</span>
           </div>
-          <div class="cmd-item">
-            <div class="cmd-item-icon option"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5" stroke="#5a8a5a" stroke-width="1.3"/></svg></div>
-            <span class="cmd-item-label">${cmd.option || '—'}</span>
-          </div>
+          ${(cmd.accompagnement || cmd.option) ? `<div class="cmd-item">
+            <div class="cmd-item-icon accompagnement"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><rect x="2" y="10" width="12" height="3" rx="1" stroke="#c07820" stroke-width="1.3"/><path d="M5 10V7c0-1.7 6-1.7 6 0v3" stroke="#c07820" stroke-width="1.3"/></svg></div>
+            <span class="cmd-item-label">${cmd.accompagnement || cmd.option}</span>
+          </div>` : `<div class="cmd-item">
+            <div class="cmd-item-icon accompagnement"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><rect x="2" y="10" width="12" height="3" rx="1" stroke="#c07820" stroke-width="1.3"/><path d="M5 10V7c0-1.7 6-1.7 6 0v3" stroke="#c07820" stroke-width="1.3"/></svg></div>
+            <span class="cmd-item-label">—</span>
+          </div>`}
+          ${cmd.dessert ? `<div class="cmd-item">
+            <div class="cmd-item-icon dessert"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 2c-2 0-4 1.5-4 4 0 1.5.8 2.7 2 3.4V11h4V9.4c1.2-.7 2-1.9 2-3.4 0-2.5-2-4-4-4z" stroke="#8030aa" stroke-width="1.3"/><rect x="5" y="11" width="6" height="2" rx="1" stroke="#8030aa" stroke-width="1.3"/></svg></div>
+            <span class="cmd-item-label">${cmd.dessert}</span>
+          </div>` : ''}
         </div>
         <div class="cmd-tags">
           ${cmd.modif ? `<span class="cmd-tag modif">Modif : ${cmd.modif}</span>` : ''}
@@ -859,9 +1063,10 @@ function renderDetail() {
   </span>
 </div>
         <div class="detail-block">
-          <div class="detail-row"><span class="detail-key">Sandwich</span><span class="detail-val">${cmd.sandwich || '—'}</span></div>
-          <div class="detail-row"><span class="detail-key">Boisson</span><span class="detail-val">${cmd.boisson || '—'}</span></div>
-          <div class="detail-row"><span class="detail-key">Option</span><span class="detail-val">${cmd.option || '—'}</span></div>
+          <div class="detail-row"><span class="detail-key">🥪 Sandwich</span><span class="detail-val">${cmd.sandwich || '—'}</span></div>
+          <div class="detail-row"><span class="detail-key">🥤 Boisson</span><span class="detail-val">${cmd.boisson || '—'}</span></div>
+          <div class="detail-row"><span class="detail-key">🍟 Accompagnement</span><span class="detail-val">${cmd.accompagnement || cmd.option || '—'}</span></div>
+          ${cmd.dessert ? `<div class="detail-row"><span class="detail-key">🍦 Dessert</span><span class="detail-val">${cmd.dessert}</span></div>` : ''}
           ${cmd.modif ? `<div><span class="detail-tag modif">Modif : ${cmd.modif}</span></div>` : ''}
           ${cmd.allergy ? `<div><span class="detail-tag allergy">Allergie : ${cmd.allergy}</span></div>` : ''}
         </div>
@@ -999,24 +1204,359 @@ function addNoteFromDetail(id) {
 }
 
 // ═══ ARCHIVES ═══
-function renderArchive() {
-  const c = document.getElementById('archive-container');
-  if (!archives.length) { c.innerHTML = '<div style="grid-column:1/-1;font-size:13px;color:#9ab89a;padding:24px 0;">Aucune commande archivée.</div>'; return; }
-  c.innerHTML = '';
-  archives.forEach(cmd => {
-    const dur = cmd.chronoStart && cmd.chronoEnd ? fmtTime(Math.floor((cmd.chronoEnd - cmd.chronoStart) / 1000)) : null;
-    const el = document.createElement('div');
-    el.className = 'archive-card';
-    el.innerHTML = `
-      <div class="archive-tag ${cmd.state === 'refused' ? 'refused' : 'done'}">${cmd.state === 'refused' ? 'Refusée' : 'Prête'} — ${cmd.archivedAt}</div>
-      <div class="archive-name">${cmd.name}</div>
-      <div class="archive-detail">${cmd.sandwich} · ${cmd.boisson} · ${cmd.option}</div>
-      ${cmd.modif ? `<div class="archive-detail" style="color:#906010;">Modif : ${cmd.modif}</div>` : ''}
-      ${cmd.allergy ? `<div class="archive-detail" style="color:#b03030;">Allergie : ${cmd.allergy}</div>` : ''}
-      <div class="archive-phone">${cmd.phone || '—'}</div>
-      ${dur ? `<div class="archive-dur">Préparation : ${dur}</div>` : ''}`;
-    c.appendChild(el);
+// ═══════════════════════════════════════════════════════
+// ═══ ARCHIVES — système complet ════════════════════════
+// ═══════════════════════════════════════════════════════
+
+let archCurrentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+let archFilter = 'all';
+let archView = 'grid';
+let archSortCol = 'time';
+let archSortAsc = true;
+let archDatesWithData = [];
+
+// ── Date helpers ─────────────────────────────────────
+function archDateLabel(d) {
+  const today = new Date().toISOString().split('T')[0];
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+  if (d === today) return 'Aujourd\'hui';
+  if (d === yesterday) return 'Hier';
+  const dt = new Date(d + 'T12:00:00');
+  return dt.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+}
+function archDateFull(d) {
+  const dt = new Date(d + 'T12:00:00');
+  return dt.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+// ── Charger les archives pour une date ───────────────
+async function archLoadDate(date) {
+  archCurrentDate = date;
+  const today = new Date().toISOString().split('T')[0];
+  const rid = currentUser.restaurantId || '';
+  // Toujours récupérer depuis le serveur pour avoir des données fraîches et persistées
+  try {
+    const res = await fetch(`/archives?date=${date}&restaurantId=${rid}`);
+    const data = await res.json();
+    // Si c'est aujourd'hui, mettre à jour aussi le tableau en mémoire
+    if (date === today) { archives = data; }
+    archDisplayedList = data;
+  } catch(e) { archDisplayedList = date === today ? [...archives] : []; }
+  // Charger les dates disponibles
+  try {
+    const res = await fetch('/archives/dates?restaurantId=' + rid);
+    archDatesWithData = await res.json();
+  } catch(e) {}
+  archUpdateDateUI();
+  renderArchive();
+}
+
+function archUpdateDateUI() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('arch-date-label').textContent = archDateLabel(archCurrentDate);
+  document.getElementById('arch-date-sub').textContent = archDateFull(archCurrentDate);
+  document.getElementById('arch-date-picker').value = archCurrentDate;
+  document.getElementById('arch-next').disabled = archCurrentDate >= today;
+  // Dots des 7 derniers jours
+  const dotsEl = document.getElementById('arch-date-dots');
+  dotsEl.innerHTML = '';
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(Date.now() - i * 86400000).toISOString().split('T')[0];
+    const dot = document.createElement('div');
+    dot.className = 'arch-dot' + (archDatesWithData.includes(d) || d === today ? ' has-data' : '');
+    dot.title = archDateLabel(d);
+    dot.onclick = () => archLoadDate(d);
+    dotsEl.appendChild(dot);
+  }
+}
+
+function archNavDay(delta) {
+  const d = new Date(archCurrentDate + 'T12:00:00');
+  d.setDate(d.getDate() + delta);
+  const nd = d.toISOString().split('T')[0];
+  const today = new Date().toISOString().split('T')[0];
+  if (nd > today) return;
+  archLoadDate(nd);
+}
+function archSetDate(val) { if (val) archLoadDate(val); }
+function archGoToday() { archLoadDate(new Date().toISOString().split('T')[0]); }
+
+// ── Filtres & vue ─────────────────────────────────────
+function setArchFilter(f, btn) {
+  archFilter = f;
+  document.querySelectorAll('.arch-pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  renderArchive();
+}
+function setArchView(v) {
+  archView = v;
+  ['grid','table','timeline'].forEach(x => {
+    document.getElementById('avb-' + x)?.classList.toggle('active', x === v);
   });
+  renderArchive();
+}
+
+// ── Filtrer les archives affichées ───────────────────
+function archGetFiltered() {
+  const search = (document.getElementById('arch-search-input')?.value || '').toLowerCase();
+  return archDisplayedList.filter(cmd => {
+    if (archFilter === 'done' && cmd.state !== 'done') return false;
+    if (archFilter === 'refused' && cmd.state !== 'refused') return false;
+    if (archFilter === 'surplace' && !cmd.surPlace) return false;
+    if (archFilter === 'emporter' && cmd.surPlace) return false;
+    if (search) {
+      const hay = [(cmd.name || ''), (cmd.sandwich || ''), (cmd.boisson || ''), (cmd.accompagnement || ''), (cmd.dessert || ''), (cmd.option || '')].join(' ').toLowerCase();
+      if (!hay.includes(search)) return false;
+    }
+    return true;
+  });
+}
+
+// ── Stats ─────────────────────────────────────────────
+function archRenderStats(list) {
+  const total = list.length;
+  const done = list.filter(c => c.state === 'done').length;
+  const refused = list.filter(c => c.state === 'refused').length;
+  const withTime = list.filter(c => c.chronoStart && c.chronoEnd);
+  const avgSec = withTime.length ? Math.round(withTime.reduce((s, c) => s + (c.chronoEnd - c.chronoStart) / 1000, 0) / withTime.length) : null;
+  // Heure de pointe
+  const hourMap = {};
+  list.forEach(c => {
+    const h = (c.archivedAt || c.createdAt || '00:00').split(':')[0];
+    hourMap[h] = (hourMap[h] || 0) + 1;
+  });
+  const peakH = Object.entries(hourMap).sort((a,b) => b[1]-a[1])[0];
+  document.getElementById('as-total').textContent = total;
+  document.getElementById('as-done').textContent = done;
+  document.getElementById('as-done-pct').textContent = total ? Math.round(done/total*100) + '% acceptées' : '—';
+  document.getElementById('as-refused').textContent = refused;
+  document.getElementById('as-ref-pct').textContent = total ? Math.round(refused/total*100) + '% refusées' : '—';
+  document.getElementById('as-avg').textContent = avgSec !== null ? fmtTime(avgSec) : '—';
+  document.getElementById('as-peak').textContent = peakH ? peakH[0] + 'h' : '—';
+  document.getElementById('as-peak-sub').textContent = peakH ? peakH[1] + ' cmd' : 'aucune donnée';
+  // Pill counts (sur total avant filtre)
+  document.getElementById('af-all').textContent = archDisplayedList.length;
+  document.getElementById('af-done').textContent = archDisplayedList.filter(c=>c.state==='done').length;
+  document.getElementById('af-refused').textContent = archDisplayedList.filter(c=>c.state==='refused').length;
+  document.getElementById('af-sp').textContent = archDisplayedList.filter(c=>c.surPlace).length;
+  document.getElementById('af-em').textContent = archDisplayedList.filter(c=>!c.surPlace).length;
+}
+
+// ── Rendu principal ───────────────────────────────────
+function renderArchive() {
+  const filtered = archGetFiltered();
+  archRenderStats(filtered);
+  const c = document.getElementById('arch-content');
+  if (!filtered.length) {
+    c.innerHTML = `<div class="arch-empty">
+      <div class="arch-empty-icon">📋</div>
+      <div class="arch-empty-title">${archDisplayedList.length ? 'Aucun résultat' : 'Aucune commande ce jour-là'}</div>
+      <div class="arch-empty-sub">${archDisplayedList.length ? 'Modifie le filtre ou la recherche.' : 'Les commandes terminées apparaissent ici.'}</div>
+    </div>`;
+    return;
+  }
+  if (archView === 'grid')     renderArchGrid(filtered, c);
+  else if (archView === 'table')    renderArchTable(filtered, c);
+  else if (archView === 'timeline') renderArchTimeline(filtered, c);
+}
+
+// ── VUE GRILLE ───────────────────────────────────────
+function renderArchGrid(list, c) {
+  const dur = cmd => cmd.chronoStart && cmd.chronoEnd ? fmtTime(Math.floor((cmd.chronoEnd - cmd.chronoStart) / 1000)) : null;
+  c.innerHTML = `<div class="arch-grid">${list.map(cmd => {
+    const d = dur(cmd);
+    const items = [cmd.sandwich, cmd.boisson, cmd.accompagnement || cmd.option, cmd.dessert].filter(Boolean).join(' · ');
+    return `<div class="arch-card ${cmd.state}" onclick="openArchiveModal(${cmd.id})">
+      <div class="arch-card-top">
+        <div>
+          <div class="arch-card-name">${cmd.name || 'Anonyme'}</div>
+          <div class="arch-card-time">${cmd.archivedAt || cmd.createdAt}</div>
+        </div>
+        <span class="arch-card-badge ${cmd.state}">${cmd.state === 'refused' ? '❌ Refusée' : '✅ Servie'}</span>
+      </div>
+      <div class="arch-card-items">${items || '—'}</div>
+      ${cmd.modif ? `<div style="font-size:11px;color:#906010;margin-top:4px;">✏️ ${cmd.modif}</div>` : ''}
+      ${cmd.allergy ? `<div style="font-size:11px;color:#b03030;margin-top:2px;">⚠️ ${cmd.allergy}</div>` : ''}
+      <div class="arch-card-footer">
+        <span class="arch-card-id">${cmdNumber(cmd.id)}</span>
+        <span class="arch-card-lieu ${cmd.surPlace ? 'sp' : 'em'}">${cmd.surPlace ? '🍽 Sur place' : '📦 Emporter'}</span>
+        ${d ? `<span class="arch-card-dur">⏱ ${d}</span>` : ''}
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+// ── VUE TABLEAU ──────────────────────────────────────
+function renderArchTable(list, c) {
+  const sorted = [...list].sort((a,b) => {
+    let va, vb;
+    if (archSortCol === 'time')   { va = a.archivedAt || ''; vb = b.archivedAt || ''; }
+    if (archSortCol === 'name')   { va = a.name || ''; vb = b.name || ''; }
+    if (archSortCol === 'dur')    { va = (a.chronoStart&&a.chronoEnd) ? a.chronoEnd-a.chronoStart : 0; vb = (b.chronoStart&&b.chronoEnd) ? b.chronoEnd-b.chronoStart : 0; }
+    if (archSortCol === 'state')  { va = a.state; vb = b.state; }
+    return archSortAsc ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
+  });
+  const th = (col, label) => {
+    const active = archSortCol === col;
+    return `<th class="${active ? 'sorted' : ''}" onclick="archSort('${col}')">${label} <span class="sort-arrow">${active ? (archSortAsc ? '↑' : '↓') : '↕'}</span></th>`;
+  };
+  c.innerHTML = `<table class="arch-table">
+    <thead><tr>${th('time','Heure')}${th('name','Client')}${th('state','Statut')}<th>Commande</th><th>Lieu</th>${th('dur','Durée prépa')}</tr></thead>
+    <tbody>${sorted.map(cmd => {
+      const d = cmd.chronoStart && cmd.chronoEnd ? fmtTime(Math.floor((cmd.chronoEnd - cmd.chronoStart) / 1000)) : '—';
+      const items = [cmd.sandwich, cmd.boisson, cmd.accompagnement || cmd.option, cmd.dessert].filter(Boolean).join(', ');
+      return `<tr class="${cmd.state}" onclick="openArchiveModal(${cmd.id})">
+        <td style="color:#9ab89a;font-variant-numeric:tabular-nums;">${cmd.archivedAt || '—'}</td>
+        <td><span class="t-name">${cmd.name || 'Anonyme'}</span><br><span style="font-size:10px;color:#c0d0c0">${cmdNumber(cmd.id)}</span></td>
+        <td><span class="t-badge ${cmd.state === 'done' ? 'done' : 'refused'}" style="${cmd.state==='done'?'background:#e8f5dc;color:#2d6a0a;border:1px solid #c0e090':'background:#fef0f0;color:#b03030;border:1px solid #f0c0c0'}">${cmd.state === 'done' ? '✅ Servie' : '❌ Refusée'}</span></td>
+        <td class="t-items">${items || '—'}</td>
+        <td>${cmd.surPlace ? '🍽' : '📦'}</td>
+        <td class="t-dur">${d}</td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table>`;
+}
+function archSort(col) {
+  if (archSortCol === col) archSortAsc = !archSortAsc;
+  else { archSortCol = col; archSortAsc = true; }
+  renderArchive();
+}
+
+// ── VUE TIMELINE ─────────────────────────────────────
+function renderArchTimeline(list, c) {
+  // Graphe par heure
+  const hourMap = {};
+  for (let h = 0; h < 24; h++) hourMap[h] = { done: 0, refused: 0, cmds: [] };
+  list.forEach(cmd => {
+    const h = parseInt((cmd.archivedAt || cmd.createdAt || '0:00').split(':')[0]);
+    if (hourMap[h]) { hourMap[h][cmd.state === 'refused' ? 'refused' : 'done']++; hourMap[h].cmds.push(cmd); }
+  });
+  const maxVal = Math.max(1, ...Object.values(hourMap).map(h => h.done + h.refused));
+  // Trouver les heures actives (±2h autour de la vraie plage)
+  const activeHours = Object.entries(hourMap).filter(([,v]) => v.done + v.refused > 0).map(([h]) => parseInt(h));
+  const minH = activeHours.length ? Math.max(0, Math.min(...activeHours) - 1) : 8;
+  const maxH = activeHours.length ? Math.min(23, Math.max(...activeHours) + 1) : 22;
+  const hoursRange = Array.from({length: maxH - minH + 1}, (_,i) => i + minH);
+
+  const barsHtml = hoursRange.map(h => {
+    const v = hourMap[h];
+    const total = v.done + v.refused;
+    const pct = total ? Math.max(8, Math.round((total / maxVal) * 100)) : 0;
+    const type = total === 0 ? '' : v.refused === 0 ? 'has-done' : v.done === 0 ? 'has-refused' : 'has-mixed';
+    const isActive = total > 0;
+    return `<div class="arch-hour-col">
+      <div class="arch-hour-bar ${type}" style="height:${pct}px" title="${total} commande${total>1?'s':''} à ${h}h" onclick="archScrollToHour(${h})"></div>
+      <div class="arch-hour-label ${isActive?'active':''}">${h}h</div>
+    </div>`;
+  }).join('');
+
+  // Liste chronologique
+  const sortedList = [...list].sort((a,b) => (a.archivedAt||'').localeCompare(b.archivedAt||''));
+  const rowsHtml = sortedList.map(cmd => {
+    const d = cmd.chronoStart && cmd.chronoEnd ? fmtTime(Math.floor((cmd.chronoEnd-cmd.chronoStart)/1000)) : null;
+    const items = [cmd.sandwich, cmd.boisson, cmd.accompagnement||cmd.option, cmd.dessert].filter(Boolean).join(' · ');
+    const h = parseInt((cmd.archivedAt||'0:00').split(':')[0]);
+    return `<div class="arch-tl-row ${cmd.state}" data-hour="${h}" onclick="openArchiveModal(${cmd.id})">
+      <span class="arch-tl-time">${cmd.archivedAt || '—'}</span>
+      <div class="arch-tl-sep ${cmd.state}"></div>
+      <span class="arch-tl-name">${cmd.name || 'Anonyme'}</span>
+      <span class="arch-tl-items">${items || '—'}</span>
+      <span class="arch-card-lieu ${cmd.surPlace?'sp':'em'}" style="flex-shrink:0">${cmd.surPlace?'🍽':'📦'}</span>
+      ${d ? `<span class="arch-tl-dur">⏱ ${d}</span>` : ''}
+      <span class="arch-tl-badge" style="${cmd.state==='done'?'background:#e8f5dc;color:#2d6a0a':'background:#fef0f0;color:#b03030'}">${cmd.state==='done'?'✅':'❌'}</span>
+    </div>`;
+  }).join('');
+
+  c.innerHTML = `
+    <div class="arch-timeline-wrap">
+      <div class="arch-timeline-title">Répartition horaire — ${archDateLabel(archCurrentDate)}</div>
+      <div class="arch-timeline-hours">${barsHtml}</div>
+    </div>
+    <div class="arch-timeline-list">${rowsHtml || '<div class="arch-empty"><div class="arch-empty-icon">📋</div><div class="arch-empty-title">Aucune commande</div></div>'}</div>`;
+}
+function archScrollToHour(h) {
+  const el = document.querySelector(`.arch-tl-row[data-hour="${h}"]`);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// ── Modal détail ──────────────────────────────────────
+function openArchiveModal(id) {
+  const cmd = archDisplayedList.find(c => c.id === id);
+  if (!cmd) return;
+  const dur = cmd.chronoStart && cmd.chronoEnd ? fmtTime(Math.floor((cmd.chronoEnd - cmd.chronoStart) / 1000)) : '—';
+  const items = [
+    cmd.sandwich && `🥪 ${cmd.sandwich}`,
+    cmd.boisson && `🥤 ${cmd.boisson}`,
+    (cmd.accompagnement || cmd.option) && `🍟 ${cmd.accompagnement || cmd.option}`,
+    cmd.dessert && `🍦 ${cmd.dessert}`
+  ].filter(Boolean);
+  const backdrop = document.createElement('div');
+  backdrop.className = 'arch-modal-backdrop';
+  backdrop.onclick = e => { if (e.target === backdrop) backdrop.remove(); };
+  backdrop.innerHTML = `<div class="arch-modal">
+    <div class="arch-modal-top">
+      <div class="arch-modal-id">${cmdNumber(cmd.id)} · ${cmd.state === 'done' ? '✅ Servie' : '❌ Refusée'} · ${cmd.archivedDate || ''}</div>
+      <div class="arch-modal-name">${cmd.name || 'Anonyme'}</div>
+      <div class="arch-modal-meta">
+        <span>🕐 ${cmd.createdAt} → ${cmd.archivedAt}</span>
+        ${cmd.phone ? `<span>📞 ${cmd.phone}</span>` : ''}
+        <span>${cmd.surPlace ? '🍽 Sur place' : '📦 À emporter'}</span>
+        ${cmd.source === 'ai' || cmd.phone ? '<span>🤖 Commande IA</span>' : '<span>✍️ Manuel</span>'}
+      </div>
+    </div>
+    <div class="arch-modal-body">
+      <div>
+        <div class="arch-modal-section">Articles</div>
+        <div class="arch-modal-block">
+          ${items.map(it => `<div class="arch-modal-row"><span class="arch-modal-key">${it.split(' ')[0]}</span><span class="arch-modal-val">${it.slice(it.indexOf(' ')+1)}</span></div>`).join('')}
+          ${cmd.modif ? `<div class="arch-modal-row"><span class="arch-modal-key">✏️ Modif</span><span class="arch-modal-val" style="color:#906010">${cmd.modif}</span></div>` : ''}
+          ${cmd.allergy ? `<div class="arch-modal-row"><span class="arch-modal-key">⚠️ Allergie</span><span class="arch-modal-val" style="color:#b03030">${cmd.allergy}</span></div>` : ''}
+        </div>
+      </div>
+      <div>
+        <div class="arch-modal-section">Temps de préparation</div>
+        <div class="arch-modal-block">
+          <div class="arch-modal-row"><span class="arch-modal-key">Durée</span><span class="arch-modal-val" style="font-size:20px;font-weight:800;color:#3B6D11">${dur}</span></div>
+          <div class="arch-modal-row"><span class="arch-modal-key">Commande reçue</span><span class="arch-modal-val">${cmd.createdAt}</span></div>
+          <div class="arch-modal-row"><span class="arch-modal-key">Archivée</span><span class="arch-modal-val">${cmd.archivedAt}</span></div>
+        </div>
+      </div>
+      ${(cmd.notes||[]).length ? `<div>
+        <div class="arch-modal-section">Notes internes</div>
+        <div class="arch-modal-block">${(cmd.notes||[]).map(n=>`<div class="arch-modal-row"><span style="color:#4a50aa">• ${n}</span></div>`).join('')}</div>
+      </div>` : ''}
+    </div>
+    <button class="arch-modal-close" onclick="this.closest('.arch-modal-backdrop').remove()">Fermer</button>
+  </div>`;
+  document.body.appendChild(backdrop);
+}
+
+// ── Export CSV ────────────────────────────────────────
+function exportCSV() {
+  const list = archGetFiltered();
+  if (!list.length) { alert('Aucune donnée à exporter.'); return; }
+  const header = ['ID','Statut','Client','Téléphone','Sandwich','Boisson','Accompagnement','Dessert','Modification','Allergie','Lieu','Source','Heure commande','Heure archivage','Date','Durée prépa (s)'];
+  const rows = list.map(cmd => {
+    const dur = cmd.chronoStart && cmd.chronoEnd ? Math.floor((cmd.chronoEnd - cmd.chronoStart)/1000) : '';
+    return [cmd.id, cmd.state === 'done' ? 'Servie' : 'Refusée', cmd.name||'', cmd.phone||'', cmd.sandwich||'', cmd.boisson||'', cmd.accompagnement||cmd.option||'', cmd.dessert||'', cmd.modif||'', cmd.allergy||'', cmd.surPlace ? 'Sur place' : 'À emporter', cmd.source === 'ai' || cmd.phone ? 'IA' : 'Manuel', cmd.createdAt||'', cmd.archivedAt||'', cmd.archivedDate||archCurrentDate, dur].map(v => `"${String(v).replace(/"/g,'""')}"`).join(',');
+  });
+  const csv = [header.join(','), ...rows].join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `commandes_${archCurrentDate}.csv`;
+  a.click();
+}
+
+// ── Vider le jour affiché ─────────────────────────────
+function clearArchivesDay() {
+  const label = archDateLabel(archCurrentDate);
+  if (!confirm(`Supprimer toutes les commandes de "${label}" ? Irréversible.`)) return;
+  archives = archives.filter(a => a.archivedDate !== archCurrentDate);
+  archDisplayedList = archDisplayedList.filter(a => a.archivedDate !== archCurrentDate);
+  doneCount = 0; totalDuration = 0;
+  document.getElementById('done-count').textContent = archives.filter(a => a.state === 'done').length;
+  renderArchive();
 }
 
 // ═══ VIEWS ═══
@@ -1036,8 +1576,11 @@ function switchView(view, tab) {
     toolbar.style.display = 'none';
     renderCuisine();
   } else {
-    document.getElementById('archive-panel').style.display = 'block';
+    const ap = document.getElementById('archive-panel');
+    ap.style.display = 'flex';
+    ap.classList.add('visible');
     toolbar.style.display = 'none';
+    archLoadDate(archCurrentDate);
   }
 }
 
@@ -1061,28 +1604,7 @@ function renderCuisine() {
   });
 }
 
-function exportPDF(e) {
-  e.preventDefault();
-  const lines = ['COMMANDE-IA — EXPORT JOURNÉE', new Date().toLocaleDateString('fr-FR'), ''];
-  archives.forEach(c => {
-    lines.push(`[${c.state === 'refused' ? 'REFUSÉE' : 'PRÊTE'}] ${c.name} | ${c.createdAt} | ${c.sandwich} / ${c.boisson} / ${c.option}${c.modif ? ' / Modif: ' + c.modif : ''}${c.allergy ? ' / Allergie: ' + c.allergy : ''}`);
-  });
-  const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'commandes_journee.txt';
-  a.click();
-}
-
-function clearArchives() {
-  if (!confirm('Supprimer toutes les commandes archivées ? Cette action est irréversible.')) return;
-  archives = [];
-  doneCount = 0;
-  totalDuration = 0;
-  document.getElementById('done-count').textContent = '0';
-  document.getElementById('avg-time').textContent = '—';
-  renderArchive();
-}
+// exportPDF et clearArchives remplacés par exportCSV et clearArchivesDay (voir section Archives)
 
 // ═══ PWA ═══
 if ('serviceWorker' in navigator) {

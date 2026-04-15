@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Stocks — Commande-IA</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'DM Sans', system-ui, sans-serif; background: #f0f2f0; min-height: 100vh; color: #111; }
@@ -136,6 +137,9 @@
     .product-icon.ingredient { background: #f0f5ee; }
     .product-name { font-size: 14px; font-weight: 700; color: #1a2a1a; }
     .product-meta { font-size: 11px; color: #9ab89a; margin-top: 2px; display: flex; align-items: center; gap: 6px; }
+    .product-links { font-size: 10px; color: #9ab89a; margin-top: 4px; display: flex; flex-wrap: wrap; gap: 3px; align-items: center; }
+    .product-link-badge { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 10px; background: #eef5e8; color: #3B6D11; border: 1px solid #c0e090; }
+    .product-link-label { font-size: 9px; color: #b0c8b0; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
     .product-category { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: #f0f5ee; color: #7aaa7a; text-transform: uppercase; letter-spacing: 0.5px; }
 
     .qty-cell { }
@@ -317,12 +321,104 @@
     .history-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.2); z-index: 150; }
     .history-backdrop.open { display: block; }
 
+    /* ═══ ANALYTICS ═══ */
+    .analytics-section {
+      background: #fff; border: 1.5px solid #e0ecd8; border-radius: 16px;
+      margin-bottom: 20px; overflow: hidden;
+    }
+    .analytics-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 22px; cursor: pointer; transition: background 0.15s;
+      border-bottom: 1.5px solid transparent;
+      user-select: none;
+    }
+    .analytics-header:hover { background: #f8fdf4; }
+    .analytics-header.open { border-bottom-color: #e0ecd8; }
+    .analytics-icon { font-size: 20px; }
+    .analytics-title { font-size: 15px; font-weight: 700; color: #1a2a1a; }
+    .analytics-sub { font-size: 11px; color: #9ab89a; margin-top: 2px; }
+    .analytics-arrow { font-size: 18px; color: #9ab89a; transition: transform 0.25s; }
+    .analytics-arrow.open { transform: rotate(180deg); }
+    .period-sel {
+      font-size: 11px; font-weight: 600; padding: 5px 10px; border-radius: 8px;
+      border: 1.5px solid #e0ecd8; background: #f8faf6; color: #5a8a5a;
+      font-family: 'DM Sans', sans-serif; outline: none; cursor: pointer;
+    }
+    .period-sel:focus { border-color: #4a8a1a; }
+
+    .analytics-body { padding: 20px 22px 22px; display: none; }
+    .analytics-body.open { display: block; }
+
+    .chart-row { display: grid; gap: 16px; margin-bottom: 16px; }
+    .chart-row:last-child { margin-bottom: 0; }
+    .chart-row-1 { grid-template-columns: 1fr; }
+    .chart-row-2 { grid-template-columns: 2fr 1fr; }
+    .chart-row-3 { grid-template-columns: 1fr 1fr; }
+
+    .chart-card {
+      background: #f8fdf4; border: 1.5px solid #e8f0e0; border-radius: 14px;
+      padding: 18px; overflow: hidden;
+    }
+    .chart-card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; gap: 12px; flex-wrap: wrap; }
+    .chart-card-title { font-size: 13px; font-weight: 700; color: #1a2a1a; }
+    .chart-card-sub { font-size: 10px; color: #9ab89a; margin-top: 2px; }
+    .chart-wrap { position: relative; height: 240px; }
+    .chart-wrap.tall { height: 280px; }
+    .chart-wrap.short { height: 200px; }
+    .chart-donut-wrap { height: 220px; }
+    .chart-empty {
+      display: flex; align-items: center; justify-content: center;
+      height: 180px; font-size: 12px; color: #b0c8b0; font-weight: 500;
+      flex-direction: column; gap: 8px; text-align: center;
+    }
+    .chart-empty::before { content: '📊'; font-size: 28px; opacity: 0.4; }
+
+    .prod-toggles { display: flex; flex-wrap: wrap; gap: 5px; }
+    .prod-toggle {
+      font-size: 10px; font-weight: 600; padding: 3px 10px; border-radius: 20px;
+      border: 1.5px solid var(--color, #9ab89a); background: transparent;
+      color: var(--color, #9ab89a); cursor: pointer; font-family: 'DM Sans', sans-serif;
+      transition: all 0.15s; opacity: 0.4;
+    }
+    .prod-toggle.active { background: var(--color, #9ab89a); color: #fff; opacity: 1; }
+
+    /* ═══ KPI MINI-CARDS analytics ═══ */
+    .analytics-kpi-bar { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 18px; }
+    .kpi-card {
+      background: #fff; border: 1.5px solid #e8f0e0; border-radius: 12px;
+      padding: 12px 14px; text-align: center; position: relative; overflow: hidden;
+    }
+    .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+    .kpi-card.green::before { background: linear-gradient(90deg, #3B6D11, #7bc44c); }
+    .kpi-card.blue::before { background: linear-gradient(90deg, #2a50aa, #70a0f0); }
+    .kpi-card.orange::before { background: linear-gradient(90deg, #c08010, #f8d070); }
+    .kpi-card.red::before { background: linear-gradient(90deg, #c03030, #f08080); }
+    .kpi-card.purple::before { background: linear-gradient(90deg, #8030aa, #e0b0f0); }
+    .kpi-card.teal::before { background: linear-gradient(90deg, #20aa80, #80e0c0); }
+    .kpi-label { font-size: 9px; font-weight: 700; color: #9ab89a; text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 5px; }
+    .kpi-val { font-size: 20px; font-weight: 800; color: #1a2a1a; letter-spacing: -0.5px; line-height: 1; }
+    .kpi-sub { font-size: 9px; color: #b0c8b0; margin-top: 3px; }
+    .kpi-card.green .kpi-val { color: #2d6a0a; }
+    .kpi-card.blue .kpi-val { color: #2a50aa; }
+    .kpi-card.orange .kpi-val { color: #c08010; }
+    .kpi-card.red .kpi-val { color: #c03030; }
+    .kpi-card.purple .kpi-val { color: #8030aa; }
+    .kpi-card.teal .kpi-val { color: #20aa80; }
+
+    /* Rotation meter */
+    .rotation-bar { height: 4px; background: #f0f5ee; border-radius: 3px; margin-top: 5px; overflow: hidden; }
+    .rotation-fill { height: 100%; border-radius: 3px; transition: width 0.8s ease; }
+    .rotation-fill.green { background: linear-gradient(90deg,#3B6D11,#7bc44c); }
+    .rotation-fill.orange { background: linear-gradient(90deg,#c08010,#f8d070); }
+    .rotation-fill.red { background: linear-gradient(90deg,#c03030,#f08080); }
+
     /* Responsive */
     @media (max-width: 900px) {
       .stats-row { grid-template-columns: repeat(3, 1fr); }
       .table-header, .table-row { grid-template-columns: 2fr 1fr 1fr 140px; }
       .table-header > *:nth-child(3), .table-row > *:nth-child(3),
       .table-header > *:nth-child(4), .table-row > *:nth-child(4) { display: none; }
+      .chart-row-2, .chart-row-3 { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -409,6 +505,151 @@
       <div class="stat-label">Taux remplissage</div>
       <div class="stat-val blue" id="stat-fill">—</div>
       <div class="stat-change neutral" id="stat-fill-info">Stock moyen</div>
+    </div>
+  </div>
+
+  <!-- ANALYTICS CHARTS -->
+  <div class="analytics-section" id="analytics-section">
+    <div class="analytics-header" id="analytics-header" onclick="toggleAnalytics()">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="analytics-icon"></span>
+        <div>
+          <div class="analytics-title">Analytics — Vue graphique</div>
+          <div class="analytics-sub">Évolution, consommation, ruptures &amp; réapprovisionnements</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <select class="period-sel" id="period-select" onchange="refreshCharts()" onclick="event.stopPropagation()">
+          <option value="7">7 jours</option>
+          <option value="14" selected>14 jours</option>
+          <option value="30">30 jours</option>
+        </select>
+        <div class="analytics-arrow" id="analytics-arrow">▾</div>
+      </div>
+    </div>
+    <div class="analytics-body" id="analytics-body">
+
+      <!-- KPI Bar -->
+      <div class="analytics-kpi-bar" id="analytics-kpi-bar">
+        <div class="kpi-card green"><div class="kpi-label">Commandes</div><div class="kpi-val" id="kpi-orders">—</div><div class="kpi-sub" id="kpi-orders-sub">sur la période</div></div>
+        <div class="kpi-card blue"><div class="kpi-label">Chiffre d'affaires</div><div class="kpi-val" id="kpi-ca">—</div><div class="kpi-sub">total ventes</div></div>
+        <div class="kpi-card teal"><div class="kpi-label">Panier moyen</div><div class="kpi-val" id="kpi-avg">—</div><div class="kpi-sub">par commande</div></div>
+        <div class="kpi-card orange"><div class="kpi-label">Refusées</div><div class="kpi-val" id="kpi-refused">—</div><div class="kpi-sub" id="kpi-refused-pct">ruptures &amp; autres</div></div>
+        <div class="kpi-card purple"><div class="kpi-label">Produit #1</div><div class="kpi-val" style="font-size:12px;padding-top:4px;" id="kpi-top-product">—</div><div class="kpi-sub" id="kpi-top-qty"></div></div>
+        <div class="kpi-card red"><div class="kpi-label">Ingrédients</div><div class="kpi-val" id="kpi-ingredients">—</div><div class="kpi-sub" id="kpi-ing-sub">en stock</div></div>
+      </div>
+
+      <!-- Ligne 1 : Évolution multi-courbes (pleine largeur) -->
+      <div class="chart-row chart-row-1">
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div>
+              <div class="chart-card-title">📈 Évolution du stock dans le temps</div>
+              <div class="chart-card-sub">Niveau de chaque ingrédient jour par jour — cliquer sur un produit pour l'afficher/masquer</div>
+            </div>
+            <div id="product-toggles" class="prod-toggles"></div>
+          </div>
+          <div class="chart-wrap tall"><canvas id="chart-evolution"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Ligne 2 : Activité + Distribution -->
+      <div class="chart-row chart-row-2">
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div>
+              <div class="chart-card-title">📦 Consommation vs Réapprovisionnement</div>
+              <div class="chart-card-sub">Unités par jour · barre rouge = sorti · barre bleue = entré · ligne verte = bilan</div>
+            </div>
+          </div>
+          <div class="chart-wrap"><canvas id="chart-activity"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div>
+              <div class="chart-card-title">🍩 Distribution actuelle</div>
+              <div class="chart-card-sub">Répartition des statuts de stock</div>
+            </div>
+          </div>
+          <div class="chart-donut-wrap"><canvas id="chart-distribution"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Ligne 3 : Top consommés + Événements par produit -->
+      <div class="chart-row chart-row-3">
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div>
+              <div class="chart-card-title">🔥 Top ingrédients consommés</div>
+              <div class="chart-card-sub">Classement par quantité déduite sur la période</div>
+            </div>
+          </div>
+          <div class="chart-wrap"><canvas id="chart-top-consumed"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div>
+              <div class="chart-card-title">⚡ Événements par produit</div>
+              <div class="chart-card-sub">Consommations, réapprovisionnements &amp; ruptures</div>
+            </div>
+          </div>
+          <div class="chart-wrap"><canvas id="chart-events"></canvas></div>
+        </div>
+      </div>
+
+      <!-- ─── SECTION VENTES ─── -->
+      <div style="font-size:11px;font-weight:700;color:#9ab89a;text-transform:uppercase;letter-spacing:1px;margin:20px 0 12px;padding-top:16px;border-top:1.5px solid #e8f0e0;">
+        📊 Ventes &amp; Chiffre d'affaires
+      </div>
+
+      <!-- Ligne 4 : CA journalier + Commandes/jour -->
+      <div class="chart-row chart-row-1">
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div>
+              <div class="chart-card-title">💰 Chiffre d'affaires &amp; commandes journaliers</div>
+              <div class="chart-card-sub">Revenus (€) en barres · nombre de commandes en ligne · sur place vs à emporter</div>
+            </div>
+          </div>
+          <div class="chart-wrap tall"><canvas id="chart-ca-daily"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Ligne 5 : Top produits vendus + Répartition CA par catégorie -->
+      <div class="chart-row chart-row-2">
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div>
+              <div class="chart-card-title">🏆 Top produits vendus</div>
+              <div class="chart-card-sub">Quantités vendues + chiffre d'affaires généré par produit</div>
+            </div>
+          </div>
+          <div class="chart-wrap tall"><canvas id="chart-top-products"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div>
+              <div class="chart-card-title">🍕 CA par catégorie</div>
+              <div class="chart-card-sub">Répartition des revenus : Sandwich, Boisson, Accompagnement, Dessert</div>
+            </div>
+          </div>
+          <div class="chart-donut-wrap" style="height:260px;"><canvas id="chart-ca-cat"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Ligne 6 : Taux de rotation des ingrédients -->
+      <div class="chart-row chart-row-1">
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div>
+              <div class="chart-card-title">🔄 Taux de rotation des ingrédients</div>
+              <div class="chart-card-sub">% utilisé vs stock initial · rouge = quasi épuisé · vert = bien approvisionné</div>
+            </div>
+          </div>
+          <div class="chart-wrap" style="height:220px;"><canvas id="chart-rotation"></canvas></div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -543,6 +784,28 @@ let activeFilter = 'all';
 let activeView = 'table';
 let selectedCategory = 'ingredient';
 let stockHistory = []; // Local history tracking
+let menuByIngredient = {}; // { nomIngredient.toLowerCase() → [nomProduit, ...] }
+let analyticsData = null; // données de ventes / CA
+
+function buildMenuByIngredient(menuItems) {
+  menuByIngredient = {};
+  (menuItems || []).forEach(p => {
+    if (!p.ingredients) return;
+    p.ingredients.split(/[,;\n]+/).forEach(ing => {
+      const key = ing.trim().toLowerCase();
+      if (!key) return;
+      if (!menuByIngredient[key]) menuByIngredient[key] = [];
+      if (!menuByIngredient[key].includes(p.nom)) menuByIngredient[key].push(p.nom);
+    });
+  });
+}
+
+function buildProductLinks(produitName) {
+  const key = (produitName || '').toLowerCase().trim();
+  const prods = menuByIngredient[key];
+  if (!prods || !prods.length) return '';
+  return `<div class="product-links"><span class="product-link-label">🔗&nbsp;</span>${prods.map(n => `<span class="product-link-badge">${n}</span>`).join('')}</div>`;
+}
 
 // ═══ LOAD ═══
 async function loadRestaurants() {
@@ -582,10 +845,18 @@ async function loadStocks() {
   document.getElementById('stocks-list').innerHTML = '<div class="loading">Chargement...</div>';
   document.getElementById('page-sub').textContent = 'Suivi en temps réel · ' + selectedRestoNom;
   loadHistory();
-  const res = await fetch('/stocks/' + selectedRestoId);
-  stocks = await res.json();
+  const period = getPeriod();
+  const [stockRes, menuRes, analyticsRes] = await Promise.all([
+    fetch('/stocks/' + selectedRestoId),
+    fetch('/mon-menu/' + selectedRestoId),
+    fetch(`/analytics?restaurantId=${selectedRestoId}&days=${period}`)
+  ]);
+  stocks = await stockRes.json();
+  buildMenuByIngredient(menuRes.ok ? await menuRes.json() : []);
+  analyticsData = analyticsRes.ok ? await analyticsRes.json() : null;
   renderStocks();
   updateAlerts();
+  refreshCharts();
 }
 
 // ═══ FILTERS & VIEW ═══
@@ -681,6 +952,7 @@ function renderStocks() {
             <div class="product-meta">
               <span>${s.unite || 'unité'}</span> · <span>Màj: ${s.derniereMaj || '—'}</span>
             </div>
+            ${buildProductLinks(s.produit)}
           </div>
         </div>
         <div class="qty-cell">
@@ -726,6 +998,7 @@ function renderStocks() {
           <div class="grid-product-name">${emoji} ${s.produit}</div>
           <span class="status-badge ${(s.statut||'').toLowerCase()}"><span class="status-dot"></span>${s.statut}</span>
         </div>
+        ${buildProductLinks(s.produit)}
         <div class="grid-qty-big ${color}">${s.quantiteActuelle ?? 0}<span class="grid-unit"> ${s.unite || ''}</span></div>
         <div class="grid-bar"><div class="grid-bar-fill qty-bar-fill ${color}" style="width:${pct}%"></div></div>
         <div class="grid-details">
@@ -963,6 +1236,569 @@ function showToast(text) {
   toast.innerHTML = `<span class="toast-icon">✓</span>${text}`;
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 3000);
+}
+
+// ═══ ANALYTICS / CHARTS ═══
+let chartEvolution = null, chartActivity = null, chartDistribution = null;
+let chartTopConsumed = null, chartEvents = null;
+
+function toggleAnalytics() {
+  const body = document.getElementById('analytics-body');
+  const arrow = document.getElementById('analytics-arrow');
+  const header = document.getElementById('analytics-header');
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  arrow.classList.toggle('open', !isOpen);
+  header.classList.toggle('open', !isOpen);
+  if (!isOpen) setTimeout(refreshCharts, 50); // render after expand animation
+}
+
+function getPeriod() { return parseInt(document.getElementById('period-select')?.value || '14'); }
+
+function getLastNDays(n) {
+  const days = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    days.push(d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }));
+  }
+  return days;
+}
+function getDayKey(ts) {
+  return new Date(ts).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+}
+function getDayStart(n, period) {
+  const d = new Date(); d.setDate(d.getDate() - (period - 1 - n));
+  d.setHours(0, 0, 0, 0); return d.getTime();
+}
+
+function getProdColors() {
+  return [
+    { b: '#3B6D11', bg: 'rgba(59,109,17,0.12)' },
+    { b: '#2a50aa', bg: 'rgba(42,80,170,0.12)' },
+    { b: '#c08010', bg: 'rgba(192,128,16,0.12)' },
+    { b: '#8030aa', bg: 'rgba(128,48,170,0.12)' },
+    { b: '#20aa80', bg: 'rgba(32,170,128,0.12)' },
+    { b: '#c03030', bg: 'rgba(192,48,48,0.12)' },
+    { b: '#5060d0', bg: 'rgba(80,96,208,0.12)' },
+    { b: '#aa6020', bg: 'rgba(170,96,32,0.12)' },
+  ];
+}
+
+const chartDefaults = {
+  tooltipBg: 'rgba(26,42,26,0.92)',
+  gridColor: 'rgba(0,0,0,0.045)',
+  tickFont: { size: 11, family: 'DM Sans' },
+  tickColor: '#9ab89a',
+};
+
+// ── Chart 1 : Évolution multi-lignes ────────────────
+function renderEvolutionChart() {
+  const period = getPeriod();
+  const days = getLastNDays(period);
+  const startTS = getDayStart(0, period);
+  const canvas = document.getElementById('chart-evolution');
+  if (!canvas) return;
+  if (chartEvolution) { chartEvolution.destroy(); chartEvolution = null; }
+
+  const periodHist = stockHistory.filter(h => h.timestamp >= startTS);
+
+  // Top 8 products by activity
+  const activity = {};
+  periodHist.forEach(h => { activity[h.product] = (activity[h.product] || 0) + 1; });
+  let topProds = Object.entries(activity).sort((a,b) => b[1]-a[1]).slice(0, 8).map(e => e[0]);
+  if (!topProds.length) topProds = stocks.slice(0, 6).map(s => s.produit);
+  if (!topProds.length) {
+    canvas.closest('.chart-wrap').innerHTML = '<div class="chart-empty">Aucune donnée d\'historique disponible</div>'; return;
+  }
+
+  const colors = getProdColors();
+  const datasets = topProds.map((prod, idx) => {
+    const c = colors[idx % colors.length];
+    const stockItem = stocks.find(s => s.produit === prod);
+    const prodHist = periodHist.filter(h => h.product === prod).sort((a,b) => a.timestamp - b.timestamp);
+    const data = days.map((_, di) => {
+      const dayStart = getDayStart(di, period);
+      const dayEnd = dayStart + 86400000;
+      const todayEntries = prodHist.filter(h => h.timestamp >= dayStart && h.timestamp < dayEnd);
+      if (todayEntries.length) return todayEntries[todayEntries.length - 1].newTotal ?? null;
+      const before = prodHist.filter(h => h.timestamp < dayStart);
+      if (before.length) return before[before.length - 1].newTotal ?? null;
+      // No history yet: show current level only for today
+      return di === days.length - 1 ? (stockItem?.quantiteActuelle ?? null) : null;
+    });
+    return {
+      label: prod, data,
+      borderColor: c.b, backgroundColor: c.bg,
+      borderWidth: 2.5, pointRadius: 4, pointHoverRadius: 7,
+      tension: 0.35, fill: false, spanGaps: true,
+    };
+  });
+
+  // Build toggle buttons
+  const toggleContainer = document.getElementById('product-toggles');
+  if (toggleContainer) {
+    toggleContainer.innerHTML = topProds.map((p, i) =>
+      `<button class="prod-toggle active" style="--color:${colors[i % colors.length].b}" onclick="toggleLine(this,${i})">${p}</button>`
+    ).join('');
+  }
+
+  // Annotation zones for ruptures (shaded red areas)
+  chartEvolution = new Chart(canvas, {
+    type: 'line',
+    data: { labels: days, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: chartDefaults.tooltipBg, titleColor: '#a8e07a', bodyColor: '#fff', padding: 12,
+          callbacks: {
+            title: ctx => `📅 ${ctx[0].label}`,
+            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y ?? '—'} unités`
+          }
+        }
+      },
+      scales: {
+        x: { grid: { color: chartDefaults.gridColor }, ticks: { font: chartDefaults.tickFont, color: chartDefaults.tickColor } },
+        y: { grid: { color: chartDefaults.gridColor }, ticks: { font: chartDefaults.tickFont, color: chartDefaults.tickColor }, beginAtZero: true,
+          title: { display: true, text: 'Quantité', font: { size: 10, family: 'DM Sans' }, color: '#b0c8b0' }
+        }
+      }
+    }
+  });
+}
+
+function toggleLine(btn, idx) {
+  if (!chartEvolution) return;
+  const meta = chartEvolution.getDatasetMeta(idx);
+  meta.hidden = !meta.hidden;
+  btn.classList.toggle('active');
+  chartEvolution.update();
+}
+
+// ── Chart 2 : Activité barres + ligne bilan ──────────
+function renderActivityChart() {
+  const period = getPeriod();
+  const days = getLastNDays(period);
+  const startTS = getDayStart(0, period);
+  const canvas = document.getElementById('chart-activity');
+  if (!canvas) return;
+  if (chartActivity) { chartActivity.destroy(); chartActivity = null; }
+  const periodHist = stockHistory.filter(h => h.timestamp >= startTS);
+
+  const consumed = days.map(day =>
+    periodHist.filter(h => getDayKey(h.timestamp) === day && (h.type === 'remove' || h.type === 'auto'))
+      .reduce((s, h) => s + (h.qty || 0), 0)
+  );
+  const restocked = days.map(day =>
+    periodHist.filter(h => getDayKey(h.timestamp) === day && (h.type === 'restock' || h.type === 'add'))
+      .reduce((s, h) => s + (h.qty || 0), 0)
+  );
+  const net = days.map((_, i) => restocked[i] - consumed[i]);
+
+  if (consumed.every(v=>v===0) && restocked.every(v=>v===0)) {
+    canvas.closest('.chart-wrap').innerHTML = '<div class="chart-empty">Aucune activité enregistrée sur la période</div>'; return;
+  }
+
+  chartActivity = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: days,
+      datasets: [
+        { label: 'Consommé', data: consumed, backgroundColor: 'rgba(192,48,48,0.72)', borderColor: '#c03030', borderWidth: 1.5, borderRadius: 5 },
+        { label: 'Réapprovisionné', data: restocked, backgroundColor: 'rgba(42,80,170,0.72)', borderColor: '#2a50aa', borderWidth: 1.5, borderRadius: 5 },
+        { label: 'Bilan net', data: net, type: 'line', borderColor: '#3B6D11', backgroundColor: 'transparent',
+          borderWidth: 2.5, pointRadius: 3, pointHoverRadius: 6, tension: 0.4, yAxisID: 'y' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', labels: { font: { size: 10, family: 'DM Sans' }, color: '#5a8a5a', boxWidth: 10, padding: 14 } },
+        tooltip: { backgroundColor: chartDefaults.tooltipBg, titleColor: '#a8e07a', bodyColor: '#fff', padding: 12 }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10, family: 'DM Sans' }, color: chartDefaults.tickColor, maxRotation: 45 } },
+        y: { grid: { color: chartDefaults.gridColor }, ticks: { font: chartDefaults.tickFont, color: chartDefaults.tickColor }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+// ── Chart 3 : Donut distribution ─────────────────────
+function renderDistributionChart() {
+  const canvas = document.getElementById('chart-distribution');
+  if (!canvas) return;
+  if (chartDistribution) { chartDistribution.destroy(); chartDistribution = null; }
+  const dispo = stocks.filter(s => s.statut === 'Disponible').length;
+  const alerte = stocks.filter(s => s.statut === 'Alerte').length;
+  const rupture = stocks.filter(s => s.statut === 'Rupture').length;
+  if (!stocks.length) {
+    canvas.closest('.chart-donut-wrap').innerHTML = '<div class="chart-empty">Aucun stock</div>'; return;
+  }
+  const total = stocks.length;
+  chartDistribution = new Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      labels: ['Disponible', 'Alerte', 'Rupture'],
+      datasets: [{ data: [dispo, alerte, rupture],
+        backgroundColor: ['rgba(59,109,17,0.8)', 'rgba(192,128,16,0.8)', 'rgba(192,48,48,0.8)'],
+        borderColor: ['#3B6D11', '#c08010', '#c03030'],
+        borderWidth: 2.5, hoverBorderWidth: 3.5,
+        hoverOffset: 6,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '66%',
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 10, family: 'DM Sans' }, color: '#5a8a5a', boxWidth: 10, padding: 10 } },
+        tooltip: {
+          backgroundColor: chartDefaults.tooltipBg, titleColor: '#a8e07a', bodyColor: '#fff', padding: 10,
+          callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed/total*100)}%)` }
+        }
+      }
+    },
+    plugins: [{
+      id: 'centerLabel',
+      afterDraw(chart) {
+        const { ctx, chartArea: { width, height, top, left } } = chart;
+        const cx = left + width / 2, cy = top + height / 2;
+        ctx.save();
+        ctx.font = `800 26px DM Sans, sans-serif`; ctx.fillStyle = '#1a2a1a';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(total, cx, cy - 9);
+        ctx.font = `500 10px DM Sans, sans-serif`; ctx.fillStyle = '#9ab89a';
+        ctx.fillText('produits', cx, cy + 10);
+        ctx.restore();
+      }
+    }]
+  });
+}
+
+// ── Chart 4 : Top consommés (barres horizontales) ────
+function renderTopConsumedChart() {
+  const startTS = getDayStart(0, getPeriod());
+  const canvas = document.getElementById('chart-top-consumed');
+  if (!canvas) return;
+  if (chartTopConsumed) { chartTopConsumed.destroy(); chartTopConsumed = null; }
+  const periodHist = stockHistory.filter(h => h.timestamp >= startTS);
+  const consumed = {};
+  periodHist.forEach(h => {
+    if (h.type === 'remove' || h.type === 'auto') consumed[h.product] = (consumed[h.product] || 0) + (h.qty || 0);
+  });
+  const sorted = Object.entries(consumed).sort((a,b) => b[1]-a[1]).slice(0, 8);
+  if (!sorted.length) {
+    canvas.closest('.chart-wrap').innerHTML = '<div class="chart-empty">Aucune consommation enregistrée</div>'; return;
+  }
+  const palette = ['rgba(192,48,48,0.78)','rgba(192,80,16,0.78)','rgba(192,128,16,0.78)','rgba(128,48,170,0.78)','rgba(42,80,170,0.78)','rgba(32,128,96,0.78)','rgba(59,109,17,0.78)','rgba(170,80,32,0.78)'];
+  chartTopConsumed = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: sorted.map(e => e[0]),
+      datasets: [{ label: 'Unités consommées', data: sorted.map(e => e[1]),
+        backgroundColor: sorted.map((_, i) => palette[i % palette.length]),
+        borderRadius: 6, borderSkipped: false }]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor: chartDefaults.tooltipBg, titleColor: '#a8e07a', bodyColor: '#fff', padding: 10,
+          callbacks: { label: ctx => ` ${ctx.parsed.x} unités déduites` }
+        }
+      },
+      scales: {
+        x: { grid: { color: chartDefaults.gridColor }, ticks: { font: chartDefaults.tickFont, color: chartDefaults.tickColor }, beginAtZero: true },
+        y: { grid: { display: false }, ticks: { font: { size: 11, family: 'DM Sans' }, color: '#1a2a1a' } }
+      }
+    }
+  });
+}
+
+// ── Chart 5 : Événements par produit (barres groupées) ─
+function renderEventsChart() {
+  const startTS = getDayStart(0, getPeriod());
+  const canvas = document.getElementById('chart-events');
+  if (!canvas) return;
+  if (chartEvents) { chartEvents.destroy(); chartEvents = null; }
+  const periodHist = stockHistory.filter(h => h.timestamp >= startTS);
+  const products = {};
+  periodHist.forEach(h => {
+    if (!products[h.product]) products[h.product] = { conso: 0, restock: 0, ruptures: 0 };
+    if (h.type === 'remove' || h.type === 'auto') {
+      products[h.product].conso++;
+      if ((h.newTotal ?? 1) === 0) products[h.product].ruptures++;
+    }
+    if (h.type === 'restock' || h.type === 'add') products[h.product].restock++;
+  });
+  const sorted = Object.entries(products).sort((a,b) => (b[1].conso + b[1].restock) - (a[1].conso + a[1].restock)).slice(0, 8);
+  if (!sorted.length) {
+    canvas.closest('.chart-wrap').innerHTML = '<div class="chart-empty">Aucun événement enregistré</div>'; return;
+  }
+  chartEvents = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: sorted.map(e => e[0]),
+      datasets: [
+        { label: 'Consommations', data: sorted.map(e => e[1].conso), backgroundColor: 'rgba(192,48,48,0.72)', borderRadius: 4 },
+        { label: 'Réapprovisionnements', data: sorted.map(e => e[1].restock), backgroundColor: 'rgba(42,80,170,0.72)', borderRadius: 4 },
+        { label: 'Ruptures atteintes', data: sorted.map(e => e[1].ruptures), backgroundColor: 'rgba(192,128,16,0.72)', borderRadius: 4 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { font: { size: 10, family: 'DM Sans' }, color: '#5a8a5a', boxWidth: 10, padding: 12 } },
+        tooltip: { backgroundColor: chartDefaults.tooltipBg, titleColor: '#a8e07a', bodyColor: '#fff', padding: 10 }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 9, family: 'DM Sans' }, color: chartDefaults.tickColor, maxRotation: 35 } },
+        y: { grid: { color: chartDefaults.gridColor }, ticks: { font: chartDefaults.tickFont, color: chartDefaults.tickColor }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+// ── KPI Bar ───────────────────────────────────────────
+function updateKpis() {
+  const a = analyticsData;
+  const rupture = stocks.filter(s => s.statut === 'Rupture').length;
+  const alerte  = stocks.filter(s => s.statut === 'Alerte').length;
+
+  document.getElementById('kpi-orders').textContent = a ? a.totalOrders : '—';
+  document.getElementById('kpi-orders-sub').textContent = a ? `dont ${a.refusedOrders} refusées` : 'sur la période';
+  document.getElementById('kpi-ca').textContent = a ? a.totalRevenue.toFixed(2) + '€' : '—';
+  document.getElementById('kpi-avg').textContent = a ? a.avgOrderValue.toFixed(2) + '€' : '—';
+  document.getElementById('kpi-refused').textContent = a ? a.refusedOrders : '—';
+  const refPct = a && a.totalOrders ? Math.round(a.refusedOrders / a.totalOrders * 100) : 0;
+  document.getElementById('kpi-refused-pct').textContent = a ? refPct + '% des commandes' : 'ruptures & autres';
+  if (a && a.topProducts && a.topProducts.length) {
+    document.getElementById('kpi-top-product').textContent = a.topProducts[0].nom;
+    document.getElementById('kpi-top-qty').textContent = a.topProducts[0].qty + ' vendus · ' + a.topProducts[0].revenue.toFixed(2) + '€';
+  }
+  document.getElementById('kpi-ingredients').textContent = stocks.length;
+  document.getElementById('kpi-ing-sub').textContent = rupture + ' rupture · ' + alerte + ' alerte';
+}
+
+// ── Chart 6 : CA & commandes journaliers ─────────────
+let chartCaDaily = null;
+function renderCaDailyChart() {
+  const canvas = document.getElementById('chart-ca-daily');
+  if (!canvas) return;
+  if (chartCaDaily) { chartCaDaily.destroy(); chartCaDaily = null; }
+  if (!analyticsData) { canvas.closest('.chart-wrap').innerHTML = '<div class="chart-empty">Aucune donnée de ventes</div>'; return; }
+
+  const { revenueByDay, ordersByDay, surPlaceByDay } = analyticsData;
+  const labels = Object.keys(revenueByDay).sort();
+  const ca     = labels.map(d => Math.round(revenueByDay[d] * 100) / 100);
+  const cmds   = labels.map(d => ordersByDay[d] || 0);
+  const sp     = labels.map(d => surPlaceByDay[d] || 0);
+  const emport = labels.map((d, i) => cmds[i] - sp[i]);
+  const fmtDate = d => { const [y,m,j] = d.split('-'); return j+'/'+m; };
+
+  if (ca.every(v => v === 0) && cmds.every(v => v === 0)) {
+    canvas.closest('.chart-wrap').innerHTML = '<div class="chart-empty">Aucune vente enregistrée</div>'; return;
+  }
+
+  chartCaDaily = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: labels.map(fmtDate),
+      datasets: [
+        { label: 'Sur place', data: sp, backgroundColor: 'rgba(192,128,16,0.7)', borderRadius: 4, stack: 'cmds', yAxisID: 'yRight' },
+        { label: 'À emporter', data: emport, backgroundColor: 'rgba(42,80,170,0.7)', borderRadius: 4, stack: 'cmds', yAxisID: 'yRight' },
+        { label: 'CA (€)', data: ca, type: 'line', borderColor: '#3B6D11', backgroundColor: 'rgba(59,109,17,0.08)',
+          borderWidth: 2.5, pointRadius: 4, pointHoverRadius: 7, tension: 0.4, fill: true, yAxisID: 'yLeft' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', labels: { font: { size: 10, family: 'DM Sans' }, color: '#5a8a5a', boxWidth: 10, padding: 14 } },
+        tooltip: { backgroundColor: chartDefaults.tooltipBg, titleColor: '#a8e07a', bodyColor: '#fff', padding: 12,
+          callbacks: { label: ctx => ctx.dataset.yAxisID === 'yLeft' ? ` CA: ${ctx.parsed.y.toFixed(2)}€` : ` ${ctx.dataset.label}: ${ctx.parsed.y} commande(s)` }
+        }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10, family: 'DM Sans' }, color: chartDefaults.tickColor } },
+        yLeft: { position: 'left', grid: { color: chartDefaults.gridColor }, ticks: { font: chartDefaults.tickFont, color: '#3B6D11', callback: v => v + '€' }, beginAtZero: true },
+        yRight: { position: 'right', grid: { display: false }, ticks: { font: chartDefaults.tickFont, color: chartDefaults.tickColor }, beginAtZero: true, stacked: true }
+      }
+    }
+  });
+}
+
+// ── Chart 7 : Top produits vendus (barres horizontales doubles) ─
+let chartTopProducts = null;
+function renderTopProductsChart() {
+  const canvas = document.getElementById('chart-top-products');
+  if (!canvas) return;
+  if (chartTopProducts) { chartTopProducts.destroy(); chartTopProducts = null; }
+  if (!analyticsData || !analyticsData.topProducts.length) {
+    canvas.closest('.chart-wrap').innerHTML = '<div class="chart-empty">Aucune vente enregistrée</div>'; return;
+  }
+
+  const top = analyticsData.topProducts.slice(0, 8);
+  const palette = ['rgba(59,109,17,0.8)','rgba(42,80,170,0.8)','rgba(192,128,16,0.8)','rgba(128,48,170,0.8)','rgba(192,48,48,0.8)','rgba(32,128,96,0.8)','rgba(170,80,32,0.8)','rgba(80,96,208,0.8)'];
+
+  chartTopProducts = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: top.map(p => p.nom),
+      datasets: [
+        { label: 'Quantité vendue', data: top.map(p => p.qty), backgroundColor: top.map((_,i) => palette[i % palette.length]),
+          borderRadius: 5, yAxisID: 'yQty' },
+        { label: 'CA généré (€)', data: top.map(p => p.revenue), type: 'line',
+          borderColor: '#2a50aa', backgroundColor: 'rgba(42,80,170,0.06)',
+          borderWidth: 2, pointRadius: 5, pointHoverRadius: 8, tension: 0.3, fill: true, yAxisID: 'yCA' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', labels: { font: { size: 10, family: 'DM Sans' }, color: '#5a8a5a', boxWidth: 10, padding: 12 } },
+        tooltip: { backgroundColor: chartDefaults.tooltipBg, titleColor: '#a8e07a', bodyColor: '#fff', padding: 10,
+          callbacks: { label: ctx => ctx.dataset.yAxisID === 'yCA' ? ` CA: ${ctx.parsed.y.toFixed(2)}€` : ` Vendu: ${ctx.parsed.y} unité(s)` }
+        }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10, family: 'DM Sans' }, color: '#1a2a1a', maxRotation: 30 } },
+        yQty: { position: 'left', grid: { color: chartDefaults.gridColor }, ticks: { font: chartDefaults.tickFont, color: chartDefaults.tickColor }, beginAtZero: true },
+        yCA: { position: 'right', grid: { display: false }, ticks: { font: chartDefaults.tickFont, color: '#2a50aa', callback: v => v + '€' }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+// ── Chart 8 : CA par catégorie (donut) ────────────────
+let chartCaCat = null;
+function renderCaCatChart() {
+  const canvas = document.getElementById('chart-ca-cat');
+  if (!canvas) return;
+  if (chartCaCat) { chartCaCat.destroy(); chartCaCat = null; }
+  if (!analyticsData) { canvas.closest('[style]').innerHTML = '<div class="chart-empty">Aucune donnée</div>'; return; }
+
+  const cat = analyticsData.revenueByCategory;
+  const labels = Object.keys(cat).filter(k => cat[k] > 0);
+  const data   = labels.map(k => Math.round(cat[k] * 100) / 100);
+  const total  = data.reduce((s,v) => s + v, 0);
+
+  if (!total) { canvas.closest('[style]').innerHTML = '<div class="chart-empty">Aucune vente enregistrée</div>'; return; }
+
+  const colors = { Sandwich: '#3B6D11', Boisson: '#2a50aa', Accompagnement: '#c08010', Dessert: '#8030aa', Autre: '#9ab89a' };
+
+  chartCaCat = new Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{ data, backgroundColor: labels.map(l => colors[l] || '#9ab89a'),
+        borderColor: '#fff', borderWidth: 3, hoverOffset: 8 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '60%',
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 10, family: 'DM Sans' }, color: '#5a8a5a', boxWidth: 10, padding: 10 } },
+        tooltip: { backgroundColor: chartDefaults.tooltipBg, titleColor: '#a8e07a', bodyColor: '#fff', padding: 10,
+          callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed.toFixed(2)}€ (${Math.round(ctx.parsed/total*100)}%)` }
+        }
+      }
+    },
+    plugins: [{
+      id: 'centerCA',
+      afterDraw(chart) {
+        const { ctx, chartArea: { width, height, top, left } } = chart;
+        const cx = left + width/2, cy = top + height/2;
+        ctx.save();
+        ctx.font = `800 18px DM Sans,sans-serif`; ctx.fillStyle = '#1a2a1a';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(total.toFixed(2) + '€', cx, cy - 8);
+        ctx.font = `500 10px DM Sans,sans-serif`; ctx.fillStyle = '#9ab89a';
+        ctx.fillText('chiffre d\'affaires', cx, cy + 10);
+        ctx.restore();
+      }
+    }]
+  });
+}
+
+// ── Chart 9 : Taux de rotation des ingrédients ────────
+let chartRotation = null;
+function renderRotationChart() {
+  const canvas = document.getElementById('chart-rotation');
+  if (!canvas) return;
+  if (chartRotation) { chartRotation.destroy(); chartRotation = null; }
+
+  // Calculer le taux = (initial - actuel) / initial * 100
+  const withData = stocks
+    .filter(s => s.quantiteInitiale > 0)
+    .map(s => ({
+      nom: s.produit,
+      pct: Math.min(100, Math.round((1 - s.quantiteActuelle / s.quantiteInitiale) * 100)),
+      statut: s.statut,
+      actuel: s.quantiteActuelle,
+      initial: s.quantiteInitiale
+    }))
+    .sort((a, b) => b.pct - a.pct)
+    .slice(0, 12);
+
+  if (!withData.length) {
+    canvas.closest('.chart-wrap').innerHTML = '<div class="chart-empty">Stock initial non défini pour ces ingrédients</div>'; return;
+  }
+
+  const getBarColor = pct => pct >= 80 ? 'rgba(192,48,48,0.8)' : pct >= 50 ? 'rgba(192,128,16,0.8)' : 'rgba(59,109,17,0.8)';
+
+  chartRotation = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: withData.map(s => s.nom),
+      datasets: [
+        { label: 'Taux d\'utilisation (%)', data: withData.map(s => s.pct),
+          backgroundColor: withData.map(s => getBarColor(s.pct)),
+          borderRadius: 5, borderSkipped: false },
+        { label: 'Stock restant', data: withData.map(s => s.actuel),
+          type: 'line', borderColor: '#2a50aa', backgroundColor: 'transparent',
+          borderWidth: 1.5, pointRadius: 4, pointHoverRadius: 6, tension: 0.3, yAxisID: 'yQty' }
+      ]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', labels: { font: { size: 10, family: 'DM Sans' }, color: '#5a8a5a', boxWidth: 10, padding: 12 } },
+        tooltip: {
+          backgroundColor: chartDefaults.tooltipBg, titleColor: '#a8e07a', bodyColor: '#fff', padding: 10,
+          callbacks: {
+            label: ctx => ctx.dataset.yAxisID === 'yQty'
+              ? ` Stock restant: ${ctx.parsed.x} unités`
+              : ` Utilisé: ${ctx.parsed.x}% (${withData[ctx.dataIndex].initial - withData[ctx.dataIndex].actuel} / ${withData[ctx.dataIndex].initial})`
+          }
+        }
+      },
+      scales: {
+        x: { grid: { color: chartDefaults.gridColor }, ticks: { font: chartDefaults.tickFont, color: chartDefaults.tickColor }, beginAtZero: true, max: 100, title: { display: true, text: '% consommé', font: { size: 10, family: 'DM Sans' }, color: '#b0c8b0' } },
+        y: { grid: { display: false }, ticks: { font: { size: 10, family: 'DM Sans' }, color: '#1a2a1a' } },
+        yQty: { display: false, beginAtZero: true }
+      }
+    }
+  });
+}
+
+function refreshCharts() {
+  const isOpen = document.getElementById('analytics-body')?.classList.contains('open');
+  if (!isOpen) return;
+  updateKpis();
+  renderEvolutionChart();
+  renderActivityChart();
+  renderDistributionChart();
+  renderTopConsumedChart();
+  renderEventsChart();
+  renderCaDailyChart();
+  renderTopProductsChart();
+  renderCaCatChart();
+  renderRotationChart();
 }
 
 // ═══ INIT ═══

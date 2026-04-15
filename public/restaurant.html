@@ -67,6 +67,20 @@
     .menu-card-val { color: #1a2a1a; font-weight: 600; }
     .menu-ingredients { font-size: 11px; color: #7aaa7a; margin-top: 6px; line-height: 1.5; }
     .menu-retirables { font-size: 11px; color: #906010; margin-top: 4px; background: #fff8e8; padding: 4px 8px; border-radius: 6px; }
+
+    /* ═══ STOCK BADGES SUR LES INGRÉDIENTS ═══ */
+    .ing-status-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+    .ing-badge { font-size: 10px; font-weight: 600; padding: 2px 8px 2px 5px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px; cursor: default; white-space: nowrap; }
+    .ing-badge.ok       { background: #e8f5dc; color: #2d6a0a; border: 1px solid #c0e090; }
+    .ing-badge.alerte   { background: #fff8e8; color: #906010; border: 1px solid #e8d090; }
+    .ing-badge.rupture  { background: #fef0f0; color: #b03030; border: 1px solid #f0c0c0; }
+    .ing-badge.unknown  { background: #f0f5ee; color: #9ab89a; border: 1px solid #e0ecd8; }
+    .ing-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .ing-dot.ok      { background: #3B6D11; }
+    .ing-dot.alerte  { background: #c08010; }
+    .ing-dot.rupture { background: #c03030; }
+    .ing-dot.unknown { background: #c0d8c0; }
+    .card-rupture-warning { font-size: 10px; font-weight: 700; color: #b03030; background: #fef0f0; border: 1px solid #f0c0c0; padding: 5px 8px; border-radius: 8px; margin-top: 8px; display: flex; align-items: center; gap: 5px; }
     .menu-allergenes { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
     .allergen-badge { font-size: 9px; font-weight: 600; padding: 2px 6px; border-radius: 4px; background: #fef0f0; color: #b03030; border: 1px solid #f0c0c0; }
     .menu-card-actions { display: flex; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #f0f5ee; }
@@ -270,6 +284,27 @@
 
   let allMenuItems = [], restoData = null, editingProductId = null, selectedAllergenes = [];
   let currentView = 'grid', currentFilter = 'tous', searchQuery = '', selectedItems = new Set();
+  let stockMap = {}; // { nomIngredient.toLowerCase() → stockItem }
+
+  // ── Render ingrédients avec statut stock ──────────────
+  function renderIngredientBadges(ingredientsStr) {
+    if (!ingredientsStr) return '';
+    const ings = ingredientsStr.split(/[,;\n]+/).map(s => s.trim()).filter(Boolean);
+    let hasRupture = false;
+    const badges = ings.map(ing => {
+      const key = ing.toLowerCase().trim();
+      const s = stockMap[key];
+      let status = 'unknown', qty = '';
+      if (s) {
+        status = s.statut === 'Rupture' ? 'rupture' : s.statut === 'Alerte' ? 'alerte' : 'ok';
+        qty = ' · ' + (s.quantiteActuelle ?? 0);
+        if (status === 'rupture') hasRupture = true;
+      }
+      return `<span class="ing-badge ${status}" title="${ing}${s ? ' — Stock : ' + (s.quantiteActuelle ?? 0) + ' ' + (s.unite || '') : ' — Non lié au stock'}"><span class="ing-dot ${status}"></span>${ing}${qty}</span>`;
+    }).join('');
+    const warning = hasRupture ? '<div class="card-rupture-warning">⚠️ Ingrédient(s) en rupture — commandes bloquées</div>' : '';
+    return `<div class="ing-status-row">${badges}</div>${warning}`;
+  }
   const ALLERGENES = ['Gluten','Lactose','Oeufs','Arachides','Fruits à coque','Soja','Poisson','Crustacés','Céleri','Moutarde','Sésame','Sulfites','Lupin','Mollusques'];
 
   const ag = document.getElementById('allergenes-grid');
@@ -367,8 +402,8 @@
         + '<div class="menu-card-row"><span class="menu-card-key">Prix seul</span><span class="menu-card-val">' + (p.prix ? p.prix.toFixed(2) + ' €' : '—') + '</span></div>'
         + (p.dispoMenu ? '<div class="menu-card-row"><span class="menu-card-key">Prix menu</span><span class="menu-card-val">' + (p.prixMenu ? p.prixMenu.toFixed(2) + ' €' : '—') + '</span></div>' : '')
         + (p.tempsPrepare ? '<div class="menu-card-row"><span class="menu-card-key">Préparation</span><span class="menu-card-val">' + p.tempsPrepare + ' min</span></div>' : '')
-        + (p.ingredients ? '<div class="menu-ingredients">' + p.ingredients + '</div>' : '')
-        + (p.ingredientsRetirables ? '<div class="menu-retirables">Retirables : ' + p.ingredientsRetirables + '</div>' : '')
+        + (p.ingredients ? renderIngredientBadges(p.ingredients) : '')
+        + (p.ingredientsRetirables ? '<div class="menu-retirables">✂️ Retirables : ' + p.ingredientsRetirables + '</div>' : '')
         + (p.allergenes?.length ? '<div class="menu-allergenes">' + p.allergenes.map(a => '<span class="allergen-badge">' + a + '</span>').join('') + '</div>' : '')
         + '<div class="menu-card-actions">'
         + '<button class="btn-select ' + (isSelected ? 'active' : '') + '" onclick="event.stopPropagation();toggleSelect(\'' + p.id + '\',event)">' + (isSelected ? '☑' : '☐') + '</button>'
@@ -456,17 +491,27 @@
     try { await fetch('/admin/menus', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); toast('Produit dupliqué'); await reloadMenu(); } catch(e) { toast('Erreur duplication', 'error'); }
   }
 
+  function buildStockMap(stockData) {
+    stockMap = {};
+    (stockData || []).forEach(s => { stockMap[(s.produit || '').toLowerCase().trim()] = s; });
+  }
+
   async function reloadMenu() {
-    const menuRes = await fetch('/mon-menu/' + currentUser.restaurantId);
+    const [menuRes, stockRes] = await Promise.all([
+      fetch('/mon-menu/' + currentUser.restaurantId),
+      fetch('/stocks/' + currentUser.restaurantId)
+    ]);
     allMenuItems = await menuRes.json();
+    buildStockMap(await stockRes.json());
     buildFilters(); applyFilters();
   }
 
   async function loadResto() {
     const restoId = currentUser.restaurantId;
     if (!restoId) { document.getElementById('resto-header').innerHTML = '<div style="font-size:13px;color:#9ab89a;">Aucun restaurant associé à ce compte.</div>'; return; }
-    const [restoRes, menuRes] = await Promise.all([fetch('/mon-restaurant/' + restoId), fetch('/mon-menu/' + restoId)]);
+    const [restoRes, menuRes, stockRes] = await Promise.all([fetch('/mon-restaurant/' + restoId), fetch('/mon-menu/' + restoId), fetch('/stocks/' + restoId)]);
     restoData = await restoRes.json(); allMenuItems = await menuRes.json();
+    buildStockMap(await stockRes.json());
     const catCount = new Set(allMenuItems.map(p => p.categorie)).size;
     document.getElementById('resto-header').innerHTML =
       '<div class="resto-avatar">' + initials(restoData.nom) + '</div>'

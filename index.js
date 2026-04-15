@@ -3,6 +3,8 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 require('dotenv').config();
 let twilioClient, deepgram;
 try {
@@ -34,10 +36,169 @@ const notionHeaders = {
   'Notion-Version': '2022-06-28'
 };
 
-let commandes = [], archives = [], nextId = 1;
+// ─── PERSISTENCE ARCHIVES (par restaurant) ───────────
+const ARCHIVES_DIR = path.join(__dirname, 'archives');
+if (!fs.existsSync(ARCHIVES_DIR)) fs.mkdirSync(ARCHIVES_DIR);
+
+function archiveFile(restaurantId) {
+  const safe = (restaurantId || 'global').replace(/[^a-zA-Z0-9_-]/g, '_');
+  return path.join(ARCHIVES_DIR, `archives_${safe}.json`);
+}
+function loadArchivesForRestaurant(restaurantId) {
+  try {
+    const file = archiveFile(restaurantId);
+    if (fs.existsSync(file)) return JSON.parse(fs.readFileSync(file, 'utf8')) || [];
+  } catch(e) { console.log('Erreur lecture archives:', e.message); }
+  return [];
+}
+function saveArchivesForRestaurant(restaurantId, data) {
+  try { fs.writeFileSync(archiveFile(restaurantId), JSON.stringify(data, null, 2)); }
+  catch(e) { console.log('Erreur sauvegarde archives:', e.message); }
+}
+
+// Migration: si ancien archives.json existe, le distribuer par restaurant
+function migrateOldArchives() {
+  const oldFile = path.join(__dirname, 'archives.json');
+  if (!fs.existsSync(oldFile)) return;
+  try {
+    const old = JSON.parse(fs.readFileSync(oldFile, 'utf8')) || [];
+    const byRestaurant = {};
+    old.forEach(a => {
+      const rid = a.restaurantId || 'global';
+      if (!byRestaurant[rid]) byRestaurant[rid] = [];
+      byRestaurant[rid].push(a);
+    });
+    Object.entries(byRestaurant).forEach(([rid, data]) => {
+      const file = archiveFile(rid);
+      if (!fs.existsSync(file)) saveArchivesForRestaurant(rid, data);
+    });
+    fs.renameSync(oldFile, oldFile + '.migrated');
+    console.log('Archives migrées par restaurant.');
+  } catch(e) { console.log('Erreur migration archives:', e.message); }
+}
+migrateOldArchives();
+
+function todayStr() { return new Date().toISOString().split('T')[0]; }
+
+// archives en mémoire : indexé par restaurantId pour le temps réel
+const archivesMemory = {}; // { restaurantId: [...] }
+function getMemoryArchives(restaurantId) {
+  const rid = restaurantId || 'global';
+  if (!archivesMemory[rid]) {
+    archivesMemory[rid] = loadArchivesForRestaurant(rid);
+  }
+  return archivesMemory[rid];
+}
+
+let commandes = [], nextId = 1;
+// Calculer le prochain ID en lisant tous les fichiers d'archives
+try {
+  const files = fs.readdirSync(ARCHIVES_DIR).filter(f => f.endsWith('.json'));
+  let maxId = 0;
+  files.forEach(f => {
+    try {
+      const data = JSON.parse(fs.readFileSync(path.join(ARCHIVES_DIR, f), 'utf8')) || [];
+      data.forEach(a => { if ((a.id || 0) > maxId) maxId = a.id; });
+    } catch(e) {}
+  });
+  if (maxId >= nextId) nextId = maxId + 1;
+} catch(e) {}
 
 // Sessions vocales (déclaré ICI, avant les routes)
 const voiceSessions = {};
+
+// ─── HELPERS STOCK / INGRÉDIENTS ─────────────────────
+
+/**
+ * Parse une chaîne d'ingrédients avec quantités optionnelles.
+ * Formats acceptés : "2 viande 10:1", "3x fromage", "pain", "2.5 sauce"
+ * Retourne [{nom, qty}] dédupliqués.
+ */
+function parseIngredientsWithQty(str) {
+  if (!str || !str.trim()) return [];
+  const seen = new Set();
+  const result = [];
+  str.split(/[,;\n]+/).forEach(part => {
+    part = part.trim();
+    if (part.length < 2) return;
+    // Détecter un préfixe numérique : "2 pain", "3x fromage", "2.5 sauce" — le nom doit commencer par une lettre
+    const m = part.match(/^(\d+(?:[.,]\d+)?)\s*[xX×]?\s*([a-zA-ZÀ-ÿ\u0080-\uFFFF].+)$/);
+    const qty = m ? parseFloat(m[1].replace(',', '.')) || 1 : 1;
+    const nom = m ? m[2].trim() : part.trim();
+    const key = nom.toLowerCase().trim();
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    result.push({ nom, qty });
+  });
+  return result;
+}
+
+/**
+ * Parse une chaîne d'ingrédients séparés par virgule/point-virgule/retour à la ligne.
+ * Retourne un tableau de noms nettoyés et dédupliqués (casse ignorée) — sans quantités.
+ */
+function parseIngredients(str) {
+  return parseIngredientsWithQty(str).map(i => i.nom);
+}
+
+/**
+ * Pour un produit donné (nom + ingrédients), crée dans Notion Stock
+ * les entrées manquantes (1 unité par ingrédient, sans doublon).
+ * Retourne { created: [...], skipped: [...] }
+ */
+async function syncIngredientStock(ingredientsStr, restaurant, restaurantId) {
+  const ingredients = parseIngredients(ingredientsStr);
+  if (!ingredients.length || !restaurantId) return { created: [], skipped: [] };
+
+  // Récupérer le stock existant pour ce restaurant
+  const existingRes = await fetch(`https://api.notion.com/v1/databases/${DB_STOCKS}/query`, {
+    method: 'POST', headers: notionHeaders,
+    body: JSON.stringify({
+      filter: { property: 'Restaurant ID', rich_text: { equals: restaurantId } }
+    })
+  });
+  const existingData = await existingRes.json();
+
+  // Map nom (lowercase) → page id
+  const existingMap = {};
+  for (const p of (existingData.results || [])) {
+    const nom = p.properties['Produit']?.title?.[0]?.plain_text || '';
+    if (nom) existingMap[nom.toLowerCase().trim()] = p.id;
+  }
+
+  const created = [], skipped = [];
+
+  for (const ingredient of ingredients) {
+    const key = ingredient.toLowerCase().trim();
+    if (existingMap[key]) {
+      skipped.push(ingredient);
+      continue;
+    }
+    // Créer l'ingrédient dans le stock
+    await fetch('https://api.notion.com/v1/pages', {
+      method: 'POST', headers: notionHeaders,
+      body: JSON.stringify({
+        parent: { database_id: DB_STOCKS },
+        properties: {
+          'Produit':              { title: [{ text: { content: ingredient } }] },
+          'Quantité actuelle':    { number: 1 },
+          'Quantité initiale':    { number: 1 },
+          'Seuil alerte':         { number: 1 },
+          'Unité':                { select: { name: 'unité' } },
+          'Statut':               { select: { name: 'Disponible' } },
+          'Restaurant':           { rich_text: [{ text: { content: restaurant || '' } }] },
+          'Restaurant ID':        { rich_text: [{ text: { content: restaurantId || '' } }] },
+          'Dernière mise à jour': { rich_text: [{ text: { content: new Date().toLocaleString('fr-FR') } }] }
+        }
+      })
+    });
+    existingMap[key] = true; // évite les doublons dans le même batch
+    created.push(ingredient);
+  }
+
+  console.log(`syncIngredientStock [${restaurant}] — créés: ${created.length} (${created.join(', ')}), ignorés: ${skipped.length}`);
+  return { created, skipped };
+}
 
 function hashPassword(pwd) { return crypto.createHash('sha256').update(pwd).digest('hex'); }
 function generatePassword() { return Math.random().toString(36).slice(2, 10).toUpperCase(); }
@@ -45,7 +206,21 @@ function generatePassword() { return Math.random().toString(36).slice(2, 10).toU
 // ─── COMMANDES ───────────────────────────────────────
 
 app.get('/commandes', (req, res) => res.json(commandes));
-app.get('/archives', (req, res) => res.json(archives));
+
+app.get('/archives', (req, res) => {
+  const { date, restaurantId } = req.query;
+  const data = getMemoryArchives(restaurantId);
+  const today = todayStr();
+  const filterDate = date || today;
+  res.json(data.filter(a => (a.archivedDate || today) === filterDate));
+});
+
+app.get('/archives/dates', (req, res) => {
+  const { restaurantId } = req.query;
+  const data = getMemoryArchives(restaurantId);
+  const dates = [...new Set(data.map(a => a.archivedDate).filter(Boolean))].sort().reverse();
+  res.json(dates);
+});
 
 app.post('/commandes', (req, res) => {
   const cmd = { id: nextId++, ...req.body, state: 'new', chronoStart: null, chronoEnd: null, createdAt: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) };
@@ -60,35 +235,143 @@ app.patch('/commandes/:id/valider', async (req, res) => {
 
   if (cmd.restaurantId) {
     try {
-      const r = await fetch(`https://api.notion.com/v1/databases/${DB_STOCKS}/query`, {
+      // ── Étape 1 : Récupérer les produits commandés depuis le menu ──
+      const menuRes = await fetch(`https://api.notion.com/v1/databases/${DB_MENUS}/query`, {
         method: 'POST', headers: notionHeaders,
         body: JSON.stringify({ filter: { property: 'Restaurant ID', rich_text: { equals: cmd.restaurantId } } })
       });
-      const data = await r.json();
-      if (data.results) {
-        for (const stock of data.results) {
-          const nomProduit = stock.properties['Produit']?.title?.[0]?.plain_text?.toLowerCase();
-          const sandwich = (cmd.sandwich || '').toLowerCase();
-          const boisson = (cmd.boisson || '').toLowerCase();
-          if (nomProduit && (sandwich.includes(nomProduit) || boisson.includes(nomProduit) || nomProduit.includes(sandwich) || nomProduit.includes(boisson))) {
-            const qtyActuelle = stock.properties['Quantité actuelle']?.number || 0;
-            const seuilAlerte = stock.properties['Seuil alerte']?.number || 5;
-            const newQty = Math.max(0, qtyActuelle - 1);
-            const statut = newQty <= 0 ? 'Rupture' : newQty <= seuilAlerte ? 'Alerte' : 'Disponible';
-            await fetch(`https://api.notion.com/v1/pages/${stock.id}`, {
-              method: 'PATCH', headers: notionHeaders,
-              body: JSON.stringify({
-                properties: {
-                  'Quantité actuelle': { number: newQty },
-                  'Statut': { select: { name: statut } },
-                  'Dernière mise à jour': { rich_text: [{ text: { content: new Date().toLocaleString('fr-FR') } }] }
-                }
-              })
-            });
+      const menuData = await menuRes.json();
+
+      // Construire une map nomProduit → [{nom, qty}] (avec multiplicateurs de quantité)
+      const menuMap = {};
+      for (const p of (menuData.results || [])) {
+        const nom = p.properties['Nom du produit']?.title?.[0]?.plain_text || '';
+        const ing = p.properties['Ingrédients']?.rich_text?.[0]?.plain_text || '';
+        if (nom) menuMap[nom.toLowerCase().trim()] = parseIngredientsWithQty(ing);
+      }
+
+      // ── Étape 2 : Identifier les produits et leurs modifications ──
+      const ingredientsADeduire = new Map(); // nomIngredient → quantité à déduire
+
+      // Fonction : trouver la clé dans menuMap (exacte → nettoyée → préfixe)
+      function findMenuKey(rawToken) {
+        const clean = rawToken.replace(/\s*\(.*?\)\s*/g, '').trim();
+        if (Object.prototype.hasOwnProperty.call(menuMap, rawToken)) return rawToken;
+        if (clean !== rawToken && Object.prototype.hasOwnProperty.call(menuMap, clean)) return clean;
+        return Object.keys(menuMap).find(k =>
+          (rawToken.startsWith(k + ' ') || clean.startsWith(k + ' ')) && k.length >= 3
+        ) || null;
+      }
+
+      // Fonction : parser "sans cornichon, sans oignon" → Set d'ingrédients exclus
+      function parseExclus(modificationsStr) {
+        const exclu = new Set();
+        if (!modificationsStr) return exclu;
+        modificationsStr.toLowerCase().split(/[,;]+/).forEach(part => {
+          const p = part.trim();
+          // "sans cornichon" ou "sans les cornichons" ou "no pickles"
+          const m = p.match(/^(?:sans|no|without)\s+(?:les?\s+|de\s+)?(.+)$/);
+          if (m) exclu.add(m[1].trim().replace(/s$/, '')); // retire le pluriel final
+        });
+        return exclu;
+      }
+
+      // Chemin 1 — panierRaw disponible : déduction précise article par article
+      const panierBrut = Array.isArray(cmd.panierRaw) ? cmd.panierRaw : [];
+
+      if (panierBrut.length > 0) {
+        for (const item of panierBrut) {
+          const nomLow = (item.nom || '').toLowerCase().trim();
+          const matchKey = findMenuKey(nomLow);
+          if (!matchKey) {
+            console.log(`[Stock] Produit "${nomLow}" non trouvé dans le menu — ignoré`);
+            continue;
+          }
+          const qteCommande = item.quantite || 1; // nombre de fois ce produit est commandé
+          const exclus = parseExclus(item.modifications || '');
+
+          for (const ing of menuMap[matchKey]) {
+            // ing = { nom, qty } — qty = multiplicateur de l'ingrédient dans la recette
+            const ingNom = ing.nom || ing; // rétro-compat si jamais string
+            const ingQtyRecette = ing.qty || 1;
+            const ingKey = ingNom.toLowerCase().trim();
+            // Vérifier si cet ingrédient est exclu par les modifications du client
+            const estExclu = exclus.size > 0 && [...exclus].some(ex => ingKey.includes(ex) || ex.includes(ingKey));
+            if (estExclu) {
+              console.log(`[Stock] "${ingNom}" exclu (modif: "${item.modifications}") — non déduit`);
+              continue;
+            }
+            // Déduire : qté recette × qté commandée (ex: 3x Big Mac avec 2 viandes = 6 viandes)
+            const totalADeduire = ingQtyRecette * qteCommande;
+            console.log(`[Stock] ${ingNom}: -${totalADeduire} (${ingQtyRecette} recette × ${qteCommande} commandé)`);
+            ingredientsADeduire.set(ingKey, (ingredientsADeduire.get(ingKey) || 0) + totalADeduire);
+          }
+        }
+      } else {
+        // Chemin 2 — Fallback : utiliser les champs formatés (commandes manuelles sans panierRaw)
+        // Tenter de parser cmd.modif pour les exclusions globales
+        const exclusGlobal = parseExclus(cmd.modif || '');
+
+        const champsCommande = [cmd.sandwich, cmd.boisson, cmd.accompagnement, cmd.dessert, cmd.option].filter(Boolean);
+        for (const champ of champsCommande) {
+          const tokens = champ.split(/[,|]+/).map(s => s.trim().replace(/^\d+x\s*/i, '').toLowerCase());
+          for (const token of tokens) {
+            if (!token) continue;
+            const matchKey = findMenuKey(token);
+            if (!matchKey) {
+              console.log(`[Stock] Produit "${token}" non trouvé dans le menu — ignoré`);
+              continue;
+            }
+            for (const ing of menuMap[matchKey]) {
+              const ingNom = ing.nom || ing;
+              const ingQtyRecette = ing.qty || 1;
+              const ingKey = ingNom.toLowerCase().trim();
+              const estExclu = exclusGlobal.size > 0 && [...exclusGlobal].some(ex => ingKey.includes(ex) || ex.includes(ingKey));
+              if (estExclu) {
+                console.log(`[Stock] "${ingNom}" exclu (modif global) — non déduit`);
+                continue;
+              }
+              ingredientsADeduire.set(ingKey, (ingredientsADeduire.get(ingKey) || 0) + ingQtyRecette);
+            }
           }
         }
       }
-    } catch (e) { console.log('Erreur déduction stock:', e.message); }
+
+      if (ingredientsADeduire.size === 0) {
+        console.log('Aucun ingrédient trouvé pour cette commande, déduction stock ignorée');
+      } else {
+        // ── Étape 3 : Récupérer le stock et déduire ──
+        const stockRes = await fetch(`https://api.notion.com/v1/databases/${DB_STOCKS}/query`, {
+          method: 'POST', headers: notionHeaders,
+          body: JSON.stringify({ filter: { property: 'Restaurant ID', rich_text: { equals: cmd.restaurantId } } })
+        });
+        const stockData = await stockRes.json();
+
+        for (const stockPage of (stockData.results || [])) {
+          const nomStock = stockPage.properties['Produit']?.title?.[0]?.plain_text || '';
+          const nomStockKey = nomStock.toLowerCase().trim();
+          const qteADeduire = ingredientsADeduire.get(nomStockKey) || 0;
+          if (!qteADeduire) continue;
+
+          const qtyActuelle = stockPage.properties['Quantité actuelle']?.number ?? 0;
+          const seuilAlerte = stockPage.properties['Seuil alerte']?.number || 1;
+          const newQty = Math.max(0, qtyActuelle - qteADeduire);
+          const statut = newQty <= 0 ? 'Rupture' : newQty <= seuilAlerte ? 'Alerte' : 'Disponible';
+
+          await fetch(`https://api.notion.com/v1/pages/${stockPage.id}`, {
+            method: 'PATCH', headers: notionHeaders,
+            body: JSON.stringify({
+              properties: {
+                'Quantité actuelle': { number: newQty },
+                'Statut':            { select: { name: statut } },
+                'Dernière mise à jour': { rich_text: [{ text: { content: new Date().toLocaleString('fr-FR') } }] }
+              }
+            })
+          });
+          console.log(`Stock ingrédient déduit : ${nomStock} ${qtyActuelle} → ${newQty} (${statut})`);
+        }
+      }
+    } catch (e) { console.log('Erreur déduction stock ingrédients:', e.message); }
   }
 
   res.json(cmd);
@@ -100,7 +383,12 @@ app.patch('/commandes/:id/prete', (req, res) => {
   const cmd = commandes[idx];
   cmd.state = 'done'; cmd.chronoEnd = Date.now();
   cmd.archivedAt = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-  archives.unshift(cmd); commandes.splice(idx, 1);
+  cmd.archivedDate = todayStr();
+  const rid = cmd.restaurantId || 'global';
+  const restArchives = getMemoryArchives(rid);
+  restArchives.unshift(cmd);
+  saveArchivesForRestaurant(rid, restArchives);
+  commandes.splice(idx, 1);
   io.emit('commande_terminee', cmd); res.json(cmd);
 });
 
@@ -110,7 +398,12 @@ app.patch('/commandes/:id/refuser', (req, res) => {
   const cmd = commandes[idx];
   cmd.state = 'refused';
   cmd.archivedAt = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-  archives.unshift(cmd); commandes.splice(idx, 1);
+  cmd.archivedDate = todayStr();
+  const rid = cmd.restaurantId || 'global';
+  const restArchives = getMemoryArchives(rid);
+  restArchives.unshift(cmd);
+  saveArchivesForRestaurant(rid, restArchives);
+  commandes.splice(idx, 1);
   io.emit('commande_terminee', cmd); res.json(cmd);
 });
 
@@ -367,8 +660,50 @@ app.post('/admin/menus', async (req, res) => {
       })
     });
     const page = await r.json();
-    res.json({ success: true, id: page.id });
+    if (page.object === 'error') return res.status(500).json({ error: page.message });
+
+    // ── Sync automatique des ingrédients dans le stock ──
+    let stockSync = { created: [], skipped: [] };
+    if (ingredients && restaurantId) {
+      try { stockSync = await syncIngredientStock(ingredients, restaurant, restaurantId); }
+      catch (e) { console.log('Erreur sync stock ingrédients:', e.message); }
+    }
+
+    res.json({ success: true, id: page.id, stockSync });
   } catch (e) { res.status(500).json({ error: 'Erreur création produit' }); }
+});
+
+// ─── PATCH menu (modification) ────────────────────────
+app.patch('/admin/menus/:id', async (req, res) => {
+  const { nom, categorie, prix, prixMenu, dispoMenu, description, ingredients, ingredientsRetirables, allergenes, restaurant, restaurantId, tempsPrepare, disponible } = req.body;
+  try {
+    const props = {};
+    if (nom !== undefined)                props['Nom du produit']          = { title: [{ text: { content: nom } }] };
+    if (categorie !== undefined)          props['Catégorie']               = { select: { name: categorie } };
+    if (prix !== undefined)               props['Prix']                    = { number: parseFloat(prix) || 0 };
+    if (prixMenu !== undefined)           props['Prix menu']               = { number: parseFloat(prixMenu) || 0 };
+    if (dispoMenu !== undefined)          props['Disponible en menu']      = { checkbox: dispoMenu === true || dispoMenu === 'true' };
+    if (description !== undefined)        props['Description']             = { rich_text: [{ text: { content: description || '' } }] };
+    if (ingredients !== undefined)        props['Ingrédients']             = { rich_text: [{ text: { content: ingredients || '' } }] };
+    if (ingredientsRetirables !== undefined) props['Ingrédients retirables'] = { rich_text: [{ text: { content: ingredientsRetirables || '' } }] };
+    if (allergenes !== undefined)         props['Allergènes']              = { multi_select: (allergenes || []).map(a => ({ name: a })) };
+    if (tempsPrepare !== undefined)       props['Temps de préparation']    = { number: parseInt(tempsPrepare) || 0 };
+    if (disponible !== undefined)         props['Disponible']              = { checkbox: disponible === true || disponible === 'true' };
+
+    await fetch(`https://api.notion.com/v1/pages/${req.params.id}`, {
+      method: 'PATCH', headers: notionHeaders,
+      body: JSON.stringify({ properties: props })
+    });
+
+    // ── Sync les NOUVEAUX ingrédients éventuels dans le stock ──
+    let stockSync = { created: [], skipped: [] };
+    if (ingredients && restaurantId) {
+      try { stockSync = await syncIngredientStock(ingredients, restaurant, restaurantId); }
+      catch (e) { console.log('Erreur sync stock edit:', e.message); }
+    }
+
+    res.json({ success: true, stockSync });
+  } catch (e) { res.status(500).json({ error: 'Erreur modification produit' }); }
 });
 
 app.delete('/admin/menus/:id', async (req, res) => {
@@ -659,17 +994,78 @@ app.post('/api/order/voice/session', async (req, res) => {
       };
     });
 
+    // ── Charger le stock pour filtrer les produits indisponibles ──
+    let stockMap = {}; // { nomProduitLower: { qty, statut } }
+    let stockVide = false;
+    try {
+      const stockRes = await fetch(`https://api.notion.com/v1/databases/${DB_STOCKS}/query`, {
+        method: 'POST', headers: notionHeaders,
+        body: JSON.stringify({ filter: { property: 'Restaurant ID', rich_text: { equals: restaurantId } } })
+      });
+      const stockData = await stockRes.json();
+      if (stockData.results && stockData.results.length > 0) {
+        for (const s of stockData.results) {
+          const nom = s.properties['Produit']?.title?.[0]?.plain_text || '';
+          const qty = s.properties['Quantité actuelle']?.number ?? 0;
+          const statut = s.properties['Statut']?.select?.name || 'Disponible';
+          if (nom) stockMap[nom.toLowerCase()] = { qty, statut };
+        }
+      } else {
+        // Aucun stock configuré → on considère tout comme disponible (pas de blocage)
+        stockVide = true;
+      }
+    } catch (e) { console.log('Erreur chargement stock session:', e.message); stockVide = true; }
+
+    // Marquer chaque article du menu selon disponibilité stock
+    // On vérifie d'abord le produit lui-même, puis ses INGRÉDIENTS (pour détecter les ruptures indirectes)
+    const menuAvecDispo = menuItems.map(item => {
+      if (stockVide) return { ...item, dispo: true, stockQty: null };
+      const key = item.nom.toLowerCase().trim();
+
+      // 1. Chercher le produit fini directement dans le stock (cas rare)
+      const stockEntryDirect = stockMap[key];
+      if (stockEntryDirect) {
+        const dispo = stockEntryDirect.statut !== 'Rupture' && stockEntryDirect.qty > 0;
+        return { ...item, dispo, stockQty: stockEntryDirect.qty };
+      }
+
+      // 2. Vérifier chaque ingrédient du produit dans le stock (avec quantités)
+      const ings = parseIngredientsWithQty(item.ingredients);
+      const ingEnRupture = [];
+      let minStock = null;
+      for (const ing of ings) {
+        const ingKey = ing.nom.toLowerCase().trim();
+        const ingStock = stockMap[ingKey];
+        if (ingStock) {
+          if (ingStock.statut === 'Rupture' || ingStock.qty <= 0) {
+            ingEnRupture.push(`${ing.qty > 1 ? ing.qty + 'x ' : ''}${ing.nom}`);
+          }
+          // Stock effectif = qty disponible / qty recette (combien de portions restantes)
+          const portionsRestantes = ing.qty > 1 ? Math.floor(ingStock.qty / ing.qty) : ingStock.qty;
+          if (minStock === null || portionsRestantes < minStock) minStock = portionsRestantes;
+        }
+      }
+
+      if (ingEnRupture.length > 0) {
+        return { ...item, dispo: false, stockQty: 0, ingEnRupture,
+          raisonRupture: ingEnRupture.join(', ') + ' épuisé(s)' };
+      }
+
+      // 3. Aucun ingrédient en rupture → disponible
+      return { ...item, dispo: true, stockQty: minStock };
+    });
+
     const sid = Date.now().toString();
 
-    // Stocker la session avec le menu
-    voiceSessions[sid] = { panier: [], historique: [], menu: menuItems, restaurant: nomRestaurant, restaurantId };
+    // Stocker la session avec le menu et le stock
+    voiceSessions[sid] = { panier: [], historique: [], menu: menuAvecDispo, restaurant: nomRestaurant, restaurantId, stockVide };
 
     res.json({
       success: true,
       sessionId: sid,
       restaurantData: {
         nom: nomRestaurant,
-        menu: menuItems
+        menu: menuAvecDispo
       },
       greeting: `Bonjour ! Bienvenue chez ${nomRestaurant}. Que souhaitez-vous commander ?`
     });
@@ -690,9 +1086,18 @@ app.post('/api/order/voice/message', async (req, res) => {
     const session = voiceSessions[sessionId];
     session.historique.push({ role: 'user', content: message });
 
-    const menuTexte = session.menu.map(p =>
-      `- ${p.nom} (${p.categorie}) : ${p.prix}€${p.dispoMenu ? ' | En menu : ' + p.prixMenu + '€' : ''}${p.ingredients ? ' | Ingrédients : ' + p.ingredients : ''}${p.ingredientsRetirables ? ' | Retirables : ' + p.ingredientsRetirables : ''}`
+    // Séparer produits disponibles et épuisés
+    const menuDispo    = session.menu.filter(p => p.dispo !== false);
+    const menuRupture  = session.menu.filter(p => p.dispo === false);
+
+    const menuTexte = menuDispo.map(p =>
+      `- ${p.nom} (${p.categorie}) : ${p.prix}€${p.dispoMenu ? ' | En menu : ' + p.prixMenu + '€' : ''}${p.ingredients ? ' | Ingrédients : ' + p.ingredients : ''}${p.ingredientsRetirables ? ' | Retirables : ' + p.ingredientsRetirables : ''}${p.stockQty !== null && p.stockQty !== undefined ? ' | Stock : ' + p.stockQty + ' restants' : ''}`
     ).join('\n');
+
+    const ruptureTexte = menuRupture.length
+      ? '\n\nPRODUITS ÉPUISÉS (à ne JAMAIS proposer ni accepter — ingrédient manquant) :\n' +
+        menuRupture.map(p => `- ${p.nom}${p.raisonRupture ? ' [' + p.raisonRupture + ']' : ''}`).join('\n')
+      : '';
 
     const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -706,28 +1111,37 @@ app.post('/api/order/voice/message', async (req, res) => {
         max_tokens: 800,
         system: `Tu es un assistant de prise de commande pour le restaurant "${session.restaurant}".
 
-CARTE DU RESTAURANT :
-${menuTexte}
+CARTE DU RESTAURANT (produits disponibles uniquement) :
+${menuTexte}${ruptureTexte}
 
 PANIER ACTUEL : ${JSON.stringify(session.panier)}
+SUR PLACE ACTUEL : ${session.surPlace === true ? 'sur place' : session.surPlace === false ? 'à emporter' : 'non précisé'}
 
 RÈGLES :
-- Utilise UNIQUEMENT les produits et prix de la carte ci-dessus
-- Si le client demande un produit qui n'existe pas, dis-lui poliment et propose des alternatives
+- Utilise UNIQUEMENT les produits listés dans la carte ci-dessus
+- Si un produit est dans la liste PRODUITS ÉPUISÉS, dis poliment qu'il n'est plus disponible aujourd'hui et propose une alternative disponible
+- Si le client demande un produit qui n'existe pas dans la carte, dis-lui poliment et propose des alternatives
 - Si le client demande "en menu" et que le produit est disponible en menu, utilise le prix menu
 - Note les modifications (sans cornichon, sans oignon, etc.) dans le champ modifications
 - Si le client dit "c'est tout", "valider", "confirmer", mets commandePrete à true
 - Sois naturel et sympa, comme un vrai employé de fast-food
-- Demander au client sur place ou emporter et le faire apparaitre dans le dashboard
+- Si le client n'a pas encore précisé sur place ou à emporter, demande-lui avant de finaliser la commande
+- Détecte si le client dit "sur place", "ici", "en salle" → surPlace: true ; "à emporter", "emporter", "pour partir" → surPlace: false
+- Si le client demande plusieurs burger et qu'il veut un menu, proposer pour tous les burgers, si oui mettre le nombre de firte et boisson en adequatioin, si non mettre le nombre de frite et de coca par rapport au nombre de menu
+demandé
+- Si des ingrédients en rupture indiqué directement que les burgers choisis sont en rupture et donc non disponible 
 
 Réponds UNIQUEMENT en JSON valide (pas de markdown, pas de backticks).
 Format :
 {
   "response": "ta réponse au client",
-  "panier": [{"nom": "nom exact du produit", "quantite": 1, "prix": 0.00, "modifications": ""}],
+  "panier": [{"nom": "nom exact du produit", "quantite": 1, "prix": 0.00, "modifications": "ingrédients retirés ou ajouts (ex: sans cornichon, sans glaçons) — vide si aucune modif", "categorie": "Sandwich|Boisson|Accompagnement|Dessert|Menu"}],
   "totalPrice": 0.00,
-  "commandePrete": false
-}`,
+  "commandePrete": false,
+  "surPlace": null
+}
+Note : surPlace doit être true (sur place), false (à emporter), ou null (non encore précisé).
+Note : le champ "categorie" doit correspondre à la catégorie du produit dans la carte. "modifications" ne doit contenir QUE les ingrédients retirés/ajoutés, pas les options de menu (frites, coca inclus dans le menu ne sont pas des modifications).`,
         messages: session.historique
       })
     });
@@ -749,12 +1163,17 @@ Format :
 
     session.panier = parsed.panier || [];
     session.historique.push({ role: 'assistant', content: parsed.response });
+    // Mettre à jour surPlace si Claude l'a détecté
+    if (parsed.surPlace === true || parsed.surPlace === false) {
+      session.surPlace = parsed.surPlace;
+    }
 
     res.json({
       response: parsed.response,
       panier: session.panier,
       totalPrice: parsed.totalPrice || 0,
-      commandePrete: parsed.commandePrete || false
+      commandePrete: parsed.commandePrete || false,
+      surPlace: session.surPlace ?? null
     });
   } catch (e) {
     console.log('Erreur message vocal:', e.message);
@@ -770,18 +1189,63 @@ app.post('/api/order/voice/confirm', async (req, res) => {
     const session = voiceSessions[sessionId];
     if (!session || !session.panier.length) return res.status(400).json({ error: 'Panier vide' });
 
-    const items = session.panier.map(p => p.nom + (p.modifications ? ' (' + p.modifications + ')' : '')).join(', ');
+    // ── Catégoriser les articles du panier ──────────────────
+    const CAT_SANDWICH    = ['Sandwich', 'Menu', 'Burger', 'Plat'];
+    const CAT_BOISSON     = ['Boisson', 'Boissons', 'Drink'];
+    const CAT_ACCOMP      = ['Accompagnement', 'Accompagnements', 'Frites', 'Salade'];
+    const CAT_DESSERT     = ['Dessert', 'Desserts', 'Glace'];
+
+    // Fallback : si categorie manquante, on tente de la deviner via le menu stocké en session
+    const menuRef = session.menu || [];
+    function getCategorie(item) {
+      if (item.categorie) return item.categorie;
+      const found = menuRef.find(m => m.nom && m.nom.toLowerCase() === (item.nom || '').toLowerCase());
+      return found ? found.categorie : '';
+    }
+
+    const sandwichItems = session.panier.filter(p => CAT_SANDWICH.includes(getCategorie(p)));
+    const boissonItems  = session.panier.filter(p => CAT_BOISSON.includes(getCategorie(p)));
+    const accompItems   = session.panier.filter(p => CAT_ACCOMP.includes(getCategorie(p)));
+    const dessertItems  = session.panier.filter(p => CAT_DESSERT.includes(getCategorie(p)));
+    // Articles non catégorisés → on les met dans sandwich par défaut
+    const autresItems   = session.panier.filter(p => {
+      const cat = getCategorie(p);
+      return !CAT_SANDWICH.includes(cat) && !CAT_BOISSON.includes(cat) && !CAT_ACCOMP.includes(cat) && !CAT_DESSERT.includes(cat);
+    });
+
+    function formatItem(p) {
+      return p.quantite > 1 ? `${p.quantite}x ${p.nom}` : p.nom;
+    }
+
+    const sandwichStr = [...sandwichItems, ...autresItems].map(formatItem).join(', ') || '—';
+    const boissonStr  = boissonItems.map(formatItem).join(', ') || '';
+    const accompStr   = accompItems.map(formatItem).join(', ') || '';
+    const dessertStr  = dessertItems.map(formatItem).join(', ') || '';
+    // Compat : on garde option pour les vieilles commandes sans catégorie
+    const optionStr   = accompStr || dessertStr ? '' : [...accompItems, ...dessertItems].map(formatItem).join(', ');
+
+    // Modifications : uniquement les vrais ingrédients retirés/ajoutés
+    const modifStr = session.panier
+      .filter(p => p.modifications && p.modifications.trim())
+      .map(p => `${p.nom} : ${p.modifications}`)
+      .join(' | ') || '';
+
     const cmd = {
       id: nextId++,
       name: clientName || 'Client vocal',
       phone: clientPhone || '',
-      sandwich: items,
-      boisson: '',
-      option: '',
-      modif: session.panier.filter(p => p.modifications).map(p => p.modifications).join(', '),
+      sandwich: sandwichStr,
+      boisson: boissonStr,
+      option: optionStr,
+      accompagnement: accompStr,
+      dessert: dessertStr,
+      modif: modifStr,
       allergy: '',
+      surPlace: session.surPlace === true,
       restaurantId: session.restaurantId || '',
       restaurant: session.restaurant || '',
+      // Panier brut : permet une déduction de stock précise (modifications par article)
+      panierRaw: session.panier,
       state: 'new',
       chronoStart: null,
       chronoEnd: null,
@@ -798,6 +1262,66 @@ app.post('/api/order/voice/confirm', async (req, res) => {
     console.log('Erreur confirmation:', e.message);
     res.status(500).json({ error: e.message });
   }
+});
+
+// ─── ANALYTICS AGRÉGÉS ───────────────────────────────
+app.get('/analytics', (req, res) => {
+  const { restaurantId, days: daysStr } = req.query;
+  if (!restaurantId) return res.status(400).json({ error: 'restaurantId requis' });
+  const days = Math.min(parseInt(daysStr || '14') || 14, 90);
+  const startDate = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
+
+  const allArchives = getMemoryArchives(restaurantId);
+  const doneOrders = allArchives.filter(c => c.state === 'done' && (c.archivedDate || todayStr()) >= startDate);
+  const refusedOrders = allArchives.filter(c => c.state === 'refused' && (c.archivedDate || todayStr()) >= startDate);
+
+  const salesByProduct = {}, revenueByProduct = {};
+  const revenueByCategory = { Sandwich: 0, Boisson: 0, Accompagnement: 0, Dessert: 0, Autre: 0 };
+  const revenueByDay = {}, ordersByDay = {}, surPlaceByDay = {};
+  let totalRevenue = 0;
+
+  // Pré-remplir tous les jours de la période
+  for (let i = 0; i < days; i++) {
+    const d = new Date(Date.now() - (days - 1 - i) * 86400000).toISOString().split('T')[0];
+    revenueByDay[d] = 0; ordersByDay[d] = 0; surPlaceByDay[d] = 0;
+  }
+
+  doneOrders.forEach(cmd => {
+    const date = cmd.archivedDate || todayStr();
+    ordersByDay[date] = (ordersByDay[date] || 0) + 1;
+    if (cmd.surPlace) surPlaceByDay[date] = (surPlaceByDay[date] || 0) + 1;
+
+    const items = Array.isArray(cmd.panierRaw) ? cmd.panierRaw : [];
+    items.forEach(item => {
+      const nom = item.nom || '';
+      const qty = item.quantite || 1;
+      const prix = (item.prix || 0) * qty;
+      const cat = item.categorie || 'Autre';
+      salesByProduct[nom] = (salesByProduct[nom] || 0) + qty;
+      revenueByProduct[nom] = (revenueByProduct[nom] || 0) + prix;
+      const catKey = ['Sandwich', 'Boisson', 'Accompagnement', 'Dessert'].includes(cat) ? cat : 'Autre';
+      revenueByCategory[catKey] += prix;
+      revenueByDay[date] = (revenueByDay[date] || 0) + prix;
+      totalRevenue += prix;
+    });
+  });
+
+  const topProducts = Object.entries(salesByProduct)
+    .sort((a, b) => b[1] - a[1]).slice(0, 10)
+    .map(([nom, qty]) => ({ nom, qty, revenue: Math.round((revenueByProduct[nom] || 0) * 100) / 100 }));
+
+  res.json({
+    totalOrders: doneOrders.length,
+    refusedOrders: refusedOrders.length,
+    totalRevenue: Math.round(totalRevenue * 100) / 100,
+    avgOrderValue: doneOrders.length ? Math.round(totalRevenue / doneOrders.length * 100) / 100 : 0,
+    revenueByDay,
+    ordersByDay,
+    surPlaceByDay,
+    revenueByCategory,
+    topProducts,
+    salesByProduct,
+  });
 });
 
 // ─── PING & START ────────────────────────────────────

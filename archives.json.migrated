@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "name": "dfjklbngdjlsg",
+    "phone": "0637203567",
+    "sandwich": "big mac, royal delux, mcextreme, royal cheese, cheese",
+    "boisson": "coca",
+    "option": "",
+    "accompagnement": "frite",
+    "dessert": "mcflurry mms chocolat",
+    "modif": "",
+    "allergy": "",
+    "surPlace": true,
+    "restaurantId": "33f770f9-051d-81d5-b393-f5c4873a13b2",
+    "restaurant": "mcdo",
+    "state": "done",
+    "chronoStart": 1776269628413,
+    "chronoEnd": 1776269632883,
+    "createdAt": "18:13",
+    "archivedAt": "18:13",
+    "archivedDate": "2026-04-15"
+  }
+]

@@ -54,6 +54,7 @@
 
   <div class="panier-summary">
     Panier: <strong id="panier-count">0 articles</strong> · <strong id="panier-total">0€</strong>
+    · <span id="lieu-badge" style="display:none;font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;"></span>
   </div>
 
   <div class="messages" id="messages"></div>
@@ -67,6 +68,7 @@
 <script>
 let sessionId = null;
 let restaurantData = null;
+let currentSurPlace = null;
 
 async function startSession() {
   const restaurantId = prompt('Entrez l\'ID du restaurant:');
@@ -117,6 +119,25 @@ function updatePanier(panier, totalPrice) {
   document.getElementById('panier-total').textContent = `${totalPrice}€`;
 }
 
+function updateLieuBadge() {
+  const badge = document.getElementById('lieu-badge');
+  if (currentSurPlace === true) {
+    badge.style.display = 'inline';
+    badge.textContent = '🍽 Sur place';
+    badge.style.background = '#fff4e0';
+    badge.style.color = '#906010';
+    badge.style.border = '1px solid #f0d090';
+  } else if (currentSurPlace === false) {
+    badge.style.display = 'inline';
+    badge.textContent = '📦 À emporter';
+    badge.style.background = '#f0f5ee';
+    badge.style.color = '#5a8a5a';
+    badge.style.border = '1px solid #d0e0c8';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
 async function sendMessage() {
   const input = document.getElementById('input-msg');
   const message = input.value.trim();
@@ -135,14 +156,20 @@ async function sendMessage() {
     
     addMessage('ai', data.response);
     updatePanier(data.panier, data.totalPrice);
+    if (data.surPlace !== null && data.surPlace !== undefined) {
+      currentSurPlace = data.surPlace;
+      updateLieuBadge();
+    }
 
     // Si la commande est prête, afficher le bouton confirmer
     if (data.commandePrete) {
+      const lieuLabel = currentSurPlace === true ? '🍽 Sur place' : currentSurPlace === false ? '📦 À emporter' : '';
       const confirmDiv = document.createElement('div');
       confirmDiv.innerHTML = `
         <div class="order-summary">
           ${data.panier.map(p => `<div class="order-item"><span>${p.quantite}x ${p.nom}${p.modifications ? ' (' + p.modifications + ')' : ''}</span><span>${p.prix}€</span></div>`).join('')}
           <div class="order-item order-total"><span>Total</span><span>${data.totalPrice}€</span></div>
+          ${lieuLabel ? `<div class="order-item" style="margin-top:6px;padding-top:6px;border-top:1px dashed #c0e090;"><span style="color:#5a7a5a;">${lieuLabel}</span></div>` : ''}
         </div>
         <button class="btn-confirm" onclick="confirmOrder()">✅ Confirmer la commande</button>`;
       document.getElementById('messages').appendChild(confirmDiv);
