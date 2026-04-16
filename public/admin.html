@@ -4,93 +4,241 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin — Commande-IA</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Inter', system-ui, sans-serif; background: #f7f8f7; min-height: 100vh; color: #111; }
 
-    .topbar { background: #1a3a1a; border-bottom: none; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: 60px; }
-    .topbar-left { display: flex; align-items: center; gap: 16px; }
+    /* ── TOPBAR ── */
+    .topbar { background: #1a3a1a; border-bottom: none; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; height: 60px; position: fixed; top: 0; left: 0; right: 0; z-index: 100; }
+    .topbar-left { display: flex; align-items: center; gap: 14px; }
     .logo { font-size: 16px; font-weight: 700; color: #fff; letter-spacing: -0.3px; display: flex; align-items: center; gap: 8px; }
     .logo span { color: #a8e07a; }
     .admin-pill { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; background: rgba(168,224,122,0.15); color: #a8e07a; padding: 3px 8px; border-radius: 4px; border: 1px solid rgba(168,224,122,0.25); }
     .topbar-right { display: flex; align-items: center; gap: 12px; }
-    .user-name { font-size: 13px; font-weight: 500; color: #c8e8c8; }
+    .topbar-user { display: flex; align-items: center; gap: 9px; }
+    .topbar-avatar { width: 28px; height: 28px; border-radius: 7px; background: rgba(168,224,122,0.2); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #a8e07a; }
+    .topbar-name { font-size: 13px; font-weight: 500; color: #c8e8c8; }
     .back-btn { font-size: 12px; font-weight: 600; color: #c8e8c8; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-family: 'Inter', sans-serif; text-decoration: none; transition: all 0.15s; }
     .back-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+    .search-global { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 7px; padding: 6px 12px; font-size: 12px; font-family: 'Inter',sans-serif; color: #fff; outline: none; width: 220px; transition: all 0.2s; }
+    .search-global:focus { border-color: rgba(168,224,122,0.5); background: rgba(255,255,255,0.12); width: 270px; }
+    .search-global::placeholder { color: rgba(255,255,255,0.35); }
 
-    .layout { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 60px); }
+    /* ── LAYOUT ── */
+    .layout { display: block; min-height: 100vh; padding-top: 60px; }
 
-    /* SIDEBAR */
-    .sidebar { background: #fff; border-right: 1px solid #eaeeea; padding: 24px 0; }
-    .sidebar-section { padding: 0 16px; margin-bottom: 8px; }
-    .sidebar-label { font-size: 10px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 1px; padding: 0 8px; margin-bottom: 6px; }
-    .sidebar-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; color: #555; transition: all 0.1s; margin-bottom: 2px; }
+    /* ── SIDEBAR ── */
+    .sidebar { background: #fff; border-right: 1px solid #eaeeea; padding: 20px 0; position: fixed; top: 60px; left: 0; bottom: 0; width: 220px; overflow-y: auto; }
+    .sidebar-group { margin-bottom: 4px; }
+    .sidebar-label { font-size: 10px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 1px; padding: 0 16px 0 24px; margin: 14px 0 4px; }
+    .sidebar-item { display: flex; align-items: center; gap: 9px; padding: 8px 12px; margin: 0 8px 1px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; color: #555; transition: all 0.1s; position: relative; }
     .sidebar-item:hover { background: #f5f5f5; color: #111; }
     .sidebar-item.active { background: #f0f7e8; color: #2d5c2d; font-weight: 600; }
-    .sidebar-item svg { width: 15px; height: 15px; flex-shrink: 0; }
+    .sidebar-icon { width: 15px; height: 15px; flex-shrink: 0; }
     .sidebar-count { margin-left: auto; font-size: 11px; font-weight: 600; color: #3B6D11; background: #e8f5dc; padding: 1px 7px; border-radius: 10px; }
+    .sidebar-badge { margin-left: auto; width: 7px; height: 7px; border-radius: 50%; background: #e05555; }
+    .sidebar-divider { height: 1px; background: #f0f0f0; margin: 8px 16px; }
 
-    /* MAIN */
-    .main { padding: 32px; overflow-y: auto; }
-    .main-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
-    .main-title { font-size: 20px; font-weight: 700; color: #111; letter-spacing: -0.4px; }
-    .main-sub { font-size: 13px; color: #999; margin-top: 3px; }
+    /* ── MAIN ── */
+    .main { margin-left: 220px; padding: 28px 32px; min-height: calc(100vh - 60px); }
+    .section-view { display: none; }
+    .section-view.active { display: block; }
 
+    /* ── PAGE HEADER ── */
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; }
+    .page-title { font-size: 20px; font-weight: 700; color: #111; letter-spacing: -0.4px; }
+    .page-sub { font-size: 13px; color: #999; margin-top: 3px; }
     .add-btn { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; padding: 9px 18px; border-radius: 8px; border: none; background: #2d5c2d; color: #fff; cursor: pointer; font-family: 'Inter', sans-serif; transition: background 0.15s; }
     .add-btn:hover { background: #1a3a1a; }
     .add-btn svg { width: 14px; height: 14px; }
 
-    /* GRILLE */
-    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    /* ── KPI CARDS ── */
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+    .kpi-card { background: #fff; border: 1px solid #eaeeea; border-radius: 12px; padding: 18px 20px; }
+    .kpi-label { font-size: 11px; font-weight: 600; color: #aaa; text-transform: uppercase; letter-spacing: 0.8px; }
+    .kpi-val { font-size: 26px; font-weight: 700; color: #111; margin: 6px 0 4px; letter-spacing: -0.8px; }
+    .kpi-sub { font-size: 11px; color: #bbb; }
+    .kpi-card.green .kpi-val { color: #2d6a0a; }
+    .kpi-card.blue .kpi-val { color: #2a50aa; }
+    .kpi-card.orange .kpi-val { color: #906010; }
+    .kpi-card.red .kpi-val { color: #b03030; }
 
-    /* CARDS */
-    .card { background: #fff; border: 1px solid #eaeeea; border-radius: 12px; padding: 20px; transition: box-shadow 0.15s; }
-    .card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
-    .card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
-    .card-identity { display: flex; align-items: center; gap: 12px; }
-    .card-avatar { width: 38px; height: 38px; border-radius: 10px; background: #f0f7e8; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #2d6a0a; flex-shrink: 0; }
-    .card-name { font-size: 14px; font-weight: 600; color: #111; }
-    .card-meta { font-size: 11px; color: #aaa; margin-top: 2px; }
-    .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+    /* ── GRILLE CARDS ── */
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+
+    /* ── RESTAURANT CARD ── */
+    .rcard { background: #fff; border: 1px solid #eaeeea; border-radius: 12px; padding: 20px; transition: box-shadow 0.15s; }
+    .rcard:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+    .rcard-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+    .rcard-identity { display: flex; align-items: center; gap: 11px; }
+    .rcard-avatar { width: 38px; height: 38px; border-radius: 10px; background: #f0f7e8; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #2d6a0a; flex-shrink: 0; }
+    .rcard-name { font-size: 14px; font-weight: 600; color: #111; }
+    .rcard-meta { font-size: 11px; color: #aaa; margin-top: 2px; }
+    .rcard-status { display: flex; align-items: center; gap: 5px; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; }
     .status-dot.actif { background: #5ab52a; }
     .status-dot.suspendu { background: #e05555; }
-
-    .card-divider { height: 1px; background: #f5f5f5; margin: 14px 0; }
-
-    .card-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; padding: 3px 0; }
-    .card-key { color: #aaa; }
-    .card-val { color: #333; font-weight: 500; text-align: right; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-    .card-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .status-dot.maintenance { background: #e08a10; }
+    .status-label { font-size: 10px; font-weight: 500; color: #aaa; }
+    .rcard-divider { height: 1px; background: #f5f5f5; margin: 12px 0; }
+    .rcard-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; padding: 3px 0; }
+    .rcard-key { color: #aaa; }
+    .rcard-val { color: #333; font-weight: 500; max-width: 165px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .rcard-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
     .tag { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 5px; }
     .tag.green { background: #f0f7e8; color: #2d6a0a; }
     .tag.red { background: #fef0f0; color: #b03030; }
     .tag.blue { background: #eff4ff; color: #2a50aa; }
     .tag.orange { background: #fff8ec; color: #906010; }
     .tag.gray { background: #f5f5f5; color: #666; }
-
-    .card-actions { display: flex; gap: 6px; margin-top: 14px; }
-    .btn-sm { font-size: 11px; font-weight: 600; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-family: 'Inter', sans-serif; flex: 1; border: 1px solid transparent; transition: all 0.12s; }
+    .tag.purple { background: #f5eeff; color: #7030c0; }
+    .rcard-actions { display: flex; gap: 6px; margin-top: 14px; flex-wrap: wrap; }
+    .btn-sm { font-size: 11px; font-weight: 600; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-family: 'Inter', sans-serif; border: 1px solid transparent; transition: all 0.12s; white-space: nowrap; }
     .btn-primary { background: #2d5c2d; color: #fff; }
     .btn-primary:hover { background: #1a3a1a; }
     .btn-warning { background: #fff8ec; color: #906010; border-color: #f0d898; }
     .btn-warning:hover { background: #fef0d0; }
     .btn-danger { background: #fef0f0; color: #b03030; border-color: #f5c5c5; }
     .btn-danger:hover { background: #fce0e0; }
+    .btn-blue { background: #eff4ff; color: #2a50aa; border-color: #c5d5f8; }
+    .btn-blue:hover { background: #ddeeff; }
+    .btn-gray { background: #f5f5f5; color: #666; border-color: #e0e0e0; }
+    .btn-gray:hover { background: #eee; }
 
-    /* MODAL */
+    /* ── TABLES ── */
+    .table-wrap { background: #fff; border: 1px solid #eaeeea; border-radius: 12px; overflow: hidden; }
+    .table-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid #f0f0f0; }
+    .table-title { font-size: 14px; font-weight: 600; color: #111; }
+    table { width: 100%; border-collapse: collapse; }
+    thead tr { background: #fafafa; }
+    th { font-size: 10px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.8px; padding: 11px 16px; text-align: left; border-bottom: 1px solid #f0f0f0; }
+    td { font-size: 12px; color: #555; padding: 12px 16px; border-bottom: 1px solid #f8f8f8; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: #fafafa; }
+    td .td-main { font-size: 13px; font-weight: 600; color: #111; }
+
+    /* ── PANELS (2 colonnes) ── */
+    .panel-grid { display: grid; grid-template-columns: 1fr 340px; gap: 18px; }
+
+    /* ── CHART BLOCK ── */
+    .chart-block { background: #fff; border: 1px solid #eaeeea; border-radius: 12px; padding: 20px; }
+    .chart-block-title { font-size: 13px; font-weight: 600; color: #333; margin-bottom: 14px; }
+    .chart-wrap { position: relative; }
+
+    /* ── LIVE FEED ── */
+    .live-feed { background: #fff; border: 1px solid #eaeeea; border-radius: 12px; overflow: hidden; max-height: 480px; display: flex; flex-direction: column; }
+    .live-head { padding: 14px 18px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .live-dot { width: 7px; height: 7px; background: #5ab52a; border-radius: 50%; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.8)} }
+    .live-label { font-size: 13px; font-weight: 600; color: #111; }
+    .live-list { overflow-y: auto; flex: 1; }
+    .live-item { padding: 10px 18px; border-bottom: 1px solid #f8f8f8; display: flex; align-items: center; gap: 10px; animation: slideIn 0.3s ease; }
+    @keyframes slideIn { from{opacity:0;transform:translateY(-5px)} to{opacity:1;transform:translateY(0)} }
+    .live-item:last-child { border-bottom: none; }
+    .live-icon { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+    .live-icon.new { background: #f0f7e8; }
+    .live-icon.done { background: #eff4ff; }
+    .live-icon.refused { background: #fef0f0; }
+    .live-content { flex: 1; min-width: 0; }
+    .live-text { font-size: 12px; font-weight: 500; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .live-time { font-size: 10px; color: #bbb; }
+    .live-amount { font-size: 12px; font-weight: 600; color: #2d6a0a; }
+    .live-empty { padding: 32px; text-align: center; font-size: 13px; color: #ccc; }
+
+    /* ── ALERTES ── */
+    .alert-item { background: #fff; border: 1px solid #eaeeea; border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 12px; }
+    .alert-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+    .alert-icon.warn { background: #fff8ec; }
+    .alert-icon.danger { background: #fef0f0; }
+    .alert-icon.info { background: #eff4ff; }
+    .alert-icon.success { background: #f0f7e8; }
+    .alert-title { font-size: 13px; font-weight: 600; color: #111; }
+    .alert-desc { font-size: 12px; color: #888; margin-top: 2px; line-height: 1.5; }
+
+    /* ── BROADCAST ── */
+    .broadcast-form { background: #fff; border: 1px solid #eaeeea; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+    .broadcast-form textarea { width: 100%; background: #fafafa; border: 1.5px solid #e8e8e8; border-radius: 8px; padding: 12px; font-size: 13px; font-family: 'Inter',sans-serif; color: #111; resize: vertical; min-height: 80px; outline: none; transition: border 0.15s; }
+    .broadcast-form textarea:focus { border-color: #3B6D11; background: #fff; }
+    .broadcast-type-row { display: flex; gap: 8px; margin: 10px 0; }
+    .type-btn { padding: 5px 12px; border-radius: 6px; border: 1.5px solid #e8e8e8; background: #fafafa; font-size: 11px; font-weight: 600; color: #888; cursor: pointer; font-family:'Inter',sans-serif; transition: all 0.12s; }
+    .type-btn.active.info { border-color: #2a50aa; color: #2a50aa; background: #eff4ff; }
+    .type-btn.active.warn { border-color: #906010; color: #906010; background: #fff8ec; }
+    .type-btn.active.success { border-color: #2d6a0a; color: #2d6a0a; background: #f0f7e8; }
+    .type-btn.active.danger { border-color: #b03030; color: #b03030; background: #fef0f0; }
+    .bc-item { background: #fff; border: 1px solid #eaeeea; border-radius: 10px; padding: 14px 16px; margin-bottom: 8px; display: flex; align-items: flex-start; gap: 12px; }
+    .bc-badge { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 5px; text-transform: uppercase; }
+    .bc-badge.info { background: #eff4ff; color: #2a50aa; }
+    .bc-badge.warn { background: #fff8ec; color: #906010; }
+    .bc-badge.success { background: #f0f7e8; color: #2d6a0a; }
+    .bc-badge.danger { background: #fef0f0; color: #b03030; }
+
+    /* ── HEALTH ── */
+    .health-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
+    .health-card { background: #fff; border: 1px solid #eaeeea; border-radius: 12px; padding: 18px; }
+    .health-card-label { font-size: 10px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.8px; }
+    .health-card-val { font-size: 22px; font-weight: 700; color: #2d5c2d; margin: 6px 0 2px; letter-spacing: -0.5px; }
+    .health-card-unit { font-size: 11px; color: #bbb; }
+    .progress-bar { height: 4px; background: #f0f0f0; border-radius: 4px; margin-top: 10px; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg,#5ab52a,#3B6D11); transition: width 0.5s; }
+    .progress-fill.orange { background: linear-gradient(90deg,#e08a10,#c06000); }
+    .progress-fill.red { background: linear-gradient(90deg,#e05555,#b03030); }
+
+    /* ── AUDIT ── */
+    .audit-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f5f5f5; }
+    .audit-item:last-child { border-bottom: none; }
+    .audit-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .audit-action { font-size: 12px; font-weight: 600; color: #333; flex: 1; }
+    .audit-meta { font-size: 11px; color: #bbb; }
+    .audit-wrap { background: #fff; border: 1px solid #eaeeea; border-radius: 12px; padding: 18px 20px; }
+
+    /* ── ABONNEMENTS ── */
+    .abo-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 5px; }
+    .abo-badge.mensuel { background: #eff4ff; color: #2a50aa; }
+    .abo-badge.annuel { background: #f0f7e8; color: #2d6a0a; }
+    .abo-badge.gratuit { background: #f5f5f5; color: #666; }
+    .toggle-switch { position: relative; width: 36px; height: 20px; display: inline-block; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; inset: 0; background: #ddd; border-radius: 20px; cursor: pointer; transition: 0.2s; }
+    .toggle-slider:before { content:''; position: absolute; width: 14px; height: 14px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
+    input:checked + .toggle-slider { background: #5ab52a; }
+    input:checked + .toggle-slider:before { transform: translateX(16px); }
+
+    /* ── EXPORT ── */
+    .export-card { background: #fff; border: 1px solid #eaeeea; border-radius: 12px; padding: 20px; display: flex; align-items: center; gap: 16px; margin-bottom: 10px; transition: all 0.15s; cursor: pointer; }
+    .export-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.06); border-color: #c8e0c8; }
+    .export-icon { width: 42px; height: 42px; border-radius: 10px; background: #f0f7e8; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .export-label { font-size: 13px; font-weight: 600; color: #111; }
+    .export-desc { font-size: 12px; color: #aaa; margin-top: 2px; }
+    .export-btn-wrap { margin-left: auto; }
+
+    /* ── RECHERCHE GLOBALE ── */
+    .search-results { background: #fff; border: 1px solid #eaeeea; border-radius: 12px; overflow: hidden; }
+    .search-result-item { padding: 12px 18px; border-bottom: 1px solid #f8f8f8; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: background 0.1s; }
+    .search-result-item:hover { background: #fafafa; }
+    .search-result-item:last-child { border-bottom: none; }
+    .sr-type { font-size: 10px; font-weight: 600; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; }
+    .sr-type.restaurant { background: #f0f7e8; color: #2d6a0a; }
+    .sr-type.employe { background: #eff4ff; color: #2a50aa; }
+    .sr-name { font-size: 13px; font-weight: 600; color: #111; }
+    .sr-sub { font-size: 11px; color: #aaa; }
+
+    /* ── MODAL ── */
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 999; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
     .modal-overlay.open { display: flex; }
     .modal { background: #fff; border-radius: 16px; padding: 32px; width: 100%; max-width: 460px; box-shadow: 0 24px 60px rgba(0,0,0,0.12); }
-    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
     .modal-title { font-size: 17px; font-weight: 700; color: #111; letter-spacing: -0.3px; }
-    .modal-close { width: 28px; height: 28px; border-radius: 6px; border: none; background: #f5f5f5; color: #666; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .modal-close { width: 28px; height: 28px; border-radius: 6px; border: none; background: #f5f5f5; color: #666; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: background 0.12s; }
     .modal-close:hover { background: #eee; }
     .form-group { margin-bottom: 16px; }
     .form-label { font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 7px; display: block; }
     .form-input { width: 100%; padding: 11px 13px; border-radius: 8px; border: 1.5px solid #e8e8e8; background: #fafafa; font-size: 13px; font-family: 'Inter', sans-serif; color: #111; outline: none; transition: all 0.15s; }
     .form-input:focus { border-color: #3B6D11; background: #fff; }
+    .form-input::placeholder { color: #ccc; }
     .form-select { width: 100%; padding: 11px 13px; border-radius: 8px; border: 1.5px solid #e8e8e8; background: #fafafa; font-size: 13px; font-family: 'Inter', sans-serif; color: #111; outline: none; }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .modal-footer { display: flex; gap: 10px; margin-top: 28px; }
@@ -101,15 +249,28 @@
     .modal-btn.secondary:hover { background: #eee; }
     .success-box { background: #f0f7e8; border: 1px solid #c8e8a0; border-radius: 8px; padding: 12px 14px; margin-top: 16px; font-size: 13px; color: #2d5c2d; font-weight: 500; display: none; word-break: break-all; }
     .success-box.show { display: block; }
-    .loading { text-align: center; font-size: 13px; color: #aaa; padding: 48px 0; }
 
-    .section-view { display: none; }
-    .section-view.active { display: block; }
-    .btn-reset { font-size: 11px; font-weight: 600; padding: 6px 10px; border-radius: 7px; border: 1.5px solid #b0c8f8; background: #eff4ff; color: #2a50aa; cursor: pointer; flex: 1; font-family: 'Inter', sans-serif; }
-.btn-reset:hover { background: #ddeeff; }
+    .loading { text-align: center; font-size: 13px; color: #ccc; padding: 48px 0; }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
+
+    /* ── NOTIFICATIONS TOAST ── */
+    #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+    .toast { background: #fff; border: 1px solid #eaeeea; border-radius: 10px; padding: 12px 16px; font-size: 12px; font-weight: 600; color: #333; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.1); animation: slideUp 0.3s ease; max-width: 320px; }
+    @keyframes slideUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+    .toast.success { border-color: #c8e8a0; }
+    .toast.error { border-color: #f5c5c5; color: #b03030; }
+
+    /* ── MAINTENANCE BANNER ── */
+    .maintenance-banner { background: #fff8ec; border: 1px solid #f0d898; border-radius: 8px; padding: 8px 12px; font-size: 11px; color: #906010; font-weight: 600; margin-top: 8px; }
   </style>
 </head>
 <body>
+
+<div id="toast-container"></div>
 
 <div class="topbar">
   <div class="topbar-left">
@@ -117,65 +278,318 @@
     <div class="admin-pill">Admin</div>
   </div>
   <div class="topbar-right">
-    <span class="user-name" id="admin-name"></span>
+    <input class="search-global" id="global-search" placeholder="🔍  Rechercher un restaurant, employé..." oninput="onGlobalSearch(this.value)" onfocus="switchSection('recherche', document.getElementById('nav-recherche'))" />
+    <div class="topbar-user">
+      <div class="topbar-avatar" id="topbar-init">A</div>
+      <span class="topbar-name" id="admin-name"></span>
+    </div>
     <a href="/" class="back-btn">← Dashboard</a>
   </div>
 </div>
 <script src="/burger-menu.js"></script>
 
 <div class="layout">
+  <!-- SIDEBAR -->
   <div class="sidebar">
-    <div class="sidebar-section">
-      <div class="sidebar-label">Gestion</div>
-      <div class="sidebar-item active" id="nav-restaurants" onclick="switchSection('restaurants', this)">
-        <svg viewBox="0 0 15 15" fill="none"><path d="M2 3h11M2 7.5h11M2 12h11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-        Restaurants
-        <span class="sidebar-count" id="count-restaurants">0</span>
-      </div>
-      <div class="sidebar-item" id="nav-employes" onclick="switchSection('employes', this)">
-        <svg viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="5" r="2.5" stroke="currentColor" stroke-width="1.4"/><path d="M2 13c0-3.038 2.462-5.5 5.5-5.5S13 9.962 13 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-        Employés
-        <span class="sidebar-count" id="count-employes">0</span>
-      </div>
-      <div class="sidebar-item" onclick="window.location.href='/stocks.html'">
-  <svg viewBox="0 0 15 15" fill="none"><rect x="1.5" y="1.5" width="12" height="4" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="1.5" y="7.5" width="12" height="4" rx="1" stroke="currentColor" stroke-width="1.3"/></svg>
-  Stocks
-</div>
+    <div class="sidebar-label">Vue d'ensemble</div>
+    <div class="sidebar-item active" id="nav-dashboard" onclick="switchSection('dashboard',this)">
+      <svg class="sidebar-icon" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1.5" fill="currentColor" opacity=".6"/><rect x="8" y="1" width="5" height="5" rx="1.5" fill="currentColor"/><rect x="1" y="8" width="5" height="5" rx="1.5" fill="currentColor"/><rect x="8" y="8" width="5" height="5" rx="1.5" fill="currentColor" opacity=".6"/></svg>
+      Dashboard
+    </div>
+
+    <div class="sidebar-label">Gestion</div>
+    <div class="sidebar-item" id="nav-restaurants" onclick="switchSection('restaurants',this)">
+      <svg class="sidebar-icon" viewBox="0 0 14 14" fill="none"><path d="M2 3a1 1 0 011-1h8a1 1 0 011 1v2a1 1 0 01-1 1H3a1 1 0 01-1-1V3z" stroke="currentColor" stroke-width="1.2"/><path d="M2 9a1 1 0 011-1h8a1 1 0 011 1v2a1 1 0 01-1 1H3a1 1 0 01-1-1V9z" stroke="currentColor" stroke-width="1.2"/></svg>
+      Restaurants
+      <span class="sidebar-count" id="count-restaurants">0</span>
+    </div>
+    <div class="sidebar-item" id="nav-employes" onclick="switchSection('employes',this)">
+      <svg class="sidebar-icon" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="4.5" r="2.5" stroke="currentColor" stroke-width="1.2"/><path d="M2 12c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Employés
+      <span class="sidebar-count" id="count-employes">0</span>
+    </div>
+    <div class="sidebar-item" id="nav-abonnements" onclick="switchSection('abonnements',this)">
+      <svg class="sidebar-icon" viewBox="0 0 14 14" fill="none"><rect x="1" y="3" width="12" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M1 6h12" stroke="currentColor" stroke-width="1.2"/></svg>
+      Abonnements
+    </div>
+
+    <div class="sidebar-label">Monitoring</div>
+    <div class="sidebar-item" id="nav-live" onclick="switchSection('live',this)">
+      <svg class="sidebar-icon" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="2" fill="currentColor"/><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.2" opacity=".4"/></svg>
+      Activité live
+      <span class="sidebar-badge" id="live-badge" style="display:none"></span>
+    </div>
+    <div class="sidebar-item" id="nav-alertes" onclick="switchSection('alertes',this)">
+      <svg class="sidebar-icon" viewBox="0 0 14 14" fill="none"><path d="M7 1l5.5 10H1.5L7 1z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M7 5.5v2.5M7 10h.01" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+      Alertes
+      <span class="sidebar-count" id="count-alertes" style="background:rgba(224,85,85,0.15);color:#e05555;">0</span>
+    </div>
+    <div class="sidebar-item" id="nav-sante" onclick="switchSection('sante',this)">
+      <svg class="sidebar-icon" viewBox="0 0 14 14" fill="none"><path d="M1 7h2l2-4 2 8 2-4 1 2h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Santé système
+    </div>
+
+    <div class="sidebar-label">Outils</div>
+    <div class="sidebar-item" id="nav-broadcast" onclick="switchSection('broadcast',this)">
+      <svg class="sidebar-icon" viewBox="0 0 14 14" fill="none"><path d="M1 5h8M1 9h5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M10 2l3 5-3 5V2z" fill="currentColor" opacity=".5"/></svg>
+      Broadcast
+    </div>
+    <div class="sidebar-item" id="nav-export" onclick="switchSection('export',this)">
+      <svg class="sidebar-icon" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 10v2a1 1 0 001 1h8a1 1 0 001-1v-2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Export global
+    </div>
+    <div class="sidebar-item" id="nav-audit" onclick="switchSection('audit',this)">
+      <svg class="sidebar-icon" viewBox="0 0 14 14" fill="none"><path d="M3 1h8a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V2a1 1 0 011-1z" stroke="currentColor" stroke-width="1.2"/><path d="M4 5h6M4 8h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Journal d'audit
+    </div>
+    <div class="sidebar-item" id="nav-recherche" onclick="switchSection('recherche',this)">
+      <svg class="sidebar-icon" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4" stroke="currentColor" stroke-width="1.2"/><path d="M9 9l3 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Recherche globale
+    </div>
+    <div class="sidebar-item" id="nav-messagerie" onclick="window.location.href='/messagerie.html'">
+      <svg class="sidebar-icon" viewBox="0 0 14 14" fill="none"><path d="M1 2h12a1 1 0 011 1v7a1 1 0 01-1 1H4l-3 2V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+      Messagerie
+      <span class="sidebar-count" id="count-msgs" style="background:rgba(224,85,85,0.12);color:#b03030;display:none">0</span>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-item" onclick="window.location.href='/stocks.html'">
+      <svg class="sidebar-icon" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="12" height="4" rx="1" stroke="currentColor" stroke-width="1.2"/><rect x="1" y="7" width="12" height="4" rx="1" stroke="currentColor" stroke-width="1.2"/></svg>
+      Stocks
     </div>
   </div>
 
+  <!-- MAIN -->
   <div class="main">
-    <!-- RESTAURANTS -->
-    <div class="section-view active" id="section-restaurants">
-      <div class="main-header">
+
+    <!-- ══ DASHBOARD ══ -->
+    <div class="section-view active" id="section-dashboard">
+      <div class="page-header">
         <div>
-          <div class="main-title">Restaurants</div>
-          <div class="main-sub">Gérez les comptes restaurants de vos clients</div>
+          <div class="page-title">Vue d'ensemble</div>
+          <div class="page-sub">Activité globale de la plateforme Commande-IA</div>
+        </div>
+        <button class="add-btn" onclick="refreshDashboard()">
+          <svg viewBox="0 0 14 14" fill="none"><path d="M1 7a6 6 0 1010.5-4M11 1v3H8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Actualiser
+        </button>
+      </div>
+      <div class="kpi-grid" id="dash-kpis">
+        <div class="kpi-card green"><div class="kpi-label">Commandes aujourd'hui</div><div class="kpi-val" id="kpi-today">—</div><div class="kpi-sub">sur l'ensemble des restaurants</div></div>
+        <div class="kpi-card blue"><div class="kpi-label">CA aujourd'hui</div><div class="kpi-val" id="kpi-ca">—</div><div class="kpi-sub">toutes enseignes confondues</div></div>
+        <div class="kpi-card orange"><div class="kpi-label">Sessions vocales</div><div class="kpi-val" id="kpi-sessions">—</div><div class="kpi-sub">en cours en ce moment</div></div>
+        <div class="kpi-card"><div class="kpi-label">Restaurants actifs</div><div class="kpi-val" id="kpi-restos">—</div><div class="kpi-sub">avec données en mémoire</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="chart-block">
+          <div class="chart-block-title">Activité par heure (aujourd'hui)</div>
+          <div class="chart-wrap" style="height:180px"><canvas id="chart-hourly"></canvas></div>
+        </div>
+        <div class="live-feed" style="max-height:240px">
+          <div class="live-head">
+            <div class="live-dot"></div>
+            <div class="live-label">Commandes en direct</div>
+          </div>
+          <div class="live-list" id="dash-live-list"><div class="live-empty">En attente d'activité...</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ RESTAURANTS ══ -->
+    <div class="section-view" id="section-restaurants">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Restaurants</div>
+          <div class="page-sub">Gérez les comptes restaurants de vos clients</div>
         </div>
         <button class="add-btn" onclick="openModal('restaurant')">
-          <svg viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+          <svg viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
           Nouveau restaurant
         </button>
       </div>
-      <div class="grid" id="grid-restaurants"><div class="loading">Chargement...</div></div>
+      <div class="grid-3" id="grid-restaurants"><div class="loading">Chargement...</div></div>
     </div>
 
-    <!-- EMPLOYES -->
+    <!-- ══ EMPLOYES ══ -->
     <div class="section-view" id="section-employes">
-      <div class="main-header">
+      <div class="page-header">
         <div>
-          <div class="main-title">Employés</div>
-          <div class="main-sub">Gérez les accès au dashboard</div>
+          <div class="page-title">Employés</div>
+          <div class="page-sub">Gérez les accès au dashboard</div>
         </div>
         <button class="add-btn" onclick="openModal('employe')">
-          <svg viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+          <svg viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
           Nouvel employé
         </button>
       </div>
-      <div class="grid" id="grid-employes"><div class="loading">Chargement...</div></div>
+      <div class="grid-3" id="grid-employes"><div class="loading">Chargement...</div></div>
     </div>
-  </div>
-</div>
+
+    <!-- ══ ABONNEMENTS ══ -->
+    <div class="section-view" id="section-abonnements">
+      <div class="page-header">
+        <div><div class="page-title">Abonnements</div><div class="page-sub">Gestion des plans et statuts de facturation</div></div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-head">
+          <div class="table-title">Tous les restaurants</div>
+          <select class="form-select" style="width:160px;padding:6px 10px;font-size:11px" onchange="filterAbonnements(this.value)">
+            <option value="">Tous les plans</option>
+            <option value="Mensuel">Mensuel</option>
+            <option value="Annuel">Annuel</option>
+            <option value="Gratuit">Gratuit</option>
+          </select>
+        </div>
+        <table id="abo-table">
+          <thead><tr><th>Restaurant</th><th>Plan</th><th>Statut</th><th>Onboarding</th><th>Email</th><th>Actions</th></tr></thead>
+          <tbody id="abo-tbody"><tr><td colspan="6" style="text-align:center;padding:32px;color:#2a3a2a">Chargement...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ ACTIVITE LIVE ══ -->
+    <div class="section-view" id="section-live">
+      <div class="page-header">
+        <div><div class="page-title">Activité en direct</div><div class="page-sub">Flux temps réel de toutes les commandes</div></div>
+        <button class="add-btn" style="background:rgba(224,85,85,0.15);color:#e05555;border:1px solid rgba(224,85,85,0.25)" onclick="clearLiveFeed()">Effacer</button>
+      </div>
+      <div class="panel-grid">
+        <div class="live-feed" style="max-height:600px">
+          <div class="live-head">
+            <div class="live-dot"></div>
+            <div class="live-label">Toutes les commandes</div>
+            <span id="live-count" style="margin-left:auto;font-size:10px;color:#3a5a3a">0 événements</span>
+          </div>
+          <div class="live-list" id="live-list"><div class="live-empty">En attente d'activité...</div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div class="chart-block">
+            <div class="chart-block-title">Répartition aujourd'hui</div>
+            <div class="chart-wrap" style="height:160px"><canvas id="chart-live-dist"></canvas></div>
+          </div>
+          <div class="kpi-card green" style="margin-bottom:0">
+            <div class="kpi-label">Total aujourd'hui</div>
+            <div class="kpi-val" id="live-total-today">0</div>
+            <div class="kpi-sub">commandes confirmées</div>
+          </div>
+          <div class="kpi-card orange" style="margin-bottom:0">
+            <div class="kpi-label">CA live</div>
+            <div class="kpi-val" id="live-ca-today">0 €</div>
+            <div class="kpi-sub">depuis ce matin</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ALERTES ══ -->
+    <div class="section-view" id="section-alertes">
+      <div class="page-header">
+        <div><div class="page-title">Alertes système</div><div class="page-sub">Problèmes détectés automatiquement</div></div>
+        <button class="add-btn" onclick="detectAlertes()">
+          <svg viewBox="0 0 14 14" fill="none"><path d="M1 7a6 6 0 1010.5-4M11 1v3H8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Relancer la détection
+        </button>
+      </div>
+      <div id="alertes-list"><div class="loading">Analyse en cours...</div></div>
+    </div>
+
+    <!-- ══ SANTE SYSTEME ══ -->
+    <div class="section-view" id="section-sante">
+      <div class="page-header">
+        <div><div class="page-title">Santé système</div><div class="page-sub">Métriques du serveur en temps réel</div></div>
+        <button class="add-btn" onclick="loadHealth()">
+          <svg viewBox="0 0 14 14" fill="none"><path d="M1 7a6 6 0 1010.5-4M11 1v3H8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Actualiser
+        </button>
+      </div>
+      <div class="health-grid" id="health-cards">
+        <div class="health-card"><div class="health-card-label">Uptime</div><div class="health-card-val" id="h-uptime">—</div><div class="health-card-unit">heures de fonctionnement</div><div class="progress-bar"><div class="progress-fill" id="h-uptime-bar" style="width:100%"></div></div></div>
+        <div class="health-card"><div class="health-card-label">Mémoire utilisée</div><div class="health-card-val" id="h-mem">—</div><div class="health-card-unit">Mo heap JS utilisé</div><div class="progress-bar"><div class="progress-fill" id="h-mem-bar" style="width:0%"></div></div></div>
+        <div class="health-card"><div class="health-card-label">Mémoire totale</div><div class="health-card-val" id="h-memtot">—</div><div class="health-card-unit">Mo heap total alloué</div><div class="progress-bar"><div class="progress-fill" style="width:100%;opacity:0.3"></div></div></div>
+        <div class="health-card"><div class="health-card-label">Sessions vocales</div><div class="health-card-val" id="h-sessions">—</div><div class="health-card-unit">appels actifs maintenant</div></div>
+        <div class="health-card"><div class="health-card-label">Archives en mémoire</div><div class="health-card-val" id="h-archives">—</div><div class="health-card-unit">commandes chargées</div></div>
+        <div class="health-card"><div class="health-card-label">Node.js</div><div class="health-card-val" id="h-node" style="font-size:16px">—</div><div class="health-card-unit">version runtime</div></div>
+      </div>
+      <div class="chart-block" style="margin-top:14px">
+        <div class="chart-block-title">Snapshot RAM (dernières actualisations)</div>
+        <div class="chart-wrap" style="height:160px"><canvas id="chart-ram"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ══ BROADCAST ══ -->
+    <div class="section-view" id="section-broadcast">
+      <div class="page-header">
+        <div><div class="page-title">Broadcast</div><div class="page-sub">Envoyer une annonce à tous les restaurants</div></div>
+      </div>
+      <div class="broadcast-form">
+        <textarea id="bc-text" placeholder="Rédigez votre message pour tous les restaurants..."></textarea>
+        <div class="broadcast-type-row">
+          <button class="type-btn active info" data-type="info" onclick="selectBcType(this,'info')">ℹ️ Info</button>
+          <button class="type-btn warn" data-type="warn" onclick="selectBcType(this,'warn')">⚠️ Avertissement</button>
+          <button class="type-btn success" data-type="success" onclick="selectBcType(this,'success')">✅ Succès</button>
+          <button class="type-btn danger" data-type="danger" onclick="selectBcType(this,'danger')">🔴 Urgent</button>
+        </div>
+        <button class="add-btn" style="margin-top:10px" onclick="sendBroadcast()">
+          <svg viewBox="0 0 14 14" fill="none"><path d="M1 7h12M8 3l5 4-5 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Envoyer à tous
+        </button>
+      </div>
+      <div id="bc-list"><div class="loading">Chargement des messages...</div></div>
+    </div>
+
+    <!-- ══ EXPORT ══ -->
+    <div class="section-view" id="section-export">
+      <div class="page-header">
+        <div><div class="page-title">Export global</div><div class="page-sub">Télécharger les données de la plateforme</div></div>
+      </div>
+      <div class="export-card" onclick="exportData('restaurants','json')">
+        <div class="export-icon">🏪</div>
+        <div><div class="export-label">Restaurants — JSON</div><div class="export-desc">Tous les restaurants avec leurs informations complètes</div></div>
+        <div class="export-btn-wrap"><button class="btn-sm btn-primary">⬇ JSON</button></div>
+      </div>
+      <div class="export-card" onclick="exportData('restaurants','csv')">
+        <div class="export-icon">📊</div>
+        <div><div class="export-label">Restaurants — CSV</div><div class="export-desc">Format tableur compatible Excel/Google Sheets</div></div>
+        <div class="export-btn-wrap"><button class="btn-sm btn-primary">⬇ CSV</button></div>
+      </div>
+      <div class="export-card" onclick="exportData('employes','json')">
+        <div class="export-icon">👥</div>
+        <div><div class="export-label">Employés — JSON</div><div class="export-desc">Tous les comptes employés et leurs rôles</div></div>
+        <div class="export-btn-wrap"><button class="btn-sm btn-primary">⬇ JSON</button></div>
+      </div>
+      <div class="export-card" onclick="exportData('employes','csv')">
+        <div class="export-icon">📋</div>
+        <div><div class="export-label">Employés — CSV</div><div class="export-desc">Format tableur compatible Excel/Google Sheets</div></div>
+        <div class="export-btn-wrap"><button class="btn-sm btn-primary">⬇ CSV</button></div>
+      </div>
+      <div class="export-card" onclick="exportData('complet','json')">
+        <div class="export-icon">📦</div>
+        <div><div class="export-label">Export complet — JSON</div><div class="export-desc">Restaurants + Employés dans un seul fichier</div></div>
+        <div class="export-btn-wrap"><button class="btn-sm btn-primary">⬇ JSON</button></div>
+      </div>
+    </div>
+
+    <!-- ══ AUDIT ══ -->
+    <div class="section-view" id="section-audit">
+      <div class="page-header">
+        <div><div class="page-title">Journal d'audit</div><div class="page-sub">Historique de toutes les actions administrateur</div></div>
+        <button class="add-btn" style="background:rgba(224,85,85,0.1);color:#e05555;border:1px solid rgba(224,85,85,0.2)" onclick="clearAudit()">Effacer</button>
+      </div>
+      <div class="audit-wrap" id="audit-list"><div class="loading" style="color:#2a3a2a">Aucune action enregistrée.</div></div>
+    </div>
+
+    <!-- ══ RECHERCHE ══ -->
+    <div class="section-view" id="section-recherche">
+      <div class="page-header">
+        <div><div class="page-title">Recherche globale</div><div class="page-sub">Restaurants, employés, IDs...</div></div>
+      </div>
+      <div class="form-group" style="margin-bottom:20px">
+        <input class="form-input" id="search-input" placeholder="Nom, email, ID, téléphone..." oninput="runSearch(this.value)" style="font-size:15px;padding:14px 16px" />
+      </div>
+      <div id="search-results"><div class="loading" style="color:#2a3a2a">Commencez à taper pour chercher...</div></div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /layout -->
 
 <!-- MODAL RESTAURANT -->
 <div class="modal-overlay" id="modal-restaurant">
@@ -185,27 +599,11 @@
       <button class="modal-close" onclick="closeModal('restaurant')">×</button>
     </div>
     <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Nom</label>
-        <input class="form-input" id="r-nom" placeholder="Burger Express" />
-      </div>
-      <div class="form-group">
-        <label class="form-label">Abonnement</label>
-        <select class="form-select" id="r-abo">
-          <option value="Mensuel">Mensuel</option>
-          <option value="Annuel">Annuel</option>
-          <option value="Gratuit">Gratuit</option>
-        </select>
-      </div>
+      <div class="form-group"><label class="form-label">Nom</label><input class="form-input" id="r-nom" placeholder="Burger Express" /></div>
+      <div class="form-group"><label class="form-label">Abonnement</label><select class="form-select" id="r-abo"><option value="Mensuel">Mensuel</option><option value="Annuel">Annuel</option><option value="Gratuit">Gratuit</option></select></div>
     </div>
-    <div class="form-group">
-      <label class="form-label">Email</label>
-      <input class="form-input" id="r-email" type="email" placeholder="contact@restaurant.fr" />
-    </div>
-    <div class="form-group">
-      <label class="form-label">Téléphone</label>
-      <input class="form-input" id="r-tel" placeholder="+33 6 00 00 00 00" />
-    </div>
+    <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="r-email" type="email" placeholder="contact@restaurant.fr" /></div>
+    <div class="form-group"><label class="form-label">Téléphone</label><input class="form-input" id="r-tel" placeholder="+33 6 00 00 00 00" /></div>
     <div class="success-box" id="r-success"></div>
     <div class="modal-footer">
       <button class="modal-btn secondary" onclick="closeModal('restaurant')">Annuler</button>
@@ -222,33 +620,13 @@
       <button class="modal-close" onclick="closeModal('employe')">×</button>
     </div>
     <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Nom complet</label>
-        <input class="form-input" id="e-nom" placeholder="Jean Dupont" />
-      </div>
-      <div class="form-group">
-        <label class="form-label">Rôle</label>
-        <select class="form-select" id="e-role">
-          <option value="Hôte">Hôte</option>
-          <option value="Cuisine">Cuisine</option>
-          <option value="Gérant">Gérant</option>
-          <option value="Admin">Admin</option>
-        </select>
-      </div>
+      <div class="form-group"><label class="form-label">Nom complet</label><input class="form-input" id="e-nom" placeholder="Jean Dupont" /></div>
+      <div class="form-group"><label class="form-label">Rôle</label><select class="form-select" id="e-role"><option value="Hôte">Hôte</option><option value="Cuisine">Cuisine</option><option value="Gérant">Gérant</option><option value="Admin">Admin</option></select></div>
     </div>
-    <div class="form-group">
-      <label class="form-label">Email</label>
-      <input class="form-input" id="e-email" type="email" placeholder="jean@restaurant.fr" />
-    </div>
+    <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="e-email" type="email" placeholder="jean@restaurant.fr" /></div>
     <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Restaurant (nom)</label>
-        <input class="form-input" id="e-restaurant" placeholder="Burger Express" />
-      </div>
-      <div class="form-group">
-        <label class="form-label">Restaurant ID</label>
-        <input class="form-input" id="e-restaurant-id" placeholder="ID Notion" />
-      </div>
+      <div class="form-group"><label class="form-label">Restaurant (nom)</label><input class="form-input" id="e-restaurant" placeholder="Burger Express" /></div>
+      <div class="form-group"><label class="form-label">Restaurant ID</label><input class="form-input" id="e-restaurant-id" placeholder="ID Notion" /></div>
     </div>
     <div class="success-box" id="e-success"></div>
     <div class="modal-footer">
@@ -259,185 +637,580 @@
 </div>
 
 <script>
-  const user = sessionStorage.getItem('user');
-  if (!user) window.location.href = '/login.html?redirect=/admin.html';
-  const currentUser = JSON.parse(user || '{}');
-  if (currentUser.role !== 'Admin') window.location.href = '/';
-  document.getElementById('admin-name').textContent = currentUser.nom;
+// ── AUTH ──
+const user = sessionStorage.getItem('user');
+if (!user) window.location.href = '/login.html?redirect=/admin.html';
+const currentUser = JSON.parse(user || '{}');
+if (currentUser.role !== 'Admin') window.location.href = '/';
+document.getElementById('admin-name').textContent = currentUser.nom;
+const ini = (currentUser.nom||'A').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+document.getElementById('topbar-init').textContent = ini;
 
-  function initials(name) { return (name || '?').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2); }
+// ── DATA CACHE ──
+let allRestaurants = [], allEmployes = [];
+let liveEvents = [], liveTotal = 0, liveCa = 0;
+let auditLog = JSON.parse(localStorage.getItem('adminAuditLog') || '[]');
+let bcType = 'info';
+let chartHourly = null, chartLiveDist = null, chartRam = null;
+const ramHistory = [];
 
-  function switchSection(section, el) {
-    document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
-    document.querySelectorAll('.section-view').forEach(s => s.classList.remove('active'));
-    el.classList.add('active');
-    document.getElementById('section-' + section).classList.add('active');
-  }
+// ── UTILS ──
+function initials(name) { return (name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2); }
+function fmt(n) { return typeof n==='number' ? n.toFixed(2).replace('.',',') + ' €' : '—'; }
+function fmtH(secs) { const h=Math.floor(secs/3600), m=Math.floor((secs%3600)/60); return h+'h '+m+'m'; }
+function timeAgo(iso) {
+  const d = new Date(iso), now = Date.now(), diff = now - d;
+  if (diff < 60000) return 'il y a ' + Math.floor(diff/1000) + 's';
+  if (diff < 3600000) return 'il y a ' + Math.floor(diff/60000) + 'min';
+  return d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+}
 
-  function openModal(type) {
-    document.getElementById('modal-' + type).classList.add('open');
-    document.getElementById(type === 'restaurant' ? 'r-success' : 'e-success').classList.remove('show');
-  }
-  function closeModal(type) { document.getElementById('modal-' + type).classList.remove('open'); }
-  async function resetPassword(id, type) {
-  if (!confirm('Générer un nouveau mot de passe pour ce compte ?')) return;
-  const res = await fetch('/admin/reset-password/' + id, {
-    method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ type })
+function toast(msg, type='success') {
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.innerHTML = (type==='success'?'✅':'❌') + ' ' + msg;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(()=>el.remove(), 3200);
+}
+
+function addAudit(action, detail, color='#7ee83a') {
+  const entry = { action, detail, color, ts: new Date().toISOString(), user: currentUser.nom };
+  auditLog.unshift(entry);
+  if (auditLog.length > 200) auditLog.splice(200);
+  localStorage.setItem('adminAuditLog', JSON.stringify(auditLog));
+}
+
+// ── NAVIGATION ──
+function switchSection(section, el) {
+  document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+  document.querySelectorAll('.section-view').forEach(s => s.classList.remove('active'));
+  if (el) el.classList.add('active');
+  const sv = document.getElementById('section-' + section);
+  if (sv) sv.classList.add('active');
+  if (section === 'sante') loadHealth();
+  if (section === 'alertes') detectAlertes();
+  if (section === 'broadcast') loadBroadcasts();
+  if (section === 'audit') renderAudit();
+  if (section === 'abonnements') renderAbonnements();
+}
+
+// ── LOAD DATA ──
+async function loadRestaurants() {
+  const res = await fetch('/admin/restaurants');
+  allRestaurants = await res.json();
+  document.getElementById('count-restaurants').textContent = allRestaurants.length;
+  renderRestaurants(allRestaurants);
+  renderAbonnements(allRestaurants);
+  return allRestaurants;
+}
+
+async function loadEmployes() {
+  const res = await fetch('/admin/employes');
+  allEmployes = await res.json();
+  document.getElementById('count-employes').textContent = allEmployes.length;
+  renderEmployes(allEmployes);
+  return allEmployes;
+}
+
+function renderRestaurants(data) {
+  const grid = document.getElementById('grid-restaurants');
+  if (!data.length) { grid.innerHTML = '<div class="loading">Aucun restaurant.</div>'; return; }
+  grid.innerHTML = '';
+  data.forEach(r => {
+    const card = document.createElement('div');
+    card.className = 'rcard';
+    const statusClass = r.statut === 'Actif' ? 'actif' : r.statut === 'Maintenance' ? 'maintenance' : 'suspendu';
+    card.innerHTML = `
+      <div class="rcard-top">
+        <div class="rcard-identity">
+          <div class="rcard-avatar">${initials(r.nom)}</div>
+          <div>
+            <div class="rcard-name">${r.nom||'—'}</div>
+            <div class="rcard-meta">${r.abonnement||'—'}</div>
+          </div>
+        </div>
+        <div class="rcard-status">
+          <div class="status-dot ${statusClass}"></div>
+          <div class="status-label">${r.statut||'—'}</div>
+        </div>
+      </div>
+      <div class="rcard-divider"></div>
+      <div class="rcard-row"><span class="rcard-key">Email</span><span class="rcard-val">${r.email||'—'}</span></div>
+      <div class="rcard-row"><span class="rcard-key">Tél</span><span class="rcard-val">${r.telephone||'—'}</span></div>
+      <div class="rcard-row"><span class="rcard-key">ID</span><span class="rcard-val" style="font-size:9px;opacity:0.5">${(r.id||'').slice(0,20)}...</span></div>
+      ${r.adresse ? `<div class="rcard-row"><span class="rcard-key">Adresse</span><span class="rcard-val">${r.adresse}</span></div>` : ''}
+      <div class="rcard-tags">
+        <span class="tag ${r.statut==='Actif'?'green':r.statut==='Maintenance'?'orange':'red'}">${r.statut||'—'}</span>
+        <span class="tag ${r.onboarding==='Complété'?'green':r.onboarding==='En cours'?'orange':'gray'}">${r.onboarding||'À compléter'}</span>
+        ${r.menuComplete ? '<span class="tag blue">Menu ✓</span>' : ''}
+      </div>
+      ${r.statut==='Maintenance'?'<div class="maintenance-banner">⚠️ Mode maintenance activé — commandes suspendues</div>':''}
+      <div class="rcard-actions">
+        <button class="btn-sm btn-primary" onclick="ouvrirOnboarding('${r.id}','${encodeURIComponent(r.nom||'')}')">${r.onboarding==='Complété'?'Modifier':'Compléter'}</button>
+        ${r.onboarding==='Complété'?`<button class="btn-sm btn-blue" onclick="telechargerPanel('${r.id}','${encodeURIComponent(r.nom||'')}')">Panel</button>`:''}
+        <button class="btn-sm ${r.statut==='Maintenance'?'btn-warning':'btn-gray'}" onclick="toggleMaintenance('${r.id}','${r.statut}',this)">${r.statut==='Maintenance'?'▶ Reprendre':'⏸ Maintenance'}</button>
+        <button class="btn-sm ${r.statut==='Actif'?'btn-warning':'btn-primary'}" onclick="toggleStatut('${r.id}','${r.statut==='Actif'?'Suspendu':'Actif'}','restaurant')">${r.statut==='Actif'?'Suspendre':'Activer'}</button>
+        <button class="btn-sm btn-gray" onclick="resetPassword('${r.id}','restaurant')">MDP</button>
+        <button class="btn-sm btn-danger" onclick="supprimerRestaurant('${r.id}')">Supprimer</button>
+      </div>`;
+    grid.appendChild(card);
   });
-  const data = await res.json();
-  if (data.motDePasse) {
-    alert('Nouveau mot de passe : ' + data.motDePasse + '\n\nNote-le et transmets-le au client.');
-  } else {
-    alert('Erreur : ' + (data.error || 'inconnue'));
+}
+
+function renderEmployes(data) {
+  const grid = document.getElementById('grid-employes');
+  if (!data.length) { grid.innerHTML = '<div class="loading">Aucun employé.</div>'; return; }
+  grid.innerHTML = '';
+  const roleColors = { 'Admin':'red','Gérant':'orange','Hôte':'blue','Cuisine':'green' };
+  data.forEach(e => {
+    const card = document.createElement('div');
+    card.className = 'rcard';
+    card.innerHTML = `
+      <div class="rcard-top">
+        <div class="rcard-identity">
+          <div class="rcard-avatar" style="background:linear-gradient(135deg,#101a30,#1a2a50)">${initials(e.nom)}</div>
+          <div>
+            <div class="rcard-name">${e.nom||'—'}</div>
+            <div class="rcard-meta">${e.restaurant||'—'}</div>
+          </div>
+        </div>
+        <div class="rcard-status">
+          <div class="status-dot ${e.statut==='Actif'?'actif':'suspendu'}"></div>
+          <div class="status-label">${e.statut||'—'}</div>
+        </div>
+      </div>
+      <div class="rcard-divider"></div>
+      <div class="rcard-row"><span class="rcard-key">Email</span><span class="rcard-val">${e.email||'—'}</span></div>
+      <div class="rcard-row"><span class="rcard-key">Dernière co.</span><span class="rcard-val">${e.derniereConnexion||'Jamais'}</span></div>
+      <div class="rcard-tags">
+        <span class="tag ${roleColors[e.role]||'gray'}">${e.role||'—'}</span>
+        <span class="tag ${e.statut==='Actif'?'green':'red'}">${e.statut||'—'}</span>
+      </div>
+      <div class="rcard-actions">
+        ${e.statut==='Actif'
+          ? `<button class="btn-sm btn-warning" onclick="toggleStatut('${e.id}','Suspendu','employe')">Suspendre</button>`
+          : `<button class="btn-sm btn-primary" onclick="toggleStatut('${e.id}','Actif','employe')">Activer</button>`}
+        <button class="btn-sm btn-gray" onclick="resetPassword('${e.id}','employe')">MDP</button>
+        <button class="btn-sm btn-danger" onclick="supprimerEmploye('${e.id}')">Supprimer</button>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+// ── ABONNEMENTS ──
+function renderAbonnements(data) {
+  data = data || allRestaurants;
+  const tbody = document.getElementById('abo-tbody');
+  if (!data.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:#2a3a2a">Aucun restaurant.</td></tr>'; return; }
+  tbody.innerHTML = data.map(r => {
+    const aboClass = r.abonnement === 'Mensuel' ? 'mensuel' : r.abonnement === 'Annuel' ? 'annuel' : 'gratuit';
+    return `<tr>
+      <td><div class="td-main">${r.nom||'—'}</div><div style="font-size:10px;color:#2a3a2a;margin-top:2px">${(r.id||'').slice(0,16)}...</div></td>
+      <td><span class="abo-badge ${aboClass}">${r.abonnement||'—'}</span></td>
+      <td><span class="tag ${r.statut==='Actif'?'green':r.statut==='Maintenance'?'orange':'red'}" style="display:inline-block">${r.statut||'—'}</span></td>
+      <td><span class="tag ${r.onboarding==='Complété'?'green':r.onboarding==='En cours'?'orange':'gray'}" style="display:inline-block">${r.onboarding||'—'}</span></td>
+      <td style="color:#5a6a5a">${r.email||'—'}</td>
+      <td>
+        <div style="display:flex;gap:6px;align-items:center">
+          <label class="toggle-switch" title="Activer/Suspendre">
+            <input type="checkbox" ${r.statut==='Actif'?'checked':''} onchange="toggleStatut('${r.id}',this.checked?'Actif':'Suspendu','restaurant')">
+            <span class="toggle-slider"></span>
+          </label>
+          <button class="btn-sm btn-gray" onclick="ouvrirOnboarding('${r.id}','${encodeURIComponent(r.nom||'')}')">Config</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterAbonnements(plan) {
+  const filtered = plan ? allRestaurants.filter(r => r.abonnement === plan) : allRestaurants;
+  renderAbonnements(filtered);
+}
+
+// ── DASHBOARD ──
+async function refreshDashboard() {
+  try {
+    const res = await fetch('/admin/stats');
+    const stats = await res.json();
+    document.getElementById('kpi-today').textContent = stats.totalToday;
+    document.getElementById('kpi-ca').textContent = stats.caToday.toFixed(2).replace('.',',') + ' €';
+    document.getElementById('kpi-sessions').textContent = stats.voiceSessions;
+    document.getElementById('kpi-restos').textContent = stats.restaurantsWithData;
+    renderHourlyChart(stats.activityByHour);
+  } catch(e) { console.error('Stats error', e); }
+}
+
+function renderHourlyChart(data) {
+  const ctx = document.getElementById('chart-hourly').getContext('2d');
+  if (chartHourly) chartHourly.destroy();
+  chartHourly = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: Array.from({length:24},(_,i)=>i+'h'),
+      datasets: [{ data, backgroundColor: data.map(v => v > 0 ? 'rgba(126,232,58,0.5)' : 'rgba(255,255,255,0.04)'), borderColor: data.map(v => v > 0 ? '#7ee83a' : 'transparent'), borderWidth: 1, borderRadius: 3 }]
+    },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{ticks:{color:'#3a4a3a',font:{size:9}},grid:{color:'transparent'}}, y:{ticks:{color:'#3a4a3a',font:{size:9}},grid:{color:'rgba(255,255,255,0.04)'}} } }
+  });
+}
+
+// ── LIVE FEED ──
+function addLiveEvent(cmd, type='new') {
+  const icons = { new:'🛎️', done:'✅', refused:'❌' };
+  const item = { cmd, type, ts: new Date().toISOString() };
+  liveEvents.unshift(item);
+  if (liveEvents.length > 100) liveEvents.pop();
+  if (type === 'done') { liveTotal++; liveCa += cmd.total || 0; }
+
+  const el = document.createElement('div');
+  el.className = 'live-item';
+  el.innerHTML = `
+    <div class="live-icon ${type}">${icons[type]||'📦'}</div>
+    <div class="live-content">
+      <div class="live-text">${cmd.restaurantNom||cmd.restaurantId||'—'} · ${cmd.modeLivraison||''} · #${cmd.id||'?'}</div>
+      <div class="live-time">${timeAgo(item.ts)}</div>
+    </div>
+    <div class="live-amount">${cmd.total ? cmd.total.toFixed(2)+'€' : ''}</div>`;
+
+  ['dash-live-list','live-list'].forEach(id => {
+    const list = document.getElementById(id);
+    const empty = list.querySelector('.live-empty');
+    if (empty) empty.remove();
+    list.insertBefore(el.cloneNode(true), list.firstChild);
+    while (list.children.length > 50) list.removeChild(list.lastChild);
+  });
+
+  document.getElementById('live-total-today').textContent = liveTotal;
+  document.getElementById('live-ca-today').textContent = liveCa.toFixed(2).replace('.',',') + ' €';
+  document.getElementById('live-count').textContent = liveEvents.length + ' événements';
+  document.getElementById('live-badge').style.display = 'block';
+  updateLiveDistChart();
+}
+
+function clearLiveFeed() {
+  liveEvents = []; liveTotal = 0; liveCa = 0;
+  ['dash-live-list','live-list'].forEach(id => {
+    document.getElementById(id).innerHTML = '<div class="live-empty">En attente d\'activité...</div>';
+  });
+  document.getElementById('live-badge').style.display = 'none';
+  document.getElementById('live-count').textContent = '0 événements';
+  document.getElementById('live-total-today').textContent = 0;
+  document.getElementById('live-ca-today').textContent = '0 €';
+}
+
+function updateLiveDistChart() {
+  const done = liveEvents.filter(e=>e.type==='done').length;
+  const refused = liveEvents.filter(e=>e.type==='refused').length;
+  const newE = liveEvents.filter(e=>e.type==='new').length;
+  const ctx = document.getElementById('chart-live-dist').getContext('2d');
+  if (chartLiveDist) chartLiveDist.destroy();
+  chartLiveDist = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels:['Confirmées','Refusées','Nouvelles'],
+      datasets:[{ data:[done,refused,newE], backgroundColor:['rgba(126,232,58,0.6)','rgba(224,85,85,0.6)','rgba(90,200,250,0.6)'], borderWidth:0 }]
+    },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ labels:{color:'#6a7a6a',font:{size:10}} } } }
+  });
+}
+
+// ── ALERTES ──
+async function detectAlertes() {
+  const list = document.getElementById('alertes-list');
+  list.innerHTML = '<div class="loading">Analyse en cours...</div>';
+  await loadRestaurants();
+  await loadEmployes();
+  const alertes = [];
+
+  allRestaurants.forEach(r => {
+    if (r.onboarding !== 'Complété') alertes.push({ type:'warn', icon:'⚠️', title:`Onboarding incomplet — ${r.nom}`, desc:`Ce restaurant n'a pas encore complété son onboarding. Statut : ${r.onboarding||'À compléter'}` });
+    if (!r.menuComplete) alertes.push({ type:'info', icon:'📋', title:`Menu non configuré — ${r.nom}`, desc:`Le menu de ce restaurant n'est pas encore marqué comme complété.` });
+    if (r.statut === 'Suspendu') alertes.push({ type:'danger', icon:'🚫', title:`Restaurant suspendu — ${r.nom}`, desc:`Ce restaurant est actuellement suspendu et ne peut plus recevoir de commandes.` });
+    if (r.statut === 'Maintenance') alertes.push({ type:'warn', icon:'🔧', title:`Maintenance active — ${r.nom}`, desc:`Le mode maintenance est activé pour ce restaurant.` });
+  });
+
+  if (!allRestaurants.length) alertes.push({ type:'info', icon:'ℹ️', title:'Aucun restaurant créé', desc:'Aucun compte restaurant n\'est encore enregistré sur la plateforme.' });
+  if (!allEmployes.length) alertes.push({ type:'info', icon:'👤', title:'Aucun employé créé', desc:'Aucun compte employé n\'est encore enregistré.' });
+  if (alertes.length === 0) alertes.push({ type:'success', icon:'✅', title:'Aucune alerte détectée', desc:'Tous les restaurants et employés sont correctement configurés.' });
+
+  document.getElementById('count-alertes').textContent = alertes.filter(a=>a.type!=='success').length;
+
+  list.innerHTML = alertes.map(a => `
+    <div class="alert-item">
+      <div class="alert-icon ${a.type}">${a.icon}</div>
+      <div>
+        <div class="alert-title">${a.title}</div>
+        <div class="alert-desc">${a.desc}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ── SANTÉ SYSTÈME ──
+async function loadHealth() {
+  try {
+    const res = await fetch('/admin/health');
+    const h = await res.json();
+    document.getElementById('h-uptime').textContent = fmtH(h.uptime);
+    document.getElementById('h-mem').textContent = h.memory.heapUsed;
+    document.getElementById('h-memtot').textContent = h.memory.heapTotal;
+    document.getElementById('h-sessions').textContent = h.voiceSessions;
+    document.getElementById('h-archives').textContent = h.totalArchives;
+    document.getElementById('h-node').textContent = h.nodeVersion;
+    const pct = Math.round(h.memory.heapUsed / h.memory.heapTotal * 100);
+    const bar = document.getElementById('h-mem-bar');
+    bar.style.width = pct + '%';
+    bar.className = 'progress-fill' + (pct > 80 ? ' red' : pct > 60 ? ' orange' : '');
+    ramHistory.push({ t: new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}), used: h.memory.heapUsed, total: h.memory.heapTotal });
+    if (ramHistory.length > 20) ramHistory.shift();
+    renderRamChart();
+  } catch(e) { toast('Erreur chargement santé', 'error'); }
+}
+
+function renderRamChart() {
+  const ctx = document.getElementById('chart-ram').getContext('2d');
+  if (chartRam) chartRam.destroy();
+  chartRam = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ramHistory.map(r=>r.t),
+      datasets: [
+        { label:'Heap utilisé (Mo)', data: ramHistory.map(r=>r.used), borderColor:'#7ee83a', backgroundColor:'rgba(126,232,58,0.08)', fill:true, tension:0.4, pointRadius:3, pointBackgroundColor:'#7ee83a' },
+        { label:'Heap total (Mo)', data: ramHistory.map(r=>r.total), borderColor:'rgba(255,170,68,0.5)', fill:false, tension:0.4, pointRadius:2, borderDash:[4,4] }
+      ]
+    },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:'#6a7a6a',font:{size:10}}}}, scales:{ x:{ticks:{color:'#3a4a3a',font:{size:9}},grid:{color:'transparent'}}, y:{ticks:{color:'#3a4a3a',font:{size:9}},grid:{color:'rgba(255,255,255,0.04)'}} } }
+  });
+}
+
+// ── BROADCAST ──
+let bcTypeSelected = 'info';
+function selectBcType(btn, type) {
+  document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active','info','warn','success','danger'));
+  btn.classList.add('active', type);
+  bcTypeSelected = type;
+}
+
+async function sendBroadcast() {
+  const msg = document.getElementById('bc-text').value.trim();
+  if (!msg) { toast('Message vide', 'error'); return; }
+  const res = await fetch('/admin/broadcast', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ message:msg, type:bcTypeSelected, author:currentUser.nom }) });
+  if (res.ok) {
+    document.getElementById('bc-text').value = '';
+    toast('Message envoyé à tous les restaurants');
+    addAudit('Broadcast envoyé', msg.slice(0,60) + (msg.length>60?'...':''), '#5ac8fa');
+    loadBroadcasts();
   }
 }
 
-  async function loadRestaurants() {
-    const res = await fetch('/admin/restaurants');
-    const data = await res.json();
-    document.getElementById('count-restaurants').textContent = data.length;
-    const grid = document.getElementById('grid-restaurants');
-    if (!data.length) { grid.innerHTML = '<div class="loading">Aucun restaurant.</div>'; return; }
-    grid.innerHTML = '';
-    data.forEach(r => {
-      const card = document.createElement('div');
-      card.className = 'card';
-      card.innerHTML = `
-        <div class="card-top">
-          <div class="card-identity">
-            <div class="card-avatar">${initials(r.nom)}</div>
-            <div>
-              <div class="card-name">${r.nom || '—'}</div>
-              <div class="card-meta">${r.abonnement || '—'}</div>
-            </div>
-          </div>
-          <div class="status-dot ${r.statut === 'Actif' ? 'actif' : 'suspendu'}"></div>
-        </div>
-        <div class="card-divider"></div>
-        <div class="card-row"><span class="card-key">Email</span><span class="card-val">${r.email || '—'}</span></div>
-        <div class="card-row"><span class="card-key">Tél</span><span class="card-val">${r.telephone || '—'}</span></div>
-        <div class="card-row"><span class="card-key">ID</span><span class="card-val" style="font-size:10px;color:#aaa;">${r.id?.slice(0, 18) + '...' || '—'}</span></div>
-        <div class="card-tags">
-          <span class="tag ${r.statut === 'Actif' ? 'green' : 'red'}">${r.statut || '—'}</span>
-          <span class="tag ${r.onboarding === 'Complété' ? 'green' : r.onboarding === 'En cours' ? 'orange' : 'gray'}">${r.onboarding || 'À compléter'}</span>
-        </div>
-        <div class="card-actions">
-          <button class="btn-sm btn-primary" onclick="ouvrirOnboarding('${r.id}','${encodeURIComponent(r.nom || '')}')">${r.onboarding === 'Complété' ? 'Modifier' : 'Compléter'}</button>
-          ${r.onboarding === 'Complété' ? `<button class="btn-sm btn-warning" onclick="telechargerPanel('${r.id}','${encodeURIComponent(r.nom || '')}')">Panel</button>` : ''}
-          <button class="btn-sm btn-danger" onclick="supprimerRestaurant('${r.id}')">Supprimer</button>
-          <button class="btn-reset" onclick="resetPassword('${r.id}', 'restaurant')">Réinitialiser MDP</button>
-        </div>`;
-      grid.appendChild(card);
-    });
-  }
+async function loadBroadcasts() {
+  const res = await fetch('/admin/broadcast');
+  const data = await res.json();
+  const list = document.getElementById('bc-list');
+  if (!data.length) { list.innerHTML = '<div class="loading" style="color:#2a3a2a">Aucun message envoyé.</div>'; return; }
+  list.innerHTML = data.map(b => `
+    <div class="bc-item">
+      <div>
+        <span class="bc-badge ${b.type}">${b.type.toUpperCase()}</span>
+        <div style="font-size:12px;font-weight:600;color:#c8d8c8;margin-top:6px">${b.message}</div>
+        <div style="font-size:10px;color:#3a4a3a;margin-top:4px">Par ${b.author} · ${timeAgo(b.createdAt)}</div>
+      </div>
+      <button class="btn-sm btn-danger" style="margin-left:auto;flex-shrink:0" onclick="deleteBroadcast('${b.id}')">✕</button>
+    </div>`).join('');
+}
 
-  async function loadEmployes() {
-    const res = await fetch('/admin/employes');
-    const data = await res.json();
-    document.getElementById('count-employes').textContent = data.length;
-    const grid = document.getElementById('grid-employes');
-    if (!data.length) { grid.innerHTML = '<div class="loading">Aucun employé.</div>'; return; }
-    grid.innerHTML = '';
-    data.forEach(e => {
-      const roleColors = { 'Admin': 'red', 'Gérant': 'orange', 'Hôte': 'blue', 'Cuisine': 'green' };
-      const card = document.createElement('div');
-      card.className = 'card';
-      card.innerHTML = `
-        <div class="card-top">
-          <div class="card-identity">
-            <div class="card-avatar">${initials(e.nom)}</div>
-            <div>
-              <div class="card-name">${e.nom || '—'}</div>
-              <div class="card-meta">${e.restaurant || '—'}</div>
-            </div>
-          </div>
-          <div class="status-dot ${e.statut === 'Actif' ? 'actif' : 'suspendu'}"></div>
-        </div>
-        <div class="card-divider"></div>
-        <div class="card-row"><span class="card-key">Email</span><span class="card-val">${e.email || '—'}</span></div>
-        <div class="card-row"><span class="card-key">Dernière co.</span><span class="card-val">${e.derniereConnexion || 'Jamais'}</span></div>
-        <div class="card-tags">
-          <span class="tag ${roleColors[e.role] || 'gray'}">${e.role || '—'}</span>
-          <span class="tag ${e.statut === 'Actif' ? 'green' : 'red'}">${e.statut || '—'}</span>
-        </div>
-        <div class="card-actions">
-          ${e.statut === 'Actif'
-            ? `<button class="btn-sm btn-warning" onclick="toggleStatut('${e.id}','Suspendu','employe')">Suspendre</button>`
-            : `<button class="btn-sm btn-primary" onclick="toggleStatut('${e.id}','Actif','employe')">Activer</button>`}
-          <button class="btn-sm btn-danger" onclick="supprimerEmploye('${e.id}')">Supprimer</button>
-        </div>`;
-      grid.appendChild(card);
-    });
-  }
+async function deleteBroadcast(id) {
+  await fetch('/admin/broadcast/' + id, { method:'DELETE' });
+  loadBroadcasts();
+}
 
-  async function creerRestaurant() {
-    const nom = document.getElementById('r-nom').value.trim();
-    const email = document.getElementById('r-email').value.trim();
-    if (!nom || !email) { alert('Nom et email requis'); return; }
-    const res = await fetch('/admin/restaurants', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nom, email, telephone: document.getElementById('r-tel').value, abonnement: document.getElementById('r-abo').value, notes: '{}' })
-    });
-    const data = await res.json();
-    if (!data.success) { alert('Erreur : ' + data.error); return; }
-    document.getElementById('r-success').textContent = 'Créé ! Mot de passe : ' + data.motDePasse + ' | ID : ' + data.id;
-    document.getElementById('r-success').classList.add('show');
-    await loadRestaurants();
-  }
+// ── EXPORT ──
+async function exportData(type, format) {
+  let data;
+  if (type === 'restaurants') data = allRestaurants;
+  else if (type === 'employes') data = allEmployes;
+  else data = { restaurants: allRestaurants, employes: allEmployes, exportedAt: new Date().toISOString() };
 
-  async function creerEmploye() {
-    const nom = document.getElementById('e-nom').value.trim();
-    const email = document.getElementById('e-email').value.trim();
-    if (!nom || !email) { alert('Nom et email requis'); return; }
-    const res = await fetch('/admin/employes', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nom, email, role: document.getElementById('e-role').value, restaurant: document.getElementById('e-restaurant').value, restaurantId: document.getElementById('e-restaurant-id').value })
-    });
-    const data = await res.json();
-    document.getElementById('e-success').textContent = 'Employé créé ! Mot de passe : ' + data.motDePasse;
-    document.getElementById('e-success').classList.add('show');
-    await loadEmployes();
+  if (format === 'json') {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = `commande-ia-${type}-${new Date().toISOString().split('T')[0]}.json`; a.click();
+  } else {
+    const rows = Array.isArray(data) ? data : [...(data.restaurants||[]), ...(data.employes||[])];
+    if (!rows.length) { toast('Aucune donnée à exporter', 'error'); return; }
+    const keys = Object.keys(rows[0]);
+    const csv = [keys.join(','), ...rows.map(r => keys.map(k => JSON.stringify(r[k]??'')).join(','))].join('\n');
+    const blob = new Blob([csv], { type:'text/csv' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = `commande-ia-${type}-${new Date().toISOString().split('T')[0]}.csv`; a.click();
   }
+  addAudit(`Export ${type} (${format.toUpperCase()})`, `${Array.isArray(data) ? data.length : 'N/A'} entrées`, '#aa64ff');
+  toast(`Export ${type} téléchargé`);
+}
 
-  async function supprimerRestaurant(id) {
-    if (!confirm('Supprimer ce restaurant ? Cette action est irréversible.')) return;
-    await fetch('/admin/restaurants/' + id, { method: 'DELETE' });
-    loadRestaurants();
-  }
+// ── AUDIT ──
+function renderAudit() {
+  const wrap = document.getElementById('audit-list');
+  if (!auditLog.length) { wrap.innerHTML = '<div class="loading" style="color:#2a3a2a">Aucune action enregistrée.</div>'; return; }
+  wrap.innerHTML = auditLog.slice(0,100).map(e => `
+    <div class="audit-item">
+      <div class="audit-dot" style="background:${e.color||'#7ee83a'}"></div>
+      <div class="audit-action">${e.action}</div>
+      <div style="font-size:10px;color:#4a5a4a;flex:1;margin-left:8px">${e.detail||''}</div>
+      <div class="audit-meta">${e.user||''} · ${timeAgo(e.ts)}</div>
+    </div>`).join('');
+}
 
-  async function supprimerEmploye(id) {
-    if (!confirm('Supprimer cet employé ?')) return;
-    await fetch('/admin/employes/' + id, { method: 'DELETE' });
-    loadEmployes();
-  }
+function clearAudit() {
+  if (!confirm('Effacer tout le journal d\'audit ?')) return;
+  auditLog = []; localStorage.removeItem('adminAuditLog');
+  renderAudit();
+}
 
-  async function toggleStatut(id, statut, type) {
-    await fetch('/admin/' + (type === 'restaurant' ? 'restaurants' : 'employes') + '/' + id + '/statut', {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ statut })
-    });
-    type === 'restaurant' ? loadRestaurants() : loadEmployes();
-  }
+// ── RECHERCHE GLOBALE ──
+function onGlobalSearch(v) {
+  document.getElementById('search-input').value = v;
+  runSearch(v);
+}
 
-  function ouvrirOnboarding(id, nom) {
-    window.location.href = '/onboarding.html?restaurantId=' + id + '&nom=' + nom;
-  }
+function runSearch(q) {
+  const res = document.getElementById('search-results');
+  if (!q || q.length < 2) { res.innerHTML = '<div class="loading" style="color:#2a3a2a">Commencez à taper pour chercher...</div>'; return; }
+  const q2 = q.toLowerCase();
+  const found = [];
+  allRestaurants.forEach(r => {
+    if ([r.nom,r.email,r.telephone,r.id,r.adresse].some(f => (f||'').toLowerCase().includes(q2))) {
+      found.push({ type:'restaurant', name:r.nom||'—', sub:`${r.email||''} · ${r.statut||''} · ${r.abonnement||''}`, onClick:`switchSection('restaurants',document.getElementById('nav-restaurants'))` });
+    }
+  });
+  allEmployes.forEach(e => {
+    if ([e.nom,e.email,e.role,e.restaurant].some(f => (f||'').toLowerCase().includes(q2))) {
+      found.push({ type:'employe', name:e.nom||'—', sub:`${e.email||''} · ${e.role||''} · ${e.restaurant||''}`, onClick:`switchSection('employes',document.getElementById('nav-employes'))` });
+    }
+  });
+  if (!found.length) { res.innerHTML = '<div class="loading" style="color:#2a3a2a">Aucun résultat pour "' + q + '"</div>'; return; }
+  res.innerHTML = `<div class="search-results">${found.map(f=>`
+    <div class="search-result-item" onclick="${f.onClick}">
+      <span class="sr-type ${f.type}">${f.type}</span>
+      <div><div class="sr-name">${f.name}</div><div class="sr-sub">${f.sub}</div></div>
+    </div>`).join('')}</div>`;
+}
 
-  async function telechargerPanel(restaurantId, nom) {
-    const [restoRes, menuRes] = await Promise.all([fetch('/mon-restaurant/' + restaurantId), fetch('/mon-menu/' + restaurantId)]);
-    const resto = await restoRes.json();
-    const menu = await menuRes.json();
-    const panel = { version: '1.0', generatedAt: new Date().toISOString(), restaurant: resto, menu };
-    const blob = new Blob([JSON.stringify(panel, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'panel-' + decodeURIComponent(nom).toLowerCase().replace(/\s+/g, '-') + '.json';
-    a.click();
-  }
-
+// ── ACTIONS ──
+async function toggleMaintenance(id, currentStatut, btn) {
+  const isMaint = currentStatut === 'Maintenance';
+  const newStatut = isMaint ? 'Actif' : 'Maintenance';
+  await fetch(`/admin/restaurants/${id}/statut`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ statut: newStatut }) });
+  addAudit(isMaint ? 'Maintenance désactivée' : 'Maintenance activée', `Restaurant ID: ${id.slice(0,16)}`, '#ffaa44');
+  toast(isMaint ? 'Maintenance désactivée' : 'Mode maintenance activé');
   loadRestaurants();
+}
+
+async function toggleStatut(id, statut, type) {
+  await fetch(`/admin/${type==='restaurant'?'restaurants':'employes'}/${id}/statut`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ statut }) });
+  addAudit(`${type} ${statut==='Actif'?'activé':'suspendu'}`, `ID: ${id.slice(0,16)}`, statut==='Actif'?'#7ee83a':'#e05555');
+  toast(`Statut mis à jour : ${statut}`);
+  type === 'restaurant' ? loadRestaurants() : loadEmployes();
+}
+
+async function resetPassword(id, type) {
+  if (!confirm('Générer un nouveau mot de passe ?')) return;
+  const res = await fetch('/admin/reset-password/' + id, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ type }) });
+  const data = await res.json();
+  if (data.motDePasse) {
+    addAudit('Réinitialisation MDP', `ID: ${id.slice(0,16)} · Type: ${type}`, '#5ac8fa');
+    alert('Nouveau mot de passe : ' + data.motDePasse);
+  } else alert('Erreur : ' + (data.error||'inconnue'));
+}
+
+async function supprimerRestaurant(id) {
+  if (!confirm('Supprimer ce restaurant ? Cette action est irréversible.')) return;
+  await fetch('/admin/restaurants/' + id, { method:'DELETE' });
+  addAudit('Restaurant supprimé', `ID: ${id.slice(0,16)}`, '#e05555');
+  toast('Restaurant supprimé');
+  loadRestaurants();
+}
+
+async function supprimerEmploye(id) {
+  if (!confirm('Supprimer cet employé ?')) return;
+  await fetch('/admin/employes/' + id, { method:'DELETE' });
+  addAudit('Employé supprimé', `ID: ${id.slice(0,16)}`, '#e05555');
+  toast('Employé supprimé');
   loadEmployes();
+}
+
+async function creerRestaurant() {
+  const nom = document.getElementById('r-nom').value.trim();
+  const email = document.getElementById('r-email').value.trim();
+  if (!nom || !email) { alert('Nom et email requis'); return; }
+  const res = await fetch('/admin/restaurants', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ nom, email, telephone:document.getElementById('r-tel').value, abonnement:document.getElementById('r-abo').value, notes:'{}' }) });
+  const data = await res.json();
+  if (!data.success) { alert('Erreur : ' + data.error); return; }
+  document.getElementById('r-success').textContent = 'Créé ! Mot de passe : ' + data.motDePasse + ' | ID : ' + data.id;
+  document.getElementById('r-success').classList.add('show');
+  addAudit('Restaurant créé', `${nom} · ${email}`, '#7ee83a');
+  await loadRestaurants();
+}
+
+async function creerEmploye() {
+  const nom = document.getElementById('e-nom').value.trim();
+  const email = document.getElementById('e-email').value.trim();
+  if (!nom || !email) { alert('Nom et email requis'); return; }
+  const res = await fetch('/admin/employes', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ nom, email, role:document.getElementById('e-role').value, restaurant:document.getElementById('e-restaurant').value, restaurantId:document.getElementById('e-restaurant-id').value }) });
+  const data = await res.json();
+  document.getElementById('e-success').textContent = 'Employé créé ! Mot de passe : ' + data.motDePasse;
+  document.getElementById('e-success').classList.add('show');
+  addAudit('Employé créé', `${nom} · ${email}`, '#5ac8fa');
+  await loadEmployes();
+}
+
+function ouvrirOnboarding(id, nom) { window.location.href = '/onboarding.html?restaurantId=' + id + '&nom=' + nom; }
+
+async function telechargerPanel(restaurantId, nom) {
+  const [restoRes, menuRes] = await Promise.all([fetch('/mon-restaurant/' + restaurantId), fetch('/mon-menu/' + restaurantId)]);
+  const resto = await restoRes.json(); const menu = await menuRes.json();
+  const panel = { version:'1.0', generatedAt:new Date().toISOString(), restaurant:resto, menu };
+  const blob = new Blob([JSON.stringify(panel,null,2)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'panel-' + decodeURIComponent(nom).toLowerCase().replace(/\s+/g,'-') + '.json'; a.click();
+  addAudit('Panel téléchargé', decodeURIComponent(nom));
+}
+
+// ── MODAL ──
+function openModal(type) {
+  document.getElementById('modal-' + type).classList.add('open');
+  document.getElementById(type==='restaurant'?'r-success':'e-success').classList.remove('show');
+}
+function closeModal(type) { document.getElementById('modal-' + type).classList.remove('open'); }
+
+// ── SOCKET.IO LIVE ──
+const socket = io();
+socket.on('nouvelle_commande', cmd => addLiveEvent(cmd, 'new'));
+socket.on('commande_mise_a_jour', cmd => addLiveEvent(cmd, 'done'));
+socket.on('commande_terminee', cmd => addLiveEvent(cmd, 'done'));
+socket.on('broadcast', b => toast('📢 Broadcast: ' + b.message.slice(0,50), 'success'));
+socket.on('admin_new_msg', ({ restaurantId, msg }) => {
+  if (msg.from === 'restaurant') {
+    let n = parseInt(document.getElementById('count-msgs').textContent || '0') + 1;
+    const badge = document.getElementById('count-msgs');
+    badge.textContent = n; badge.style.display = 'inline-block';
+    toast(`💬 Message de ${msg.fromName||'restaurant'}: ${msg.content.slice(0,50)}`);
+  }
+});
+
+// Charger les messages non lus au démarrage
+fetch('/admin/conversations').then(r=>r.json()).then(convs => {
+  const total = convs.reduce((s,c) => s + (c.unread||0), 0);
+  if (total > 0) {
+    const badge = document.getElementById('count-msgs');
+    badge.textContent = total; badge.style.display = 'inline-block';
+  }
+}).catch(()=>{});
+
+// ── INIT ──
+Promise.all([loadRestaurants(), loadEmployes(), refreshDashboard()]);
+addAudit('Connexion admin', currentUser.nom + ' s\'est connecté', '#5ac8fa');
+setInterval(refreshDashboard, 30000);
+setInterval(loadHealth, 60000);
 </script>
 </body>
 </html>

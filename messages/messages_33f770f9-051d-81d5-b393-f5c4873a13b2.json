@@ -1,0 +1,105 @@
+[
+  {
+    "id": "1776303499717",
+    "restaurantId": "33f770f9-051d-81d5-b393-f5c4873a13b2",
+    "from": "admin",
+    "fromName": "Quentin Admin",
+    "content": "comment ça va ?",
+    "type": "message",
+    "meta": null,
+    "timestamp": "2026-04-16T01:38:19.717Z",
+    "readBy": [
+      "33f770f9-051d-81d5-b393-f5c4873a13b2",
+      "admin"
+    ],
+    "dismissed": false
+  },
+  {
+    "id": "1776303534498",
+    "restaurantId": "33f770f9-051d-81d5-b393-f5c4873a13b2",
+    "from": "restaurant",
+    "fromName": "mcdo",
+    "content": "ée",
+    "type": "message",
+    "meta": null,
+    "timestamp": "2026-04-16T01:38:54.498Z",
+    "readBy": [
+      "admin",
+      "33f770f9-051d-81d5-b393-f5c4873a13b2"
+    ],
+    "dismissed": false
+  },
+  {
+    "id": "1776303534789",
+    "restaurantId": "33f770f9-051d-81d5-b393-f5c4873a13b2",
+    "from": "restaurant",
+    "fromName": "mcdo",
+    "content": "ffe",
+    "type": "message",
+    "meta": null,
+    "timestamp": "2026-04-16T01:38:54.789Z",
+    "readBy": [
+      "admin",
+      "33f770f9-051d-81d5-b393-f5c4873a13b2"
+    ],
+    "dismissed": false
+  },
+  {
+    "id": "1776303535146",
+    "restaurantId": "33f770f9-051d-81d5-b393-f5c4873a13b2",
+    "from": "restaurant",
+    "fromName": "mcdo",
+    "content": "fe",
+    "type": "message",
+    "meta": null,
+    "timestamp": "2026-04-16T01:38:55.146Z",
+    "readBy": [
+      "admin",
+      "33f770f9-051d-81d5-b393-f5c4873a13b2"
+    ],
+    "dismissed": false
+  },
+  {
+    "id": "1776303632639",
+    "restaurantId": "33f770f9-051d-81d5-b393-f5c4873a13b2",
+    "from": "admin",
+    "fromName": "Quentin Admin",
+    "content": "bonjour",
+    "type": "message",
+    "meta": null,
+    "timestamp": "2026-04-16T01:40:32.639Z",
+    "readBy": [
+      "33f770f9-051d-81d5-b393-f5c4873a13b2",
+      "admin"
+    ],
+    "dismissed": false
+  },
+  {
+    "id": "1776304147309",
+    "restaurantId": "33f770f9-051d-81d5-b393-f5c4873a13b2",
+    "from": "restaurant",
+    "fromName": "mcdo",
+    "content": "bonjour",
+    "type": "message",
+    "meta": null,
+    "timestamp": "2026-04-16T01:49:07.309Z",
+    "readBy": [
+      "admin"
+    ],
+    "dismissed": false
+  },
+  {
+    "id": "1776304155949",
+    "restaurantId": "33f770f9-051d-81d5-b393-f5c4873a13b2",
+    "from": "admin",
+    "fromName": "Quentin Admin",
+    "content": "bonjour",
+    "type": "message",
+    "meta": null,
+    "timestamp": "2026-04-16T01:49:15.949Z",
+    "readBy": [
+      "admin"
+    ],
+    "dismissed": false
+  }
+]

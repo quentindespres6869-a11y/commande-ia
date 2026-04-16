@@ -40,6 +40,38 @@ const notionHeaders = {
 const ARCHIVES_DIR = path.join(__dirname, 'archives');
 if (!fs.existsSync(ARCHIVES_DIR)) fs.mkdirSync(ARCHIVES_DIR);
 
+// ─── MESSAGERIE (persistante par restaurant) ──────────
+const MESSAGES_DIR = path.join(__dirname, 'messages');
+if (!fs.existsSync(MESSAGES_DIR)) fs.mkdirSync(MESSAGES_DIR);
+
+function msgFile(restaurantId) {
+  const safe = (restaurantId || 'global').replace(/[^a-zA-Z0-9_-]/g, '_');
+  return path.join(MESSAGES_DIR, `messages_${safe}.json`);
+}
+function loadMessages(restaurantId) {
+  try {
+    const f = msgFile(restaurantId);
+    if (fs.existsSync(f)) return JSON.parse(fs.readFileSync(f, 'utf8')) || [];
+  } catch(e) {}
+  return [];
+}
+function saveMessages(restaurantId, data) {
+  try { fs.writeFileSync(msgFile(restaurantId), JSON.stringify(data, null, 2)); }
+  catch(e) { console.log('Erreur sauvegarde messages:', e.message); }
+}
+
+// ─── BROADCASTS (persistants sur fichier) ─────────────
+const BROADCASTS_FILE = path.join(__dirname, 'broadcasts.json');
+function loadBroadcasts() {
+  try { if (fs.existsSync(BROADCASTS_FILE)) return JSON.parse(fs.readFileSync(BROADCASTS_FILE, 'utf8')) || []; }
+  catch(e) {}
+  return [];
+}
+function saveBroadcasts(data) {
+  try { fs.writeFileSync(BROADCASTS_FILE, JSON.stringify(data, null, 2)); }
+  catch(e) {}
+}
+
 function archiveFile(restaurantId) {
   const safe = (restaurantId || 'global').replace(/[^a-zA-Z0-9_-]/g, '_');
   return path.join(ARCHIVES_DIR, `archives_${safe}.json`);
@@ -1322,6 +1354,278 @@ app.get('/analytics', (req, res) => {
     topProducts,
     salesByProduct,
   });
+});
+
+// ─── ADMIN STATS / HEALTH / BROADCAST / MESSAGERIE ──
+
+app.get('/admin/stats', (req, res) => {
+  const today = todayStr();
+  let totalToday = 0, caToday = 0, totalAllTime = 0, totalRefused = 0;
+  const activityByHour = Array(24).fill(0);
+  const caByRestaurant = {};
+  for (const [rid, list] of Object.entries(archivesMemory)) {
+    const done = list.filter(c => c.state === 'done');
+    const todayDone = done.filter(c => (c.archivedDate || '').startsWith(today));
+    totalToday += todayDone.length;
+    caToday += todayDone.reduce((s, c) => s + (c.total || 0), 0);
+    totalAllTime += done.length;
+    totalRefused += list.filter(c => c.state === 'refused').length;
+    caByRestaurant[rid] = done.reduce((s, c) => s + (c.total || 0), 0);
+    todayDone.forEach(c => {
+      const h = c.timestamp ? new Date(c.timestamp).getHours() : new Date().getHours();
+      activityByHour[h]++;
+    });
+  }
+  res.json({
+    totalToday, caToday: Math.round(caToday * 100) / 100,
+    totalAllTime, totalRefused,
+    restaurantsWithData: Object.keys(archivesMemory).length,
+    activityByHour, caByRestaurant,
+    voiceSessions: Object.keys(voiceSessions).length
+  });
+});
+
+app.get('/admin/health', (req, res) => {
+  const mem = process.memoryUsage();
+  res.json({
+    uptime: Math.floor(process.uptime()),
+    memory: { rss: Math.round(mem.rss / 1024 / 1024), heapUsed: Math.round(mem.heapUsed / 1024 / 1024), heapTotal: Math.round(mem.heapTotal / 1024 / 1024) },
+    voiceSessions: Object.keys(voiceSessions).length,
+    totalArchives: Object.values(archivesMemory).reduce((s, a) => s + a.length, 0),
+    timestamp: new Date().toISOString(),
+    nodeVersion: process.version
+  });
+});
+
+// ─── BROADCASTS (persistants fichier) ────────────────
+app.get('/admin/broadcast', (req, res) => {
+  const bs = loadBroadcasts();
+  const { restaurantId } = req.query;
+  if (restaurantId) {
+    // Pour un restaurant: exclure ceux qu'il a dismissés
+    return res.json(bs.filter(b => !(b.dismissedBy||[]).includes(restaurantId)));
+  }
+  res.json(bs);
+});
+
+app.post('/admin/broadcast', (req, res) => {
+  const { message, type, author } = req.body;
+  if (!message) return res.status(400).json({ error: 'Message requis' });
+  const b = { id: Date.now().toString(), message, type: type || 'info', author: author || 'Admin', createdAt: new Date().toISOString(), dismissedBy: [] };
+  const bs = loadBroadcasts();
+  bs.unshift(b);
+  if (bs.length > 200) bs.splice(200);
+  saveBroadcasts(bs);
+  io.emit('broadcast', b);
+  res.json({ success: true, broadcast: b });
+});
+
+app.delete('/admin/broadcast/:id', (req, res) => {
+  const bs = loadBroadcasts();
+  const idx = bs.findIndex(b => b.id === req.params.id);
+  if (idx !== -1) bs.splice(idx, 1);
+  saveBroadcasts(bs);
+  res.json({ success: true });
+});
+
+// Dismiss d'un broadcast (côté restaurant)
+app.patch('/admin/broadcast/:id/dismiss', (req, res) => {
+  const { restaurantId } = req.body;
+  const bs = loadBroadcasts();
+  const b = bs.find(b => b.id === req.params.id);
+  if (b && restaurantId && !(b.dismissedBy||[]).includes(restaurantId)) {
+    b.dismissedBy = b.dismissedBy || [];
+    b.dismissedBy.push(restaurantId);
+    saveBroadcasts(bs);
+  }
+  res.json({ success: true });
+});
+
+// ─── MESSAGERIE ──────────────────────────────────────
+// GET messages d'un restaurant
+app.get('/messages/:restaurantId', (req, res) => {
+  res.json(loadMessages(req.params.restaurantId));
+});
+
+// POST envoyer un message (admin → restaurant ou restaurant → admin)
+app.post('/messages/:restaurantId', (req, res) => {
+  const { from, fromName, content, type, meta } = req.body;
+  if (!content) return res.status(400).json({ error: 'Contenu requis' });
+  const msgs = loadMessages(req.params.restaurantId);
+  const msg = {
+    id: Date.now().toString(),
+    restaurantId: req.params.restaurantId,
+    from: from || 'admin',      // 'admin' | 'restaurant'
+    fromName: fromName || 'Admin',
+    content,
+    type: type || 'message',    // 'message' | 'restock_alert' | 'system'
+    meta: meta || null,
+    timestamp: new Date().toISOString(),
+    readBy: [],
+    dismissed: false
+  };
+  msgs.push(msg);
+  if (msgs.length > 500) msgs.splice(0, msgs.length - 500);
+  saveMessages(req.params.restaurantId, msgs);
+  // Notif temps réel
+  io.emit(`msg_${req.params.restaurantId}`, msg);
+  io.emit('admin_new_msg', { restaurantId: req.params.restaurantId, msg });
+  res.json({ success: true, msg });
+});
+
+// PATCH marquer comme lu
+app.patch('/messages/:restaurantId/:msgId/read', (req, res) => {
+  const { by } = req.body;
+  const msgs = loadMessages(req.params.restaurantId);
+  const m = msgs.find(m => m.id === req.params.msgId);
+  if (m && by && !m.readBy.includes(by)) m.readBy.push(by);
+  saveMessages(req.params.restaurantId, msgs);
+  res.json({ success: true });
+});
+
+// PATCH marquer tous comme lus
+app.patch('/messages/:restaurantId/read-all', (req, res) => {
+  const { by } = req.body;
+  const msgs = loadMessages(req.params.restaurantId);
+  msgs.forEach(m => { if (by && !m.readBy.includes(by)) m.readBy.push(by); });
+  saveMessages(req.params.restaurantId, msgs);
+  res.json({ success: true });
+});
+
+// DELETE supprimer un message
+app.delete('/messages/:restaurantId/:msgId', (req, res) => {
+  let msgs = loadMessages(req.params.restaurantId);
+  msgs = msgs.filter(m => m.id !== req.params.msgId);
+  saveMessages(req.params.restaurantId, msgs);
+  res.json({ success: true });
+});
+
+// GET liste des conversations pour admin (résumé par restaurant)
+app.get('/admin/conversations', async (req, res) => {
+  try {
+    const files = fs.readdirSync(MESSAGES_DIR).filter(f => f.endsWith('.json'));
+    const convos = [];
+    for (const f of files) {
+      const rid = f.replace('messages_', '').replace('.json', '');
+      const msgs = loadMessages(rid);
+      if (!msgs.length) continue;
+      const last = msgs[msgs.length - 1];
+      const unread = msgs.filter(m => m.from === 'restaurant' && !m.readBy.includes('admin')).length;
+      convos.push({ restaurantId: rid, lastMessage: last, unread, total: msgs.length });
+    }
+    convos.sort((a, b) => new Date(b.lastMessage.timestamp) - new Date(a.lastMessage.timestamp));
+    res.json(convos);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─── RESTOCK RECOMMENDATIONS ─────────────────────────
+app.get('/restock-recommendations/:restaurantId', async (req, res) => {
+  const { restaurantId } = req.params;
+  const { days = 14 } = req.query;
+  try {
+    // Charger le stock actuel
+    const stockRes = await fetch(`https://api.notion.com/v1/databases/${process.env.DB_STOCKS || ''}/query`, {
+      method: 'POST', headers: notionHeaders,
+      body: JSON.stringify({ filter: { property: 'Restaurant ID', rich_text: { equals: restaurantId } } })
+    });
+    let stockItems = [];
+    if (stockRes.ok) {
+      const stockData = await stockRes.json();
+      stockItems = (stockData.results || []).map(p => ({
+        id: p.id,
+        nom: p.properties['Nom']?.title?.[0]?.plain_text || '',
+        quantite: p.properties['Quantité actuelle']?.number ?? 0,
+        unite: p.properties['Unité']?.select?.name || '',
+        seuilAlerte: p.properties['Seuil d\'alerte']?.number ?? 5,
+        statut: p.properties['Statut']?.select?.name || 'OK'
+      }));
+    }
+
+    // Analyser la consommation sur les N derniers jours
+    const cutoff = new Date(Date.now() - parseInt(days) * 86400000).toISOString().split('T')[0];
+    const archives = getMemoryArchives(restaurantId);
+    const recentOrders = archives.filter(c => c.state === 'done' && (c.archivedDate || '') >= cutoff);
+
+    // Compter la consommation par ingrédient
+    const consumptionMap = {};
+    recentOrders.forEach(cmd => {
+      const items = cmd.panierRaw || [];
+      items.forEach(item => {
+        const key = (item.nom || '').toLowerCase().trim();
+        const menuKey = Object.keys(menuMap).find(k => key.includes(k) || k.includes(key));
+        if (menuKey) {
+          const ings = menuMap[menuKey] || [];
+          const qte = item.quantite || 1;
+          ings.forEach(ing => {
+            const ingKey = (ing.nom || ing).toLowerCase().trim();
+            const ingQty = (ing.qty || 1) * qte;
+            consumptionMap[ingKey] = (consumptionMap[ingKey] || 0) + ingQty;
+          });
+        }
+      });
+    });
+
+    // Générer les recommandations
+    const daysNum = parseInt(days);
+    const recommendations = [];
+    stockItems.forEach(item => {
+      const key = item.nom.toLowerCase().trim();
+      const totalConsumed = consumptionMap[key] || 0;
+      const avgPerDay = totalConsumed / daysNum;
+      const daysRemaining = avgPerDay > 0 ? Math.floor(item.quantite / avgPerDay) : null;
+      const weeklyNeed = Math.ceil(avgPerDay * 7);
+      const urgency = daysRemaining !== null
+        ? daysRemaining <= 1 ? 'critique' : daysRemaining <= 3 ? 'urgent' : daysRemaining <= 7 ? 'attention' : null
+        : item.statut === 'Rupture' ? 'critique' : null;
+
+      if (urgency || item.statut === 'Rupture' || item.statut === 'Alerte') {
+        recommendations.push({
+          id: item.id,
+          nom: item.nom,
+          quantiteActuelle: item.quantite,
+          unite: item.unite,
+          statut: item.statut,
+          totalConsumed: Math.round(totalConsumed * 10) / 10,
+          avgPerDay: Math.round(avgPerDay * 10) / 10,
+          daysRemaining,
+          weeklyNeed,
+          urgency: urgency || 'attention',
+          seuilAlerte: item.seuilAlerte
+        });
+      }
+    });
+
+    recommendations.sort((a, b) => {
+      const order = { critique: 0, urgent: 1, attention: 2 };
+      return (order[a.urgency] ?? 3) - (order[b.urgency] ?? 3);
+    });
+
+    res.json({ recommendations, period: daysNum, totalOrders: recentOrders.length });
+  } catch(e) {
+    console.error('Restock error:', e);
+    res.json({ recommendations: [], period: parseInt(days), totalOrders: 0 });
+  }
+});
+
+// Envoyer une alerte restock comme message
+app.post('/admin/restock-alert/:restaurantId', async (req, res) => {
+  const { restaurantId } = req.params;
+  const { items, author } = req.body;
+  if (!items?.length) return res.status(400).json({ error: 'items requis' });
+  const content = `⚠️ Alerte réapprovisionnement : ${items.map(i => `${i.nom} (${i.quantiteActuelle} ${i.unite} restants, besoin estimé: ${i.weeklyNeed}/semaine)`).join(' · ')}`;
+  const msgs = loadMessages(restaurantId);
+  const msg = {
+    id: Date.now().toString(), restaurantId,
+    from: 'admin', fromName: author || 'Système',
+    content, type: 'restock_alert',
+    meta: { items },
+    timestamp: new Date().toISOString(), readBy: [], dismissed: false
+  };
+  msgs.push(msg);
+  saveMessages(restaurantId, msgs);
+  io.emit(`msg_${restaurantId}`, msg);
+  io.emit('admin_new_msg', { restaurantId, msg });
+  res.json({ success: true, msg });
 });
 
 // ─── PING & START ────────────────────────────────────

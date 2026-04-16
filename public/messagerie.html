@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Messagerie — Commande-IA</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', system-ui, sans-serif; background: #f0f2f0; min-height: 100vh; color: #1a2a1a; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+    /* ── TOPBAR ── */
+    .topbar { background: #1a3a1a; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: 60px; flex-shrink: 0; }
+    .logo { font-size: 16px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px; }
+    .logo span { color: #a8e07a; }
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+    .page-badge { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; background: rgba(168,224,122,0.15); color: #a8e07a; padding: 3px 8px; border-radius: 4px; border: 1px solid rgba(168,224,122,0.25); }
+    .btn-back { font-size: 12px; font-weight: 600; color: #c8e8c8; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); padding: 6px 13px; border-radius: 6px; cursor: pointer; text-decoration: none; transition: all 0.15s; }
+    .btn-back:hover { background: rgba(255,255,255,0.15); color: #fff; }
+    .user-info { font-size: 12px; color: #a8e07a; font-weight: 500; }
+
+    /* ── LAYOUT 3 COLONNES ── */
+    .app { display: grid; grid-template-columns: 280px 1fr 320px; flex: 1; min-height: 0; }
+
+    /* ── SIDEBAR GAUCHE — liste conversations ── */
+    .sidebar-left { background: #fff; border-right: 1px solid #e8f0e0; display: flex; flex-direction: column; min-height: 0; }
+    .sl-head { padding: 16px; border-bottom: 1px solid #f0f5ee; flex-shrink: 0; }
+    .sl-title { font-size: 15px; font-weight: 700; color: #1a2a1a; }
+    .sl-sub { font-size: 11px; color: #9ab89a; margin-top: 2px; }
+    .sl-search { margin-top: 10px; position: relative; }
+    .sl-search input { width: 100%; background: #f4f8f0; border: 1.5px solid #e0ecd8; border-radius: 8px; padding: 8px 12px 8px 32px; font-size: 12px; font-family: 'DM Sans',sans-serif; outline: none; color: #1a2a1a; transition: border 0.15s; }
+    .sl-search input:focus { border-color: #4a8a1a; background: #fff; }
+    .sl-search svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); }
+    .sl-tabs { display: flex; border-bottom: 1px solid #f0f5ee; flex-shrink: 0; }
+    .sl-tab { flex: 1; padding: 10px; text-align: center; font-size: 11px; font-weight: 600; color: #9ab89a; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; }
+    .sl-tab.active { color: #1a3a1a; border-bottom-color: #4a8a1a; }
+    .conv-list { flex: 1; overflow-y: auto; }
+    .conv-item { padding: 13px 16px; border-bottom: 1px solid #f8fdf4; cursor: pointer; display: flex; gap: 11px; align-items: flex-start; transition: background 0.1s; }
+    .conv-item:hover { background: #f8fdf4; }
+    .conv-item.active { background: #f0f7e8; border-left: 3px solid #4a8a1a; padding-left: 13px; }
+    .conv-avatar { width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg,#2a5a10,#4a8a1a); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0; }
+    .conv-avatar.system { background: linear-gradient(135deg,#1a3a8a,#2a5aaa); }
+    .conv-avatar.restock { background: linear-gradient(135deg,#8a4a10,#c87020); }
+    .conv-name { font-size: 13px; font-weight: 700; color: #1a2a1a; }
+    .conv-preview { font-size: 11px; color: #9ab89a; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
+    .conv-time { font-size: 10px; color: #bbb; margin-left: auto; flex-shrink: 0; }
+    .conv-badge { background: #e05555; color: #fff; font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 10px; margin-top: 2px; }
+    .conv-empty { padding: 32px 16px; text-align: center; font-size: 12px; color: #ccc; }
+
+    /* ── CENTRE — conversation ── */
+    .chat-area { display: flex; flex-direction: column; min-height: 0; background: #f8fcf5; }
+    .chat-head { padding: 14px 20px; background: #fff; border-bottom: 1px solid #e8f0e0; display: flex; align-items: center; gap: 12px; flex-shrink: 0; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+    .chat-head-avatar { width: 36px; height: 36px; border-radius: 9px; background: linear-gradient(135deg,#2a5a10,#4a8a1a); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0; }
+    .chat-head-name { font-size: 14px; font-weight: 700; color: #1a2a1a; }
+    .chat-head-sub { font-size: 11px; color: #9ab89a; margin-top: 1px; }
+    .chat-head-actions { margin-left: auto; display: flex; gap: 6px; }
+    .chat-btn { padding: 5px 11px; border-radius: 6px; border: 1.5px solid #e0ecd8; background: #f4f8f0; font-size: 11px; font-weight: 600; color: #3B6D11; cursor: pointer; font-family:'DM Sans',sans-serif; transition: all 0.12s; }
+    .chat-btn:hover { background: #e8f5dc; }
+    .chat-btn.danger { color: #b03030; border-color: #f5c5c5; background: #fef0f0; }
+    .chat-btn.danger:hover { background: #fce0e0; }
+    .messages-area { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+    .chat-empty { margin: auto; text-align: center; }
+    .chat-empty-icon { font-size: 40px; margin-bottom: 12px; }
+    .chat-empty-text { font-size: 13px; color: #ccc; }
+    .msg-row { display: flex; gap: 10px; align-items: flex-end; }
+    .msg-row.from-admin { flex-direction: row-reverse; }
+    .msg-avatar { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0; }
+    .msg-avatar.admin { background: #1a3a1a; }
+    .msg-avatar.restaurant { background: #4a8a1a; }
+    .msg-avatar.system { background: #1a3a8a; }
+    .msg-bubble { max-width: 72%; }
+    .msg-row.from-admin .msg-bubble { align-items: flex-end; }
+    .msg-content { padding: 10px 14px; border-radius: 14px; font-size: 13px; line-height: 1.5; position: relative; }
+    .from-restaurant .msg-content { background: #fff; border: 1.5px solid #e0ecd8; color: #1a2a1a; border-bottom-left-radius: 4px; }
+    .from-admin .msg-content { background: #1a3a1a; color: #e8f8e0; border-bottom-right-radius: 4px; }
+    .msg-content.restock { background: linear-gradient(135deg,#fff8ec,#fef5e0); border: 1.5px solid #f0d898; color: #5a3a00; }
+    .msg-content.system { background: linear-gradient(135deg,#eff4ff,#e8f0ff); border: 1.5px solid #c5d5f8; color: #1a3a8a; }
+    .msg-meta { font-size: 10px; color: #bbb; margin-top: 4px; display: flex; align-items: center; gap: 6px; }
+    .msg-row.from-admin .msg-meta { justify-content: flex-end; }
+    .msg-read { font-size: 10px; color: #7ee870; }
+    .msg-dismiss-btn { background: none; border: none; cursor: pointer; color: #ccc; font-size: 14px; padding: 0 0 0 6px; line-height: 1; transition: color 0.1s; }
+    .msg-dismiss-btn:hover { color: #e05555; }
+    .restock-card { margin-top: 8px; background: rgba(255,255,255,0.6); border-radius: 8px; padding: 10px 12px; border: 1px solid rgba(240,200,100,0.4); }
+    .restock-item-line { display: flex; align-items: center; gap: 6px; font-size: 11px; padding: 3px 0; color: #5a3a00; }
+    .restock-urgency { display: inline-block; width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .restock-urgency.critique { background: #e05555; }
+    .restock-urgency.urgent { background: #e08a10; }
+    .restock-urgency.attention { background: #c0a010; }
+    .date-sep { text-align: center; font-size: 10px; color: #ccc; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; margin: 4px 0; }
+    .chat-input-area { padding: 14px 20px; background: #fff; border-top: 1.5px solid #e8f0e0; flex-shrink: 0; }
+    .chat-input-wrap { display: flex; gap: 10px; align-items: flex-end; }
+    .chat-textarea { flex: 1; background: #f4f8f0; border: 1.5px solid #e0ecd8; border-radius: 12px; padding: 10px 14px; font-size: 13px; font-family: 'DM Sans',sans-serif; outline: none; resize: none; min-height: 44px; max-height: 120px; transition: border 0.15s; overflow-y: auto; }
+    .chat-textarea:focus { border-color: #4a8a1a; background: #fff; }
+    .chat-send-btn { width: 44px; height: 44px; border-radius: 12px; background: #1a3a1a; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; flex-shrink: 0; }
+    .chat-send-btn:hover { background: #2a5a2a; }
+    .chat-input-hint { font-size: 10px; color: #bbb; margin-top: 6px; }
+
+    /* ── SIDEBAR DROITE — infos + restock ── */
+    .sidebar-right { background: #fff; border-left: 1px solid #e8f0e0; display: flex; flex-direction: column; min-height: 0; overflow-y: auto; }
+    .sr-head { padding: 16px; border-bottom: 1px solid #f0f5ee; }
+    .sr-title { font-size: 13px; font-weight: 700; color: #1a2a1a; }
+    .sr-section { padding: 14px 16px; border-bottom: 1px solid #f0f5ee; }
+    .sr-section-title { font-size: 10px; font-weight: 700; color: #9ab89a; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; }
+    .info-row { display: flex; justify-content: space-between; align-items: center; font-size: 11px; padding: 3px 0; }
+    .info-key { color: #9ab89a; }
+    .info-val { color: #1a2a1a; font-weight: 600; }
+    .restock-rec { background: #f4f8f0; border: 1.5px solid #e0ecd8; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; }
+    .restock-rec.critique { background: #fef0f0; border-color: #f5c5c5; }
+    .restock-rec.urgent { background: #fff8ec; border-color: #f0d898; }
+    .restock-rec.attention { background: #fffcec; border-color: #e8e898; }
+    .restock-nom { font-size: 12px; font-weight: 700; color: #1a2a1a; }
+    .restock-detail { font-size: 11px; color: #5a6a5a; margin-top: 2px; line-height: 1.5; }
+    .restock-send-btn { margin-top: 6px; font-size: 10px; font-weight: 600; padding: 4px 10px; border-radius: 5px; background: #f0f7e8; border: 1px solid #c8e8a0; color: #2d6a0a; cursor: pointer; font-family:'DM Sans',sans-serif; transition: all 0.12s; }
+    .restock-send-btn:hover { background: #e0f0d0; }
+    .urgency-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; }
+    .urgency-dot.critique { background: #e05555; }
+    .urgency-dot.urgent { background: #e08a10; }
+    .urgency-dot.attention { background: #c0a010; }
+
+    /* ── BROADCAST PANEL (cloche en haut) ── */
+    .bc-bell-btn { position: relative; width: 34px; height: 34px; border-radius: 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
+    .bc-bell-btn:hover { background: rgba(255,255,255,0.2); }
+    .bc-bell-badge { position: absolute; top: -4px; right: -4px; width: 16px; height: 16px; background: #e05555; border-radius: 50%; font-size: 9px; font-weight: 700; color: #fff; display: none; align-items: center; justify-content: center; border: 2px solid #1a3a1a; }
+    .bc-bell-badge.show { display: flex; }
+    .bc-panel { display: none; position: fixed; top: 66px; right: 16px; width: 340px; background: #fff; border: 1.5px solid #e0ecd8; border-radius: 14px; box-shadow: 0 12px 36px rgba(0,0,0,0.14); z-index: 9990; overflow: hidden; }
+    .bc-panel.open { display: block; }
+    .bc-panel-head { padding: 12px 16px; background: #1a3a1a; display: flex; align-items: center; justify-content: space-between; }
+    .bc-panel-title { font-size: 13px; font-weight: 700; color: #fff; }
+    .bc-panel-close { background: none; border: none; color: rgba(255,255,255,0.6); cursor: pointer; font-size: 18px; }
+    .bc-panel-list { max-height: 360px; overflow-y: auto; }
+    .bc-notif-item { padding: 12px 16px; border-bottom: 1px solid #f0f5ee; display: flex; align-items: flex-start; gap: 8px; }
+    .bc-notif-item:last-child { border-bottom: none; }
+    .bc-notif-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
+    .bc-notif-dot.info { background: #2a50aa; } .bc-notif-dot.warn { background: #e08a10; }
+    .bc-notif-dot.success { background: #3B6D11; } .bc-notif-dot.danger { background: #e05555; }
+    .bc-notif-msg { font-size: 12px; color: #333; line-height: 1.5; flex: 1; }
+    .bc-notif-time { font-size: 10px; color: #bbb; margin-top: 3px; }
+    .bc-dismiss-btn { background: none; border: none; color: #ccc; cursor: pointer; font-size: 16px; padding: 0; line-height: 1; flex-shrink: 0; transition: color 0.1s; }
+    .bc-dismiss-btn:hover { color: #e05555; }
+    .bc-panel-empty { padding: 24px; text-align: center; font-size: 12px; color: #ccc; }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: #d8e8d0; border-radius: 4px; }
+    .messages-area::-webkit-scrollbar { width: 3px; }
+  </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="logo" id="burger-anchor">Commande<span>IA</span></div>
+    <div class="page-badge">Messagerie</div>
+  </div>
+  <div class="topbar-right">
+    <span class="user-info" id="topbar-user">—</span>
+    <div class="bc-bell-btn" onclick="toggleBcPanel()" title="Broadcasts admin">
+      <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M10 2a6 6 0 00-6 6v3l-1.5 2.5h15L16 11V8a6 6 0 00-6-6z" stroke="#a8e07a" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 16a2 2 0 004 0" stroke="#a8e07a" stroke-width="1.5"/></svg>
+      <div class="bc-bell-badge" id="bc-badge">0</div>
+    </div>
+    <a href="/" class="btn-back">← Dashboard</a>
+  </div>
+</div>
+<script src="/burger-menu.js"></script>
+
+<!-- BROADCAST PANEL -->
+<div class="bc-panel" id="bc-panel">
+  <div class="bc-panel-head">
+    <span class="bc-panel-title">📢 Messages de l'administration</span>
+    <button class="bc-panel-close" onclick="toggleBcPanel()">×</button>
+  </div>
+  <div class="bc-panel-list" id="bc-panel-list"><div class="bc-panel-empty">Aucun message.</div></div>
+</div>
+
+<!-- APP -->
+<div class="app">
+
+  <!-- LISTE DES CONVERSATIONS -->
+  <div class="sidebar-left">
+    <div class="sl-head">
+      <div class="sl-title">Messagerie</div>
+      <div class="sl-sub" id="sl-sub">Chargement...</div>
+      <div class="sl-search">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="#9ab89a" stroke-width="1.5"/><path d="M11 11l3 3" stroke="#9ab89a" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <input type="text" id="conv-search" placeholder="Rechercher..." oninput="filterConvs(this.value)">
+      </div>
+    </div>
+    <div class="sl-tabs">
+      <div class="sl-tab active" id="tab-msgs" onclick="setConvTab('messages',this)">Messages</div>
+      <div class="sl-tab" id="tab-restock" onclick="setConvTab('restock',this)">Réapprovisionnement</div>
+    </div>
+    <div class="conv-list" id="conv-list"><div class="conv-empty">Chargement...</div></div>
+  </div>
+
+  <!-- ZONE DE CHAT -->
+  <div class="chat-area">
+    <div class="chat-head" id="chat-head">
+      <div style="text-align:center;width:100%;color:#ccc;font-size:13px">Sélectionne une conversation</div>
+    </div>
+    <div class="messages-area" id="messages-area">
+      <div class="chat-empty">
+        <div class="chat-empty-icon">💬</div>
+        <div class="chat-empty-text">Sélectionne une conversation<br>pour afficher les messages</div>
+      </div>
+    </div>
+    <div class="chat-input-area" id="chat-input-area" style="display:none">
+      <div class="chat-input-wrap">
+        <textarea class="chat-textarea" id="chat-input" placeholder="Votre message..." rows="1" onkeydown="onChatKey(event)"></textarea>
+        <button class="chat-send-btn" onclick="sendMessage()">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M2 10L18 2 10 18 9 11 2 10z" fill="#a8e07a"/></svg>
+        </button>
+      </div>
+      <div class="chat-input-hint">Entrée pour envoyer · Maj+Entrée pour saut de ligne</div>
+    </div>
+  </div>
+
+  <!-- INFOS + RECOMMANDATIONS RESTOCK -->
+  <div class="sidebar-right">
+    <div class="sr-head">
+      <div class="sr-title" id="sr-title">Informations</div>
+    </div>
+    <div class="sr-section" id="sr-info"><div style="font-size:12px;color:#ccc;padding:8px 0">Sélectionne une conversation</div></div>
+    <div class="sr-section">
+      <div class="sr-section-title">🔄 Réapprovisionnement</div>
+      <div id="sr-restock"><div style="font-size:12px;color:#ccc">Sélectionne un restaurant pour voir les recommandations.</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── AUTH ──
+const userStr = sessionStorage.getItem('user');
+if (!userStr) window.location.href = '/login.html?redirect=/messagerie.html';
+const currentUser = JSON.parse(userStr || '{}');
+const isAdmin = currentUser.role === 'Admin';
+const rid = currentUser.restaurantId || '';
+document.getElementById('topbar-user').textContent = currentUser.nom || '—';
+
+// ── STATE ──
+let convTab = 'messages';   // 'messages' | 'restock'
+let allConvs = [];          // [{restaurantId, lastMessage, unread, ...}] — pour admin
+let allMsgs = [];           // messages de la conv active
+let activeRid = null;       // restaurantId de la conv active
+let restockData = {};       // { restaurantId: [...recommendations] }
+let allRestaurants = [];    // liste restaurants pour admin
+
+const socket = io();
+
+// ── UTILS ──
+function ini(name) { return (name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2); }
+function timeAgo(iso) {
+  const diff = Date.now() - new Date(iso);
+  if (diff < 60000) return 'À l\'instant';
+  if (diff < 3600000) return Math.floor(diff/60000) + 'min';
+  if (diff < 86400000) return Math.floor(diff/3600000) + 'h';
+  const d = new Date(iso);
+  return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'});
+}
+function fmtDate(iso) {
+  return new Date(iso).toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
+}
+function fmtTime(iso) {
+  return new Date(iso).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ── INIT ──
+async function init() {
+  if (isAdmin) {
+    document.getElementById('sl-sub').textContent = 'Toutes les conversations';
+    await loadRestaurants();
+    await loadAllConversations();
+  } else {
+    document.getElementById('sl-sub').textContent = 'Votre messagerie';
+    // Restaurant: conversation avec admin uniquement
+    openConversation(rid, currentUser.restaurant || 'Mon restaurant');
+  }
+  loadBroadcasts();
+}
+
+async function loadRestaurants() {
+  const res = await fetch('/admin/restaurants');
+  allRestaurants = await res.json();
+}
+
+async function loadAllConversations() {
+  const res = await fetch('/admin/conversations');
+  allConvs = await res.json();
+  renderConvList();
+}
+
+function renderConvList(filter = '') {
+  const list = document.getElementById('conv-list');
+  const f = filter.toLowerCase();
+
+  if (convTab === 'restock') {
+    // Afficher les restaurants avec recommandations de restock
+    const toShow = allRestaurants.filter(r => !f || r.nom.toLowerCase().includes(f));
+    if (!toShow.length) { list.innerHTML = '<div class="conv-empty">Aucun restaurant.</div>'; return; }
+    list.innerHTML = toShow.map(r => {
+      const recs = restockData[r.id] || [];
+      const critiques = recs.filter(x => x.urgency === 'critique').length;
+      const urgents = recs.filter(x => x.urgency === 'urgent').length;
+      return `<div class="conv-item ${activeRid===r.id?'active':''}" onclick="openRestockPanel('${r.id}','${encodeURIComponent(r.nom||'')}')">
+        <div class="conv-avatar restock">${ini(r.nom)}</div>
+        <div style="flex:1;min-width:0">
+          <div class="conv-name">${r.nom||'—'}</div>
+          <div class="conv-preview">${recs.length ? `${recs.length} alerte(s)` : 'Aucune alerte'}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
+          ${critiques ? `<span style="background:#fef0f0;color:#e05555;font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px">${critiques} critique${critiques>1?'s':''}</span>` : ''}
+          ${urgents ? `<span style="background:#fff8ec;color:#e08a10;font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px">${urgents} urgent${urgents>1?'s':''}</span>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+    // Précharger les recommandations
+    toShow.forEach(r => { if (!restockData[r.id]) loadRestockRecs(r.id); });
+    return;
+  }
+
+  // Onglet messages
+  let convs;
+  if (isAdmin) {
+    convs = allConvs.filter(c => !f || c.restaurantId.toLowerCase().includes(f));
+    // Ajouter les restaurants qui n'ont pas encore de conv
+    const existingIds = new Set(convs.map(c => c.restaurantId));
+    allRestaurants.filter(r => !existingIds.has(r.id) && (!f || r.nom.toLowerCase().includes(f))).forEach(r => {
+      convs.push({ restaurantId: r.id, restaurantNom: r.nom, lastMessage: null, unread: 0, total: 0 });
+    });
+  } else {
+    convs = [{ restaurantId: rid, restaurantNom: currentUser.restaurant || 'Administration', lastMessage: null, unread: 0 }];
+  }
+
+  if (!convs.length) { list.innerHTML = '<div class="conv-empty">Aucune conversation.</div>'; return; }
+
+  // Associer les noms de restaurants (pour admin)
+  const nomMap = {};
+  allRestaurants.forEach(r => nomMap[r.id] = r.nom);
+
+  list.innerHTML = convs.map(c => {
+    const nom = nomMap[c.restaurantId] || c.restaurantNom || c.restaurantId.slice(0,12)+'...';
+    const preview = c.lastMessage ? c.lastMessage.content.slice(0,50) + (c.lastMessage.content.length>50?'...':'') : 'Aucun message';
+    const isRestock = c.lastMessage?.type === 'restock_alert';
+    return `<div class="conv-item ${activeRid===c.restaurantId?'active':''}" onclick="openConversation('${c.restaurantId}','${encodeURIComponent(nom)}')">
+      <div class="conv-avatar ${isRestock?'restock':''}">${ini(nom)}</div>
+      <div style="flex:1;min-width:0">
+        <div class="conv-name">${nom}</div>
+        <div class="conv-preview">${preview}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
+        ${c.lastMessage ? `<span class="conv-time">${timeAgo(c.lastMessage.timestamp)}</span>` : ''}
+        ${c.unread > 0 ? `<span class="conv-badge">${c.unread}</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterConvs(q) { renderConvList(q); }
+function setConvTab(tab, el) {
+  convTab = tab;
+  document.querySelectorAll('.sl-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderConvList();
+}
+
+// ── OUVRIR UNE CONVERSATION ──
+async function openConversation(restaurantId, nomEnc) {
+  activeRid = restaurantId;
+  const nom = decodeURIComponent(nomEnc);
+
+  // Header
+  document.getElementById('chat-head').innerHTML = `
+    <div class="chat-head-avatar">${ini(nom)}</div>
+    <div>
+      <div class="chat-head-name">${nom}</div>
+      <div class="chat-head-sub" id="chat-sub">Chargement...</div>
+    </div>
+    <div class="chat-head-actions">
+      <button class="chat-btn" onclick="loadRestockRecs('${restaurantId}',true)">🔄 Restock</button>
+      ${isAdmin ? `<button class="chat-btn" onclick="sendRestockAlert('${restaurantId}')">⚠️ Envoyer alerte</button>` : ''}
+      <button class="chat-btn" onclick="markAllRead('${restaurantId}')">✓ Tout lu</button>
+    </div>`;
+  document.getElementById('chat-input-area').style.display = 'block';
+  document.getElementById('chat-input').placeholder = `Message pour ${nom}...`;
+
+  // Infos sidebar
+  document.getElementById('sr-title').textContent = nom;
+  const resto = allRestaurants.find(r => r.id === restaurantId);
+  if (resto) {
+    document.getElementById('sr-info').innerHTML = `
+      <div class="sr-section-title">📋 Infos restaurant</div>
+      <div class="info-row"><span class="info-key">Email</span><span class="info-val">${resto.email||'—'}</span></div>
+      <div class="info-row"><span class="info-key">Plan</span><span class="info-val">${resto.abonnement||'—'}</span></div>
+      <div class="info-row"><span class="info-key">Statut</span><span class="info-val">${resto.statut||'—'}</span></div>
+      <div class="info-row"><span class="info-key">Onboarding</span><span class="info-val">${resto.onboarding||'—'}</span></div>`;
+  }
+
+  // Charger les messages
+  await loadMessages(restaurantId);
+
+  // Marquer lu (restaurant)
+  if (!isAdmin) {
+    fetch(`/messages/${restaurantId}/read-all`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ by: rid || 'restaurant' }) });
+  }
+
+  // Charger les recommandations restock dans la sidebar
+  loadRestockRecs(restaurantId);
+
+  // Mettre à jour la liste
+  renderConvList();
+
+  // Socket pour cette conversation
+  socket.off(`msg_${restaurantId}`);
+  socket.on(`msg_${restaurantId}`, msg => {
+    if (activeRid === restaurantId) {
+      allMsgs.push(msg);
+      renderMessages();
+      scrollToBottom();
+    }
+    if (!isAdmin) { loadBroadcasts(); }
+    loadAllConversations();
+  });
+}
+
+async function loadMessages(restaurantId) {
+  const area = document.getElementById('messages-area');
+  area.innerHTML = '<div class="chat-empty"><div class="chat-empty-icon">⏳</div><div class="chat-empty-text">Chargement...</div></div>';
+  const res = await fetch(`/messages/${restaurantId}`);
+  allMsgs = await res.json();
+  document.getElementById('chat-sub').textContent = `${allMsgs.length} message${allMsgs.length>1?'s':''}`;
+  renderMessages();
+  scrollToBottom();
+}
+
+function renderMessages() {
+  const area = document.getElementById('messages-area');
+  if (!allMsgs.length) {
+    area.innerHTML = '<div class="chat-empty"><div class="chat-empty-icon">💬</div><div class="chat-empty-text">Aucun message.<br>Commencez la conversation !</div></div>';
+    return;
+  }
+
+  let html = '';
+  let lastDate = '';
+  allMsgs.forEach(msg => {
+    const d = new Date(msg.timestamp).toDateString();
+    if (d !== lastDate) {
+      html += `<div class="date-sep">${fmtDate(msg.timestamp)}</div>`;
+      lastDate = d;
+    }
+    const fromAdmin = msg.from === 'admin';
+    const fromSystem = msg.from === 'system';
+    const isRestock = msg.type === 'restock_alert';
+    const isMe = isAdmin ? fromAdmin : !fromAdmin;
+    const rowClass = isMe ? 'from-admin' : 'from-restaurant';
+    const avatarClass = fromAdmin ? 'admin' : fromSystem ? 'system' : 'restaurant';
+    const avatarLabel = fromAdmin ? 'AD' : fromSystem ? '⚙' : ini(msg.fromName || '?');
+    const isRead = msg.readBy?.length > 0;
+
+    let contentHTML = '';
+    if (isRestock && msg.meta?.items) {
+      contentHTML = `<div>${msg.content.split(':')[0]}:</div>
+        <div class="restock-card">${msg.meta.items.map(i => `
+          <div class="restock-item-line">
+            <span class="restock-urgency ${i.urgency||'attention'}"></span>
+            <strong>${i.nom}</strong> — ${i.quantiteActuelle} ${i.unite} restants · besoin: ${i.weeklyNeed}/sem
+          </div>`).join('')}
+        </div>`;
+    } else {
+      contentHTML = msg.content.replace(/\n/g,'<br>');
+    }
+
+    html += `<div class="msg-row ${rowClass}" id="msg-${msg.id}">
+      <div class="msg-avatar ${avatarClass}">${avatarLabel}</div>
+      <div class="msg-bubble">
+        <div class="msg-content ${isRestock?'restock':fromSystem?'system':''}">${contentHTML}</div>
+        <div class="msg-meta">
+          <span>${msg.fromName||'—'} · ${fmtTime(msg.timestamp)}</span>
+          ${isMe ? `<span class="msg-read">${isRead?'✓✓':'✓'}</span>` : ''}
+          <button class="msg-dismiss-btn" onclick="dismissMsg('${msg.id}')" title="Supprimer">×</button>
+        </div>
+      </div>
+    </div>`;
+  });
+  area.innerHTML = html;
+}
+
+function scrollToBottom() {
+  const area = document.getElementById('messages-area');
+  setTimeout(() => { area.scrollTop = area.scrollHeight; }, 50);
+}
+
+// ── ENVOYER UN MESSAGE ──
+async function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const content = input.value.trim();
+  if (!content || !activeRid) return;
+  input.value = '';
+  input.style.height = 'auto';
+
+  const from = isAdmin ? 'admin' : 'restaurant';
+  const fromName = isAdmin ? (currentUser.nom || 'Admin') : (currentUser.restaurant || currentUser.nom || 'Restaurant');
+
+  await fetch(`/messages/${activeRid}`, {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ from, fromName, content, type: 'message' })
+  });
+
+  await loadMessages(activeRid);
+  await loadAllConversations();
+  scrollToBottom();
+}
+
+function onChatKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  // Auto-resize
+  const t = e.target;
+  t.style.height = 'auto';
+  t.style.height = Math.min(t.scrollHeight, 120) + 'px';
+}
+
+// ── SUPPRIMER UN MESSAGE ──
+async function dismissMsg(msgId) {
+  if (!confirm('Supprimer ce message ?')) return;
+  await fetch(`/messages/${activeRid}/${msgId}`, { method: 'DELETE' });
+  allMsgs = allMsgs.filter(m => m.id !== msgId);
+  renderMessages();
+}
+
+// ── MARQUER TOUT LU ──
+async function markAllRead(restaurantId) {
+  await fetch(`/messages/${restaurantId}/read-all`, {
+    method: 'PATCH', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ by: isAdmin ? 'admin' : rid })
+  });
+  await loadMessages(restaurantId);
+  loadAllConversations();
+}
+
+// ── RESTOCK ──
+async function loadRestockRecs(restaurantId, forceOpen = false) {
+  const res = await fetch(`/restock-recommendations/${restaurantId}?days=14`);
+  const data = await res.json();
+  restockData[restaurantId] = data.recommendations || [];
+
+  if (activeRid === restaurantId) {
+    renderRestockSidebar(restaurantId, data);
+  }
+  if (forceOpen) openRestockPanel(restaurantId, encodeURIComponent(allRestaurants.find(r=>r.id===restaurantId)?.nom||restaurantId));
+}
+
+function renderRestockSidebar(restaurantId, data) {
+  const el = document.getElementById('sr-restock');
+  const recs = data.recommendations || [];
+  if (!recs.length) {
+    el.innerHTML = '<div style="font-size:12px;color:#9ab89a;padding:4px 0">✅ Aucune recommandation de réapprovisionnement pour cette période.</div>';
+    return;
+  }
+  el.innerHTML = `<div style="font-size:11px;color:#9ab89a;margin-bottom:8px">Basé sur ${data.totalOrders} commandes (${data.period}j)</div>` +
+    recs.map(r => `
+      <div class="restock-rec ${r.urgency}">
+        <div class="restock-nom"><span class="urgency-dot ${r.urgency}"></span>${r.nom}</div>
+        <div class="restock-detail">
+          Stock: <strong>${r.quantiteActuelle} ${r.unite}</strong>
+          ${r.daysRemaining !== null ? ` · <strong>${r.daysRemaining}j</strong> restants` : ''}
+          · Conso: ${r.avgPerDay}/j · Besoin sem: <strong>${r.weeklyNeed}</strong>
+        </div>
+        ${isAdmin ? `<button class="restock-send-btn" onclick="sendSingleRestockAlert('${restaurantId}','${r.nom}')">📨 Envoyer alerte</button>` : ''}
+      </div>`).join('');
+}
+
+function openRestockPanel(restaurantId, nomEnc) {
+  activeRid = restaurantId;
+  const nom = decodeURIComponent(nomEnc);
+  document.getElementById('sr-title').textContent = nom;
+  renderConvList();
+  if (!restockData[restaurantId]) {
+    document.getElementById('sr-restock').innerHTML = '<div style="font-size:12px;color:#ccc">Chargement...</div>';
+    loadRestockRecs(restaurantId);
+  } else {
+    renderRestockSidebar(restaurantId, { recommendations: restockData[restaurantId], period: 14, totalOrders: 0 });
+  }
+  // Ouvrir la conversation aussi
+  openConversation(restaurantId, nomEnc);
+}
+
+async function sendRestockAlert(restaurantId) {
+  const recs = restockData[restaurantId] || [];
+  if (!recs.length) { alert('Aucune recommandation à envoyer pour ce restaurant.'); return; }
+  const critiques = recs.filter(r => ['critique','urgent'].includes(r.urgency));
+  const items = critiques.length ? critiques : recs.slice(0,3);
+  const res = await fetch(`/admin/restock-alert/${restaurantId}`, {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ items, author: currentUser.nom || 'Admin' })
+  });
+  if (res.ok) { alert('✅ Alerte réapprovisionnement envoyée !'); await loadMessages(restaurantId); }
+}
+
+async function sendSingleRestockAlert(restaurantId, nomIngredient) {
+  const recs = restockData[restaurantId] || [];
+  const item = recs.find(r => r.nom === nomIngredient);
+  if (!item) return;
+  await fetch(`/admin/restock-alert/${restaurantId}`, {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ items: [item], author: currentUser.nom || 'Admin' })
+  });
+  await loadMessages(restaurantId);
+  alert(`✅ Alerte envoyée pour : ${nomIngredient}`);
+}
+
+// ── BROADCASTS ──
+let bcList = [], bcUnread = 0;
+const bcIcons = { info:'ℹ️', warn:'⚠️', success:'✅', danger:'🔴' };
+
+function timeAgoBc(iso) {
+  const diff = Date.now() - new Date(iso);
+  if (diff < 60000) return 'À l\'instant';
+  if (diff < 3600000) return 'Il y a ' + Math.floor(diff/60000) + 'min';
+  return new Date(iso).toLocaleDateString('fr-FR');
+}
+
+async function loadBroadcasts() {
+  const url = '/admin/broadcast' + (isAdmin ? '' : `?restaurantId=${rid}`);
+  const res = await fetch(url);
+  bcList = await res.json();
+  const lastSeen = parseInt(localStorage.getItem('bcLastSeen')||'0');
+  bcUnread = bcList.filter(b => new Date(b.createdAt).getTime() > lastSeen).length;
+  updateBcBadge(); renderBcPanel();
+}
+
+function renderBcPanel() {
+  const el = document.getElementById('bc-panel-list');
+  if (!bcList.length) { el.innerHTML = '<div class="bc-panel-empty">Aucun message.</div>'; return; }
+  el.innerHTML = bcList.map(b => `
+    <div class="bc-notif-item" id="bc-${b.id}">
+      <div class="bc-notif-dot ${b.type||'info'}"></div>
+      <div style="flex:1">
+        <div class="bc-notif-msg">${b.message}</div>
+        <div class="bc-notif-time">De ${b.author||'Admin'} · ${timeAgoBc(b.createdAt)}</div>
+      </div>
+      <button class="bc-dismiss-btn" onclick="dismissBroadcast('${b.id}')" title="Supprimer">×</button>
+    </div>`).join('');
+}
+
+function updateBcBadge() {
+  const badge = document.getElementById('bc-badge');
+  if (bcUnread > 0) { badge.textContent = bcUnread>9?'9+':bcUnread; badge.classList.add('show'); }
+  else { badge.classList.remove('show'); }
+}
+
+function toggleBcPanel() {
+  const panel = document.getElementById('bc-panel');
+  panel.classList.toggle('open');
+  if (panel.classList.contains('open')) { bcUnread=0; updateBcBadge(); localStorage.setItem('bcLastSeen', Date.now()); }
+}
+
+async function dismissBroadcast(id) {
+  if (!isAdmin) {
+    await fetch(`/admin/broadcast/${id}/dismiss`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ restaurantId: rid }) });
+  } else {
+    await fetch(`/admin/broadcast/${id}`, { method:'DELETE' });
+  }
+  bcList = bcList.filter(b => b.id !== id);
+  renderBcPanel();
+  updateBcBadge();
+  const el = document.getElementById('bc-' + id);
+  if (el) el.remove();
+}
+
+document.addEventListener('click', e => {
+  const panel = document.getElementById('bc-panel');
+  if (!e.target.closest('.bc-bell-btn') && panel.classList.contains('open') && !panel.contains(e.target)) {
+    panel.classList.remove('open'); bcUnread=0; updateBcBadge(); localStorage.setItem('bcLastSeen', Date.now());
+  }
+});
+
+// ── SOCKET ADMIN MESSAGES ──
+socket.on('admin_new_msg', ({ restaurantId, msg }) => {
+  if (isAdmin) {
+    loadAllConversations();
+    if (activeRid === restaurantId) { allMsgs.push(msg); renderMessages(); scrollToBottom(); }
+  }
+});
+
+socket.on('broadcast', b => {
+  bcList.unshift(b); bcUnread++;
+  updateBcBadge(); renderBcPanel();
+});
+
+// ── RESTOCK AUTOMATIQUE pour restaurants ──
+async function checkRestockForRestaurant() {
+  if (isAdmin) return;
+  const res = await fetch(`/restock-recommendations/${rid}?days=14`);
+  const data = await res.json();
+  const critiques = (data.recommendations||[]).filter(r => r.urgency === 'critique' || r.urgency === 'urgent');
+  if (critiques.length > 0) {
+    // Afficher dans la sidebar
+    renderRestockSidebar(rid, data);
+  }
+}
+
+// ── START ──
+init();
+if (!isAdmin) checkRestockForRestaurant();
+</script>
+</body>
+</html>

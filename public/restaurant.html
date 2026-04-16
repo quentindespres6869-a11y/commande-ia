@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mon restaurant — Commande-IA</title>
+  <script src="/socket.io/socket.io.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -16,6 +17,33 @@
     .page-badge { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; background: rgba(168,224,122,0.15); color: #a8e07a; padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(168,224,122,0.25); }
     .btn-topbar { font-size: 12px; padding: 6px 14px; border-radius: 7px; border: 1px solid rgba(200,232,200,0.2); background: rgba(255,255,255,0.08); color: #c8e8c8; cursor: pointer; font-family: 'DM Sans', sans-serif; text-decoration: none; font-weight: 500; transition: all 0.15s; }
     .btn-topbar:hover { background: rgba(255,255,255,0.15); color: #fff; }
+    /* Broadcasts */
+    .bc-bell-btn { position: relative; width: 34px; height: 34px; border-radius: 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; flex-shrink: 0; }
+    .bc-bell-btn:hover { background: rgba(255,255,255,0.18); }
+    .bc-bell-badge { position: absolute; top: -4px; right: -4px; width: 16px; height: 16px; background: #e05555; border-radius: 50%; font-size: 9px; font-weight: 700; color: #fff; display: none; align-items: center; justify-content: center; border: 2px solid #1a3a1a; }
+    .bc-bell-badge.show { display: flex; }
+    .bc-panel { display: none; position: fixed; top: 70px; right: 20px; width: 360px; background: #fff; border: 1.5px solid #e0ecd8; border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,0.15); z-index: 9990; overflow: hidden; }
+    .bc-panel.open { display: block; }
+    .bc-panel-head { padding: 14px 18px; background: #1a3a1a; display: flex; align-items: center; justify-content: space-between; }
+    .bc-panel-title { font-size: 13px; font-weight: 700; color: #fff; }
+    .bc-panel-close { background: none; border: none; color: rgba(255,255,255,0.6); cursor: pointer; font-size: 18px; }
+    .bc-panel-list { max-height: 380px; overflow-y: auto; }
+    .bc-notif-item { padding: 13px 18px; border-bottom: 1px solid #f0f5ee; display: flex; align-items: flex-start; gap: 10px; }
+    .bc-notif-item:last-child { border-bottom: none; }
+    .bc-notif-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
+    .bc-notif-dot.info { background: #2a50aa; }
+    .bc-notif-dot.warn { background: #e08a10; }
+    .bc-notif-dot.success { background: #3B6D11; }
+    .bc-notif-dot.danger { background: #e05555; }
+    .bc-notif-msg { font-size: 12px; color: #333; line-height: 1.5; }
+    .bc-notif-time { font-size: 10px; color: #bbb; margin-top: 3px; }
+    .bc-panel-empty { padding: 28px; text-align: center; font-size: 12px; color: #ccc; }
+    .bc-toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 9999; background: #fff; border: 1.5px solid #e0ecd8; border-radius: 14px; box-shadow: 0 8px 32px rgba(0,0,0,0.15); padding: 14px 20px; display: flex; align-items: center; gap: 12px; min-width: 300px; max-width: 460px; animation: bcIn 0.4s cubic-bezier(0.22,1,0.36,1); }
+    @keyframes bcIn { from{opacity:0;transform:translateX(-50%) translateY(14px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+    .bc-toast-icon { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+    .bc-toast-icon.info { background: #eff4ff; } .bc-toast-icon.warn { background: #fff8ec; } .bc-toast-icon.success { background: #f0f7e8; } .bc-toast-icon.danger { background: #fef0f0; }
+    .bc-toast-title { font-size: 10px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.6px; }
+    .bc-toast-msg { font-size: 13px; font-weight: 500; color: #111; margin-top: 1px; }
 
     .main { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
 
@@ -193,11 +221,30 @@
   </div>
   <div class="topbar-right">
     <span class="user-badge" id="user-name">Chargement...</span>
+    <div class="bc-bell-btn" onclick="toggleBcPanel()" title="Notifications admin">
+      <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M10 2a6 6 0 00-6 6v3l-1.5 2.5h15L16 11V8a6 6 0 00-6-6z" stroke="#a8e07a" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 16a2 2 0 004 0" stroke="#a8e07a" stroke-width="1.5"/></svg>
+      <div class="bc-bell-badge" id="bc-badge">0</div>
+    </div>
+    <a href="/messagerie.html" class="btn-topbar" style="position:relative">
+      💬
+      <span id="msg-badge-resto" style="display:none;position:absolute;top:-6px;right:-6px;background:#e05555;color:#fff;font-size:8px;font-weight:700;padding:1px 4px;border-radius:8px;border:2px solid #1a3a1a">0</span>
+    </a>
     <a href="/" class="btn-topbar">← Dashboard</a>
     <button class="btn-topbar" onclick="deconnexion()">Déconnexion</button>
   </div>
 </div>
 <script src="/burger-menu.js"></script>
+
+<!-- Panel broadcasts -->
+<div class="bc-panel" id="bc-panel">
+  <div class="bc-panel-head">
+    <span class="bc-panel-title">📢 Messages de l'administration</span>
+    <button class="bc-panel-close" onclick="toggleBcPanel()">×</button>
+  </div>
+  <div class="bc-panel-list" id="bc-panel-list">
+    <div class="bc-panel-empty">Aucun message pour le moment.</div>
+  </div>
+</div>
 
 <div class="main">
   <div class="resto-header" id="resto-header">
@@ -558,6 +605,98 @@
   });
 
   loadResto();
+
+  // ═══ BROADCASTS ADMIN ═══
+  const bcIcons = { info:'ℹ️', warn:'⚠️', success:'✅', danger:'🔴' };
+  let bcList = [], bcUnread = 0;
+
+  function timeAgoBc(iso) {
+    const diff = Date.now() - new Date(iso);
+    if (diff < 60000) return 'À l\'instant';
+    if (diff < 3600000) return 'Il y a ' + Math.floor(diff/60000) + 'min';
+    if (diff < 86400000) return 'Il y a ' + Math.floor(diff/3600000) + 'h';
+    return new Date(iso).toLocaleDateString('fr-FR');
+  }
+
+  function renderBcPanel() {
+    const list = document.getElementById('bc-panel-list');
+    if (!bcList.length) { list.innerHTML = '<div class="bc-panel-empty">Aucun message pour le moment.</div>'; return; }
+    list.innerHTML = bcList.map(b => `
+      <div class="bc-notif-item" id="bcn-${b.id}">
+        <div class="bc-notif-dot ${b.type||'info'}"></div>
+        <div style="flex:1">
+          <div class="bc-notif-msg">${b.message}</div>
+          <div class="bc-notif-time">De ${b.author||'Admin'} · ${timeAgoBc(b.createdAt)}</div>
+        </div>
+        <button onclick="dismissBroadcast('${b.id}')" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:16px;padding:0 0 0 6px;flex-shrink:0;transition:color 0.1s" onmouseover="this.style.color='#e05555'" onmouseout="this.style.color='#ccc'" title="Supprimer">×</button>
+      </div>`).join('');
+  }
+
+  async function dismissBroadcast(id) {
+    const rId = JSON.parse(sessionStorage.getItem('user')||'{}').restaurantId || '';
+    await fetch(`/admin/broadcast/${id}/dismiss`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ restaurantId: rId }) });
+    bcList = bcList.filter(b => b.id !== id);
+    renderBcPanel(); updateBcBadge();
+  }
+
+  function updateBcBadge() {
+    const badge = document.getElementById('bc-badge');
+    if (bcUnread > 0) { badge.textContent = bcUnread > 9 ? '9+' : bcUnread; badge.classList.add('show'); }
+    else { badge.classList.remove('show'); }
+  }
+
+  function toggleBcPanel() {
+    const panel = document.getElementById('bc-panel');
+    panel.classList.toggle('open');
+    if (panel.classList.contains('open')) { bcUnread = 0; updateBcBadge(); localStorage.setItem('bcLastSeen', Date.now()); }
+  }
+
+  function showBcToast(b) {
+    const el = document.createElement('div');
+    el.className = 'bc-toast';
+    el.innerHTML = `<div class="bc-toast-icon ${b.type||'info'}">${bcIcons[b.type]||'ℹ️'}</div><div><div class="bc-toast-title">Message de l'administration</div><div class="bc-toast-msg">${b.message}</div></div>`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 5500);
+  }
+
+  const _ruid = JSON.parse(sessionStorage.getItem('user')||'{}').restaurantId || '';
+  fetch(`/admin/broadcast?restaurantId=${_ruid}`).then(r => r.json()).then(data => {
+    bcList = data;
+    const lastSeen = parseInt(localStorage.getItem('bcLastSeen') || '0');
+    bcUnread = data.filter(b => new Date(b.createdAt).getTime() > lastSeen).length;
+    updateBcBadge(); renderBcPanel();
+  }).catch(() => {});
+
+  // Socket.io pour les broadcasts temps réel
+  const bcSocket = io();
+  bcSocket.on('broadcast', b => {
+    bcList.unshift(b); bcUnread++;
+    updateBcBadge(); renderBcPanel(); showBcToast(b);
+  });
+
+  // Nouveaux messages depuis admin
+  bcSocket.on(`msg_${_ruid}`, msg => {
+    if (msg.from === 'admin') {
+      const badge = document.getElementById('msg-badge-resto');
+      if (badge) { const n = parseInt(badge.textContent||'0')+1; badge.textContent=n; badge.style.display='inline-block'; }
+      showBcToast({ message:`💬 Nouveau message : ${msg.content.slice(0,50)}`, type:'info', author:'Admin', createdAt:msg.timestamp });
+    }
+  });
+
+  // Charger les messages non lus au démarrage
+  fetch(`/messages/${_ruid}`).then(r=>r.json()).then(msgs => {
+    const unread = msgs.filter(m => m.from==='admin' && !(m.readBy||[]).includes(_ruid)).length;
+    const badge = document.getElementById('msg-badge-resto');
+    if (badge && unread > 0) { badge.textContent = unread; badge.style.display = 'inline-block'; }
+  }).catch(()=>{});
+
+  document.addEventListener('click', e => {
+    const panel = document.getElementById('bc-panel');
+    if (!e.target.closest('.bc-bell-btn') && panel.classList.contains('open') && !panel.contains(e.target)) {
+      panel.classList.remove('open'); bcUnread = 0; updateBcBadge();
+      localStorage.setItem('bcLastSeen', Date.now());
+    }
+  });
 </script>
 </body>
 </html>
