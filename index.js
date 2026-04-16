@@ -40,6 +40,20 @@ const notionHeaders = {
 const ARCHIVES_DIR = path.join(__dirname, 'archives');
 if (!fs.existsSync(ARCHIVES_DIR)) fs.mkdirSync(ARCHIVES_DIR);
 
+// ─── TICKETS SUPPORT ─────────────────────────────────
+const TICKETS_FILE = path.join(__dirname, 'tickets.json');
+let ticketCounter = 1;
+function loadTickets() {
+  try { if (fs.existsSync(TICKETS_FILE)) { const d = JSON.parse(fs.readFileSync(TICKETS_FILE, 'utf8')) || []; if (d.length) ticketCounter = Math.max(...d.map(t => parseInt((t.id||'0').replace(/\D/g,'')) || 0)) + 1; return d; } } catch(e) {}
+  return [];
+}
+function saveTickets(data) {
+  try { fs.writeFileSync(TICKETS_FILE, JSON.stringify(data, null, 2)); } catch(e) {}
+}
+function nextTicketId() { return 'TKT-' + String(ticketCounter++).padStart(4, '0'); }
+// Initialiser le compteur
+loadTickets();
+
 // ─── MESSAGERIE (persistante par restaurant) ──────────
 const MESSAGES_DIR = path.join(__dirname, 'messages');
 if (!fs.existsSync(MESSAGES_DIR)) fs.mkdirSync(MESSAGES_DIR);
@@ -1626,6 +1640,137 @@ app.post('/admin/restock-alert/:restaurantId', async (req, res) => {
   io.emit(`msg_${restaurantId}`, msg);
   io.emit('admin_new_msg', { restaurantId, msg });
   res.json({ success: true, msg });
+});
+
+// ─── TICKETS SUPPORT ─────────────────────────────────
+
+// GET tous les tickets (admin)
+app.get('/tickets', (req, res) => {
+  const tickets = loadTickets();
+  const { statut, type, priorite, restaurantId, q } = req.query;
+  let result = [...tickets];
+  if (restaurantId) result = result.filter(t => t.restaurantId === restaurantId);
+  if (statut) result = result.filter(t => t.statut === statut);
+  if (type) result = result.filter(t => t.type === type);
+  if (priorite) result = result.filter(t => t.priorite === priorite);
+  if (q) { const ql = q.toLowerCase(); result = result.filter(t => t.titre.toLowerCase().includes(ql) || t.description.toLowerCase().includes(ql) || t.restaurantNom?.toLowerCase().includes(ql)); }
+  result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  res.json(result);
+});
+
+// GET stats tickets (admin dashboard)
+app.get('/tickets/stats', (req, res) => {
+  const tickets = loadTickets();
+  const now = Date.now();
+  const stats = {
+    total: tickets.length,
+    ouverts: tickets.filter(t => t.statut === 'ouvert').length,
+    en_cours: tickets.filter(t => t.statut === 'en_cours').length,
+    resolus: tickets.filter(t => t.statut === 'resolu').length,
+    critiques: tickets.filter(t => t.priorite === 'critique').length,
+    sla_breach: tickets.filter(t => t.statut !== 'resolu' && t.statut !== 'ferme' && t.slaTarget && (now - new Date(t.createdAt)) > t.slaTarget * 3600000).length,
+    avgResolutionH: (() => { const res = tickets.filter(t => t.resolvedAt); if (!res.length) return null; return Math.round(res.reduce((s,t) => s + (new Date(t.resolvedAt)-new Date(t.createdAt))/3600000, 0)/res.length * 10)/10; })(),
+    byType: ['bug','question','feature','urgent'].reduce((o,k) => { o[k]=tickets.filter(t=>t.type===k).length; return o; }, {}),
+    byPriorite: ['critique','haute','normale','basse'].reduce((o,k) => { o[k]=tickets.filter(t=>t.priorite===k).length; return o; }, {})
+  };
+  res.json(stats);
+});
+
+// GET tickets d'un restaurant
+app.get('/tickets/restaurant/:restaurantId', (req, res) => {
+  const tickets = loadTickets().filter(t => t.restaurantId === req.params.restaurantId);
+  res.json(tickets.sort((a,b) => new Date(b.createdAt)-new Date(a.createdAt)));
+});
+
+// POST créer un ticket
+app.post('/tickets', (req, res) => {
+  const { restaurantId, restaurantNom, titre, description, type, priorite, metadata } = req.body;
+  if (!restaurantId || !titre || !description) return res.status(400).json({ error: 'restaurantId, titre et description requis' });
+  const ticket = {
+    id: nextTicketId(),
+    restaurantId, restaurantNom: restaurantNom || restaurantId,
+    titre, description,
+    type: type || 'question',               // bug | question | feature | urgent
+    priorite: priorite || 'normale',        // critique | haute | normale | basse
+    statut: 'ouvert',                       // ouvert | en_cours | en_attente | resolu | ferme
+    tags: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    resolvedAt: null,
+    slaTarget: priorite==='critique' ? 2 : priorite==='haute' ? 8 : 24, // heures
+    comments: [],
+    metadata: metadata || {},
+    rating: null,
+    adminNote: '',
+    assignedTo: null,
+    progress: 0
+  };
+  const tickets = loadTickets();
+  tickets.unshift(ticket);
+  saveTickets(tickets);
+  // Notifier l'admin
+  io.emit('new_ticket', ticket);
+  res.json({ success: true, ticket });
+});
+
+// PATCH mettre à jour un ticket (admin)
+app.patch('/tickets/:id', (req, res) => {
+  const tickets = loadTickets();
+  const idx = tickets.findIndex(t => t.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'Ticket introuvable' });
+  const { statut, priorite, adminNote, assignedTo, tags, progress } = req.body;
+  const t = tickets[idx];
+  if (statut) t.statut = statut;
+  if (priorite) t.priorite = priorite;
+  if (adminNote !== undefined) t.adminNote = adminNote;
+  if (assignedTo !== undefined) t.assignedTo = assignedTo;
+  if (tags) t.tags = tags;
+  if (progress !== undefined) t.progress = Math.min(100, Math.max(0, progress));
+  if (statut === 'resolu' && !t.resolvedAt) t.resolvedAt = new Date().toISOString();
+  t.updatedAt = new Date().toISOString();
+  tickets[idx] = t;
+  saveTickets(tickets);
+  io.emit(`ticket_update_${t.restaurantId}`, t);
+  io.emit('admin_ticket_update', t);
+  res.json({ success: true, ticket: t });
+});
+
+// POST ajouter un commentaire
+app.post('/tickets/:id/comment', (req, res) => {
+  const tickets = loadTickets();
+  const idx = tickets.findIndex(t => t.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'Ticket introuvable' });
+  const { from, fromName, content, internal } = req.body;
+  if (!content) return res.status(400).json({ error: 'Contenu requis' });
+  const comment = {
+    id: Date.now().toString(), from: from || 'admin', fromName: fromName || 'Admin',
+    content, internal: internal || false, timestamp: new Date().toISOString()
+  };
+  tickets[idx].comments.push(comment);
+  tickets[idx].updatedAt = new Date().toISOString();
+  if (from === 'admin' && tickets[idx].statut === 'ouvert') tickets[idx].statut = 'en_cours';
+  saveTickets(tickets);
+  io.emit(`ticket_comment_${tickets[idx].restaurantId}`, { ticketId: req.params.id, comment });
+  io.emit('admin_ticket_comment', { ticketId: req.params.id, restaurantId: tickets[idx].restaurantId, comment });
+  res.json({ success: true, comment, ticket: tickets[idx] });
+});
+
+// POST noter un ticket résolu (restaurant)
+app.patch('/tickets/:id/rate', (req, res) => {
+  const tickets = loadTickets();
+  const t = tickets.find(t => t.id === req.params.id);
+  if (!t) return res.status(404).json({ error: 'Introuvable' });
+  t.rating = Math.min(5, Math.max(1, parseInt(req.body.rating) || 3));
+  saveTickets(tickets);
+  res.json({ success: true });
+});
+
+// DELETE un ticket
+app.delete('/tickets/:id', (req, res) => {
+  let tickets = loadTickets();
+  tickets = tickets.filter(t => t.id !== req.params.id);
+  saveTickets(tickets);
+  res.json({ success: true });
 });
 
 // ─── PING & START ────────────────────────────────────

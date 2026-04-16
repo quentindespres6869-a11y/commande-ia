@@ -215,16 +215,66 @@
     .export-desc { font-size: 12px; color: #aaa; margin-top: 2px; }
     .export-btn-wrap { margin-left: auto; }
 
-    /* ── RECHERCHE GLOBALE ── */
-    .search-results { background: #fff; border: 1px solid #eaeeea; border-radius: 12px; overflow: hidden; }
-    .search-result-item { padding: 12px 18px; border-bottom: 1px solid #f8f8f8; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: background 0.1s; }
-    .search-result-item:hover { background: #fafafa; }
-    .search-result-item:last-child { border-bottom: none; }
-    .sr-type { font-size: 10px; font-weight: 600; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; }
-    .sr-type.restaurant { background: #f0f7e8; color: #2d6a0a; }
-    .sr-type.employe { background: #eff4ff; color: #2a50aa; }
-    .sr-name { font-size: 13px; font-weight: 600; color: #111; }
-    .sr-sub { font-size: 11px; color: #aaa; }
+    /* ── RECHERCHE GLOBALE — COMMAND PALETTE ── */
+    /* Floating dropdown from topbar */
+    .gs-drop { display:none; position:fixed; top:54px; left:50%; transform:translateX(-50%); width:min(720px,88vw); background:#fff; border:1.5px solid #d8e8d0; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,0.18),0 4px 16px rgba(0,0,0,0.08); z-index:2000; overflow:hidden; }
+    .gs-drop.open { display:block; animation:gsDrop 0.16s ease; }
+    @keyframes gsDrop { from{opacity:0;transform:translateX(-50%) translateY(-6px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+    .gs-drop-tip { padding:8px 16px; background:#fafdf8; border-bottom:1px solid #f0f4ee; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .gs-kbd { font-size:10px; font-weight:700; padding:2px 6px; background:#f0f0f0; border:1px solid #ddd; border-radius:4px; color:#666; font-family:monospace; }
+    .gs-drop-results { max-height:460px; overflow-y:auto; }
+    /* Dropdown items */
+    .gs-group-head { display:flex; align-items:center; gap:8px; padding:7px 16px 3px; background:#fafafa; border-top:1px solid #f5f5f5; }
+    .gs-group-head:first-child { border-top:none; }
+    .gs-group-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.7px; color:#bbb; }
+    .gs-group-more { font-size:10px; color:#ccc; margin-left:auto; }
+    .gs-item { display:flex; align-items:center; gap:12px; padding:9px 16px; cursor:pointer; transition:background 0.08s; }
+    .gs-item:hover, .gs-item.gs-selected { background:#f5fbf0; }
+    .gs-item-icon { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+    .gs-item-body { flex:1; min-width:0; }
+    .gs-item-name { font-size:13px; font-weight:600; color:#111; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .gs-item-sub { font-size:11px; color:#aaa; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .gs-item-badges { display:flex; gap:4px; margin-left:auto; flex-shrink:0; }
+    /* Badges */
+    .gs-badge { font-size:9px; font-weight:700; padding:2px 7px; border-radius:8px; text-transform:uppercase; letter-spacing:0.3px; }
+    .gs-badge.g { background:#f0f7e8; color:#2d6a0a; }
+    .gs-badge.b { background:#eff4ff; color:#2a50aa; }
+    .gs-badge.o { background:#fff8ec; color:#906010; }
+    .gs-badge.r { background:#fef0f0; color:#b03030; }
+    .gs-badge.gray { background:#f5f5f5; color:#666; }
+    .gs-badge.purple { background:#f5eeff; color:#7030c0; }
+    .gs-highlight { background:rgba(168,224,122,0.4); border-radius:2px; padding:0 1px; }
+    .gs-empty-drop { padding:24px; text-align:center; color:#bbb; font-size:12px; }
+    .gs-see-all { padding:10px 16px; border-top:1px solid #f5f5f5; display:flex; justify-content:center; }
+    .gs-see-all-btn { font-size:12px; font-weight:600; padding:6px 14px; border-radius:7px; border:1.5px solid #eaeeea; background:#fff; color:#555; cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.1s; }
+    .gs-see-all-btn:hover { background:#f0f7e8; color:#2d5c2d; border-color:#c8e8a8; }
+    /* Full search section */
+    .gs-search-bar { display:flex; gap:12px; align-items:center; margin-bottom:20px; }
+    .gs-search-big { flex:1; font-size:15px; padding:14px 18px; border:1.5px solid #eaeeea; border-radius:12px; font-family:'Inter',sans-serif; outline:none; color:#111; transition:border-color 0.15s; background:#fff; }
+    .gs-search-big:focus { border-color:#5ab52a; box-shadow:0 0 0 3px rgba(90,181,42,0.1); }
+    .gs-search-big::placeholder { color:#bbb; }
+    .gs-tabs { display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap; }
+    .gs-tab { font-size:12px; font-weight:600; padding:6px 13px; border-radius:20px; border:1.5px solid #eaeeea; background:#fff; color:#555; cursor:pointer; transition:all 0.12s; font-family:'Inter',sans-serif; display:flex; align-items:center; gap:6px; white-space:nowrap; }
+    .gs-tab:hover { border-color:#c8e8a8; color:#2d5c2d; }
+    .gs-tab.active { background:#f0f7e8; color:#2d5c2d; border-color:#c8e8a8; }
+    .gs-tab-count { background:#eaeeea; color:#888; font-size:10px; padding:1px 6px; border-radius:8px; }
+    .gs-tab.active .gs-tab-count { background:#c8e8a8; color:#2d5c2d; }
+    .gs-stats-bar { font-size:12px; color:#aaa; margin-bottom:18px; padding:10px 14px; background:#fafafa; border-radius:8px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .gs-stats-bar b { color:#333; }
+    .gs-smart-pill { display:inline-flex; align-items:center; gap:4px; padding:2px 9px; border-radius:10px; background:#f0f7e8; color:#2d5c2d; border:1px solid #c8e8a8; font-size:10px; font-weight:700; }
+    /* Full search result cards */
+    .gs-section-block { margin-bottom:26px; }
+    .gs-section-title { font-size:11px; font-weight:700; color:#aaa; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+    .gs-full-item { background:#fff; border:1px solid #eaeeea; border-radius:10px; padding:13px 16px; margin-bottom:8px; cursor:pointer; transition:box-shadow 0.12s,border-color 0.12s; display:flex; align-items:flex-start; gap:13px; }
+    .gs-full-item:hover { box-shadow:0 3px 14px rgba(0,0,0,0.07); border-color:#d8e8d0; }
+    .gs-full-item-icon { width:36px; height:36px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+    .gs-full-item-body { flex:1; min-width:0; }
+    .gs-full-item-name { font-size:13px; font-weight:600; color:#111; margin-bottom:2px; }
+    .gs-full-item-sub { font-size:12px; color:#888; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .gs-full-item-tags { display:flex; gap:5px; flex-wrap:wrap; }
+    .gs-full-item-actions { display:flex; gap:6px; align-items:flex-start; flex-shrink:0; flex-wrap:wrap; justify-content:flex-end; }
+    .gs-item-action { font-size:11px; font-weight:600; padding:5px 10px; border-radius:6px; border:1.5px solid #eaeeea; background:#fff; color:#555; cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.1s; white-space:nowrap; }
+    .gs-item-action:hover { background:#f0f7e8; color:#2d5c2d; border-color:#c8e8a8; }
 
     /* ── MODAL ── */
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 999; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
@@ -266,6 +316,75 @@
 
     /* ── MAINTENANCE BANNER ── */
     .maintenance-banner { background: #fff8ec; border: 1px solid #f0d898; border-radius: 8px; padding: 8px 12px; font-size: 11px; color: #906010; font-weight: 600; margin-top: 8px; }
+
+    /* ── TICKETS ── */
+    .tk-filter-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+    .tk-filter-btn { font-size:12px; font-weight:600; padding:6px 14px; border-radius:20px; border:1px solid #eaeeea; background:#fff; color:#555; cursor:pointer; transition:all 0.12s; font-family:'Inter',sans-serif; }
+    .tk-filter-btn.active, .tk-filter-btn:hover { background:#f0f7e8; color:#2d5c2d; border-color:#c8e8a8; }
+    .tk-filter-btn.red.active { background:#fef0f0; color:#b03030; border-color:#f5c0c0; }
+    .tk-table { width:100%; border-collapse:collapse; background:#fff; border-radius:12px; overflow:hidden; border:1px solid #eaeeea; }
+    .tk-table th { font-size:11px; font-weight:700; color:#aaa; text-transform:uppercase; letter-spacing:0.7px; padding:11px 16px; background:#fafafa; border-bottom:1px solid #eaeeea; text-align:left; }
+    .tk-table td { padding:12px 16px; border-bottom:1px solid #f5f5f5; vertical-align:middle; }
+    .tk-table tr:last-child td { border-bottom:none; }
+    .tk-table tr { transition:background 0.1s; cursor:pointer; }
+    .tk-table tr:hover td { background:#fafdf8; }
+    .tk-badge { display:inline-block; font-size:10px; font-weight:700; padding:3px 9px; border-radius:10px; }
+    .tk-badge.ouvert { background:#eff4ff; color:#2a50aa; }
+    .tk-badge.en_cours { background:#fff8ec; color:#906010; }
+    .tk-badge.en_attente { background:#f5f5f5; color:#555; }
+    .tk-badge.resolu { background:#f0f7e8; color:#2d6a0a; }
+    .tk-badge.ferme { background:#f0f0f0; color:#888; }
+    .tk-badge.critique { background:#fef0f0; color:#b03030; }
+    .tk-badge.haute { background:#fff3e8; color:#b06010; }
+    .tk-badge.normale { background:#fffbe8; color:#907010; }
+    .tk-badge.basse { background:#f0f7e8; color:#2d6a0a; }
+    .tk-badge.new-reply { background:#ffeef5; color:#c0207a; margin-left:6px; }
+    .tk-progress-mini { height:3px; border-radius:2px; background:#eaeeea; overflow:hidden; margin-top:5px; width:80px; }
+    .tk-progress-mini-fill { height:100%; border-radius:2px; background:#5ab52a; }
+    .tk-sla { font-size:10px; font-weight:600; }
+    .tk-sla.ok { color:#5ab52a; }
+    .tk-sla.warn { color:#e08a10; }
+    .tk-sla.breach { color:#e05555; }
+    /* Ticket detail panel */
+    .tk-panel-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.2); z-index:500; }
+    .tk-panel-overlay.open { display:block; }
+    .tk-panel { position:fixed; top:60px; right:-640px; width:640px; bottom:0; background:#fff; border-left:1px solid #eaeeea; z-index:600; overflow:hidden; transition:right 0.28s cubic-bezier(.4,0,.2,1); display:flex; flex-direction:column; }
+    .tk-panel.open { right:0; }
+    .tk-panel-head { display:flex; align-items:flex-start; justify-content:space-between; padding:18px 22px; border-bottom:1px solid #eaeeea; flex-shrink:0; }
+    .tk-panel-id { font-size:11px; font-weight:700; color:#aaa; letter-spacing:0.5px; }
+    .tk-panel-title { font-size:16px; font-weight:700; color:#111; margin-top:3px; line-height:1.3; }
+    .tk-panel-body { padding:20px 22px; flex:1; overflow-y:auto; }
+    .tk-panel-close { width:30px; height:30px; border-radius:7px; background:#f5f5f5; border:none; cursor:pointer; font-size:18px; color:#888; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:background 0.12s; }
+    .tk-panel-close:hover { background:#eee; color:#333; }
+    .tk-meta-row { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:18px; }
+    .tk-meta-item { display:flex; flex-direction:column; gap:2px; }
+    .tk-meta-label { font-size:10px; font-weight:700; color:#aaa; text-transform:uppercase; letter-spacing:0.5px; }
+    .tk-meta-val { font-size:12px; font-weight:600; color:#333; }
+    .tk-section-label { font-size:10px; font-weight:700; color:#aaa; text-transform:uppercase; letter-spacing:0.7px; margin-bottom:8px; margin-top:18px; }
+    .tk-progress-bar { height:6px; border-radius:3px; background:#eaeeea; overflow:hidden; margin-bottom:4px; }
+    .tk-progress-fill { height:100%; border-radius:3px; background:linear-gradient(90deg,#5ab52a,#7ee83a); transition:width 0.4s; }
+    .tk-progress-label { font-size:11px; color:#888; }
+    .tk-sla-bar { padding:10px 14px; border-radius:8px; margin-bottom:4px; display:flex; align-items:center; justify-content:space-between; }
+    .tk-sla-bar.ok { background:#f0f7e8; border:1px solid #c8e8a8; }
+    .tk-sla-bar.warn { background:#fff8ec; border:1px solid #fad880; }
+    .tk-sla-bar.breach { background:#fef0f0; border:1px solid #f5c0c0; }
+    .tk-admin-note { background:#fffbe8; border:1px solid #fad880; border-radius:8px; padding:12px 14px; margin-bottom:4px; }
+    .tk-admin-note-title { font-size:10px; font-weight:700; color:#906010; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; }
+    .tk-admin-note textarea { width:100%; border:none; background:transparent; font-family:'Inter',sans-serif; font-size:13px; color:#555; resize:vertical; min-height:56px; outline:none; }
+    .tk-comments { display:flex; flex-direction:column; gap:10px; margin-bottom:4px; }
+    .tk-comment { border-radius:8px; padding:11px 14px; max-width:92%; }
+    .tk-comment.admin { background:#f0f7e8; border:1px solid #c8e8a8; margin-left:auto; }
+    .tk-comment.restaurant { background:#f5f5f5; border:1px solid #eaeaea; }
+    .tk-comment-author { font-size:10px; font-weight:700; color:#aaa; text-transform:uppercase; letter-spacing:0.4px; margin-bottom:5px; }
+    .tk-comment-text { font-size:13px; color:#333; line-height:1.5; }
+    .tk-comment-time { font-size:10px; color:#bbb; margin-top:4px; }
+    .tk-reply-area { border:1.5px solid #eaeeea; border-radius:10px; overflow:hidden; }
+    .tk-reply-input { width:100%; border:none; padding:12px 14px; font-family:'Inter',sans-serif; font-size:13px; color:#111; resize:none; min-height:72px; outline:none; background:#fafdf8; }
+    .tk-reply-footer { display:flex; align-items:center; justify-content:space-between; padding:8px 12px; background:#f5f5f5; gap:10px; }
+    .tk-status-select { font-family:'Inter',sans-serif; font-size:12px; font-weight:600; padding:6px 10px; border-radius:6px; border:1.5px solid #eaeeea; background:#fff; color:#333; cursor:pointer; outline:none; }
+    .tk-panel-reply { padding:12px 22px; border-top:1px solid #eaeeea; flex-shrink:0; }
+    .tk-tech-meta { background:#f5f5f5; border-radius:8px; padding:10px 12px; font-size:11px; color:#888; line-height:1.9; }
+    .tk-desc-box { background:#f7f8f7; border-radius:8px; padding:12px 14px; font-size:13px; color:#333; line-height:1.6; margin-bottom:4px; white-space:pre-wrap; }
   </style>
 </head>
 <body>
@@ -278,7 +397,7 @@
     <div class="admin-pill">Admin</div>
   </div>
   <div class="topbar-right">
-    <input class="search-global" id="global-search" placeholder="🔍  Rechercher un restaurant, employé..." oninput="onGlobalSearch(this.value)" onfocus="switchSection('recherche', document.getElementById('nav-recherche'))" />
+    <input class="search-global" id="global-search" placeholder="🔍  Rechercher partout... (Ctrl+K)" oninput="onGlobalSearch(this.value)" onfocus="openGsDrop(this.value)" autocomplete="off" />
     <div class="topbar-user">
       <div class="topbar-avatar" id="topbar-init">A</div>
       <span class="topbar-name" id="admin-name"></span>
@@ -287,6 +406,26 @@
   </div>
 </div>
 <script src="/burger-menu.js"></script>
+
+<!-- GLOBAL SEARCH DROPDOWN -->
+<div id="gs-drop" class="gs-drop" role="listbox">
+  <div class="gs-drop-tip">
+    <span style="font-size:11px;color:#aaa">Astuces :</span>
+    <span class="gs-kbd">#TKT-0001</span><span style="font-size:11px;color:#aaa">ticket direct</span>
+    <span style="color:#ddd">·</span>
+    <span class="gs-kbd">@critique</span><span style="font-size:11px;color:#aaa">par priorité/statut</span>
+    <span style="color:#ddd">·</span>
+    <span class="gs-kbd">&gt;tickets</span><span style="font-size:11px;color:#aaa">navigation</span>
+    <span style="color:#ddd">·</span>
+    <span class="gs-kbd">Esc</span><span style="font-size:11px;color:#aaa">fermer</span>
+    <span style="margin-left:auto;font-size:11px;color:#bbb">↑↓ Entrée pour naviguer</span>
+  </div>
+  <div class="gs-drop-results" id="gs-drop-results">
+    <div class="gs-empty-drop">Commencez à taper pour rechercher partout...</div>
+  </div>
+</div>
+
+
 
 <div class="layout">
   <!-- SIDEBAR -->
@@ -298,6 +437,10 @@
     </div>
 
     <div class="sidebar-label">Gestion</div>
+    <div class="sidebar-item" id="nav-recherche" onclick="switchSection('recherche',this)">
+      <svg class="sidebar-icon" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4" stroke="currentColor" stroke-width="1.2"/><path d="M9 9l3 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Recherche globale
+    </div>
     <div class="sidebar-item" id="nav-restaurants" onclick="switchSection('restaurants',this)">
       <svg class="sidebar-icon" viewBox="0 0 14 14" fill="none"><path d="M2 3a1 1 0 011-1h8a1 1 0 011 1v2a1 1 0 01-1 1H3a1 1 0 01-1-1V3z" stroke="currentColor" stroke-width="1.2"/><path d="M2 9a1 1 0 011-1h8a1 1 0 011 1v2a1 1 0 01-1 1H3a1 1 0 01-1-1V9z" stroke="currentColor" stroke-width="1.2"/></svg>
       Restaurants
@@ -342,14 +485,15 @@
       <svg class="sidebar-icon" viewBox="0 0 14 14" fill="none"><path d="M3 1h8a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V2a1 1 0 011-1z" stroke="currentColor" stroke-width="1.2"/><path d="M4 5h6M4 8h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
       Journal d'audit
     </div>
-    <div class="sidebar-item" id="nav-recherche" onclick="switchSection('recherche',this)">
-      <svg class="sidebar-icon" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4" stroke="currentColor" stroke-width="1.2"/><path d="M9 9l3 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-      Recherche globale
-    </div>
     <div class="sidebar-item" id="nav-messagerie" onclick="window.location.href='/messagerie.html'">
       <svg class="sidebar-icon" viewBox="0 0 14 14" fill="none"><path d="M1 2h12a1 1 0 011 1v7a1 1 0 01-1 1H4l-3 2V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
       Messagerie
       <span class="sidebar-count" id="count-msgs" style="background:rgba(224,85,85,0.12);color:#b03030;display:none">0</span>
+    </div>
+    <div class="sidebar-item" id="nav-tickets" onclick="switchSection('tickets',this)">
+      <svg class="sidebar-icon" viewBox="0 0 14 14" fill="none"><path d="M1 5a1 1 0 011-1h10a1 1 0 011 1v5a1 1 0 01-1 1H2a1 1 0 01-1-1V5z" stroke="currentColor" stroke-width="1.2"/><path d="M4 4V3a1 1 0 011-1h4a1 1 0 011 1v1" stroke="currentColor" stroke-width="1.2"/><path d="M5 7h4M5 9h2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Demandes
+      <span class="sidebar-count" id="count-tickets" style="background:rgba(224,85,85,0.12);color:#b03030;display:none">0</span>
     </div>
     <div class="sidebar-divider"></div>
     <div class="sidebar-item" onclick="window.location.href='/stocks.html'">
@@ -580,16 +724,132 @@
     <!-- ══ RECHERCHE ══ -->
     <div class="section-view" id="section-recherche">
       <div class="page-header">
-        <div><div class="page-title">Recherche globale</div><div class="page-sub">Restaurants, employés, IDs...</div></div>
+        <div>
+          <div class="page-title">Recherche globale</div>
+          <div class="page-sub">Restaurants, employés, tickets, broadcasts, audit, navigation... tout en un</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:#bbb">Raccourci :</span>
+          <span class="gs-kbd" style="font-size:11px">Ctrl+K</span>
+        </div>
       </div>
-      <div class="form-group" style="margin-bottom:20px">
-        <input class="form-input" id="search-input" placeholder="Nom, email, ID, téléphone..." oninput="runSearch(this.value)" style="font-size:15px;padding:14px 16px" />
+      <!-- Search bar -->
+      <div class="gs-search-bar">
+        <input class="gs-search-big" id="search-input"
+          placeholder="Nom, email, ID, ticket... · #TKT-0001 | @critique | @ouvert | >dashboard | restaurant:burger"
+          oninput="runSearch(this.value)" autocomplete="off" />
       </div>
-      <div id="search-results"><div class="loading" style="color:#2a3a2a">Commencez à taper pour chercher...</div></div>
+      <!-- Smart tips -->
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+        <span style="font-size:11px;color:#bbb">Syntaxe intelligente :</span>
+        <span class="gs-smart-pill" onclick="document.getElementById('search-input').value='#';runSearch('#')"><code>#TKT-0001</code> ticket direct</span>
+        <span class="gs-smart-pill" onclick="document.getElementById('search-input').value='@critique';runSearch('@critique')"><code>@critique</code> priorités</span>
+        <span class="gs-smart-pill" onclick="document.getElementById('search-input').value='@ouvert';runSearch('@ouvert')"><code>@ouvert</code> statuts</span>
+        <span class="gs-smart-pill" onclick="document.getElementById('search-input').value='>tickets';runSearch('>tickets')"><code>&gt;tickets</code> navigation</span>
+        <span class="gs-smart-pill" onclick="document.getElementById('search-input').value='restaurant:';runSearch('restaurant:')"><code>restaurant:</code> scope</span>
+        <span class="gs-smart-pill" onclick="document.getElementById('search-input').value='ticket:';runSearch('ticket:')"><code>ticket:</code> scope</span>
+      </div>
+      <!-- Category tabs -->
+      <div class="gs-tabs" id="gs-tabs">
+        <button class="gs-tab active" onclick="setGsTab('all',this)">Tout <span class="gs-tab-count" id="gs-count-all">—</span></button>
+        <button class="gs-tab" onclick="setGsTab('navigation',this)"> Navigation <span class="gs-tab-count" id="gs-count-nav">—</span></button>
+        <button class="gs-tab" onclick="setGsTab('restaurant',this)"> Restaurants <span class="gs-tab-count" id="gs-count-resto">—</span></button>
+        <button class="gs-tab" onclick="setGsTab('employe',this)"> Employés <span class="gs-tab-count" id="gs-count-emp">—</span></button>
+        <button class="gs-tab" onclick="setGsTab('ticket',this)"> Tickets <span class="gs-tab-count" id="gs-count-tk">—</span></button>
+        <button class="gs-tab" onclick="setGsTab('broadcast',this)"> Broadcasts <span class="gs-tab-count" id="gs-count-bc">—</span></button>
+        <button class="gs-tab" onclick="setGsTab('audit',this)"> Audit <span class="gs-tab-count" id="gs-count-aud">—</span></button>
+        <button class="gs-tab" onclick="setGsTab('action',this)"> Actions <span class="gs-tab-count" id="gs-count-act">—</span></button>
+      </div>
+      <!-- Stats bar -->
+      <div class="gs-stats-bar" id="gs-stats-bar">Commencez à taper pour rechercher dans l'ensemble de la plateforme admin...</div>
+      <!-- Results -->
+      <div id="search-results"></div>
+    </div>
+
+    <!-- ══ TICKETS ══ -->
+    <div class="section-view" id="section-tickets">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Demandes</div>
+          <div class="page-sub">Support tickets soumis par les restaurants</div>
+        </div>
+        <button class="add-btn" onclick="loadTickets()">
+          <svg viewBox="0 0 14 14" fill="none"><path d="M1 7a6 6 0 1010.5-4M11 1v3H8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Actualiser
+        </button>
+      </div>
+      <div class="kpi-grid" style="margin-bottom:20px">
+        <div class="kpi-card blue"><div class="kpi-label">Total</div><div class="kpi-val" id="tk-kpi-total">—</div><div class="kpi-sub">tous tickets</div></div>
+        <div class="kpi-card orange"><div class="kpi-label">Ouverts</div><div class="kpi-val" id="tk-kpi-open">—</div><div class="kpi-sub">en attente de traitement</div></div>
+        <div class="kpi-card red"><div class="kpi-label">Critiques</div><div class="kpi-val" id="tk-kpi-critique">—</div><div class="kpi-sub">priorité critique</div></div>
+        <div class="kpi-card"><div class="kpi-label">SLA dépassé</div><div class="kpi-val" id="tk-kpi-sla" style="color:#b03030">—</div><div class="kpi-sub">délai de réponse atteint</div></div>
+      </div>
+      <div class="tk-filter-row">
+        <button class="tk-filter-btn active" onclick="setTkFilter('all',this)">Tous</button>
+        <button class="tk-filter-btn" onclick="setTkFilter('ouvert',this)">🔵 Ouverts</button>
+        <button class="tk-filter-btn" onclick="setTkFilter('en_cours',this)">🟠 En cours</button>
+        <button class="tk-filter-btn" onclick="setTkFilter('en_attente',this)">⏸ En attente</button>
+        <button class="tk-filter-btn" onclick="setTkFilter('resolu',this)">✅ Résolus</button>
+        <button class="tk-filter-btn red" onclick="setTkFilter('critique',this)">🔴 Critiques</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="tk-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Restaurant</th>
+              <th>Sujet</th>
+              <th>Type</th>
+              <th>Priorité</th>
+              <th>Statut / Avancement</th>
+              <th>SLA</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody id="tk-tbody">
+            <tr><td colspan="8" style="text-align:center;padding:40px;color:#bbb">Chargement...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
   </div><!-- /main -->
 </div><!-- /layout -->
+
+<!-- TICKET DETAIL PANEL -->
+<div class="tk-panel-overlay" id="tk-panel-overlay" onclick="closeTkPanel()"></div>
+<div class="tk-panel" id="tk-panel">
+  <div class="tk-panel-head">
+    <div style="flex:1;min-width:0">
+      <div class="tk-panel-id" id="tp-id">TKT-0000</div>
+      <div class="tk-panel-title" id="tp-title">Titre du ticket</div>
+    </div>
+    <button class="tk-panel-close" onclick="closeTkPanel()">×</button>
+  </div>
+  <div class="tk-panel-body" id="tp-body">
+    <div class="loading">Chargement...</div>
+  </div>
+  <div class="tk-panel-reply">
+    <div class="tk-section-label" style="margin-top:0;margin-bottom:8px">Répondre</div>
+    <div class="tk-reply-area">
+      <textarea class="tk-reply-input" id="tp-reply" placeholder="Votre réponse au restaurant..."></textarea>
+      <div class="tk-reply-footer">
+        <select class="tk-status-select" id="tp-status-change">
+          <option value="">Changer le statut...</option>
+          <option value="ouvert">Ouvert</option>
+          <option value="en_cours">En cours</option>
+          <option value="en_attente">En attente</option>
+          <option value="resolu">Résolu ✅</option>
+          <option value="ferme">Fermé</option>
+        </select>
+        <div style="display:flex;gap:8px">
+          <button class="btn-sm btn-danger" id="tp-delete-btn" onclick="" style="font-size:11px">Supprimer</button>
+          <button class="add-btn" style="font-size:12px;padding:7px 18px" onclick="sendTkReply()">Envoyer →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL RESTAURANT -->
 <div class="modal-overlay" id="modal-restaurant">
@@ -692,6 +952,14 @@ function switchSection(section, el) {
   if (section === 'broadcast') loadBroadcasts();
   if (section === 'audit') renderAudit();
   if (section === 'abonnements') renderAbonnements();
+  if (section === 'tickets') loadTickets();
+  if (section === 'recherche') {
+    const gsi = document.getElementById('global-search');
+    const si = document.getElementById('search-input');
+    // Mirror topbar value into search section
+    if (gsi?.value && !si?.value) { si.value = gsi.value; runSearch(gsi.value); }
+    setTimeout(() => si?.focus(), 80);
+  }
 }
 
 // ── LOAD DATA ──
@@ -1067,32 +1335,481 @@ function clearAudit() {
 }
 
 // ── RECHERCHE GLOBALE ──
-function onGlobalSearch(v) {
-  document.getElementById('search-input').value = v;
-  runSearch(v);
+// ══════════════════════════════════════════════
+// ── GLOBAL SEARCH ENGINE ──
+// ══════════════════════════════════════════════
+
+let gsTab = 'all';
+let gsAllResults = {};
+let gsSearchTimeout = null;
+let gsDropTimeout = null;
+let gsDropItems = []; // flat list for keyboard nav
+let gsSelectedIdx = -1;
+
+// ── Navigation items catalogue ──
+const GS_NAV = [
+  { id:'dashboard',    label:'Vue d\'ensemble',  icon:'', sub:'KPIs, activité, graphiques en temps réel',              keywords:['dashboard','overview','stats','chiffre'] },
+  { id:'restaurants',  label:'Restaurants',       icon:'', sub:'Gérer les restaurants, statuts, onboarding',            keywords:['restaurant','resto','gestion','local'] },
+  { id:'employes',     label:'Employés',          icon:'', sub:'Comptes employés, rôles, accès',                        keywords:['employe','staff','equipe','personnel','user'] },
+  { id:'abonnements',  label:'Abonnements',       icon:'', sub:'Plans mensuel, annuel, gratuit',                        keywords:['abo','abonnement','plan','paiement','facture','billing'] },
+  { id:'live',         label:'Activité live',     icon:'', sub:'Commandes en temps réel, flux direct',                  keywords:['live','temps reel','direct','stream','activite'] },
+  { id:'alertes',      label:'Alertes',           icon:'', sub:'Problèmes détectés, avertissements système',            keywords:['alerte','alert','warning','probleme','erreur'] },
+  { id:'sante',        label:'Santé système',     icon:'', sub:'Mémoire RAM, uptime, performance serveur',             keywords:['sante','health','systeme','memoire','ram','uptime','cpu'] },
+  { id:'broadcast',    label:'Broadcast',         icon:'', sub:'Envoyer un message à tous les restaurants',             keywords:['broadcast','message','annonce','notification','push'] },
+  { id:'export',       label:'Export global',     icon:'', sub:'Exporter données en JSON, CSV',                        keywords:['export','download','csv','json','telecharg','donnees'] },
+  { id:'audit',        label:'Journal d\'audit',  icon:'', sub:'Historique de toutes les actions admin',               keywords:['audit','log','historique','journal','action','trace'] },
+  { id:'recherche',    label:'Recherche',         icon:'', sub:'Recherche intelligente dans toute la plateforme',      keywords:['search','recherche','trouver','chercher'] },
+  { id:'messagerie',   label:'Messagerie',        icon:'', sub:'Messages directs avec les restaurants',               keywords:['message','chat','conversation','messagerie','inbox'], href:'/messagerie.html' },
+  { id:'tickets',      label:'Demandes / Tickets',icon:'', sub:'Support tickets — bugs, questions, fonctionnalités',   keywords:['ticket','demande','support','bug','feature','request'] },
+];
+
+// ── Quick actions catalogue ──
+const GS_ACTIONS = [
+  { id:'new-resto',       label:'Nouveau restaurant',      icon:'➕', sub:'Ouvrir le formulaire de création',                    tags:['créer','nouveau'],    action:'openModal("restaurant")' },
+  { id:'new-emp',         label:'Nouvel employé',          icon:'➕', sub:'Créer un nouveau compte employé',                     tags:['créer','nouveau'],    action:'openModal("employe")' },
+  { id:'broadcast-now',   label:'Envoyer un broadcast',    icon:'', sub:'Message instantané à tous les restaurants',           tags:['envoyer','message'],  action:'switchSection("broadcast",document.getElementById("nav-broadcast"))' },
+  { id:'export-all',      label:'Export global',           icon:'', sub:'Télécharger toutes les données de la plateforme',    tags:['exporter','données'], action:'switchSection("export",document.getElementById("nav-export"))' },
+  { id:'health-check',    label:'Vérifier la santé',       icon:'', sub:'Voir RAM, uptime, performance',                      tags:['système','serveur'],  action:'switchSection("sante",document.getElementById("nav-sante"))' },
+  { id:'view-audit',      label:'Journal d\'audit',        icon:'', sub:'Voir toutes les actions enregistrées',                tags:['historique','logs'],  action:'switchSection("audit",document.getElementById("nav-audit"))' },
+  { id:'tk-critical',     label:'Tickets critiques',       icon:'', sub:'Filtrer les tickets de priorité critique',            tags:['urgent','critique'],  action:'switchSection("tickets",document.getElementById("nav-tickets"));setTimeout(()=>setTkFilter("critique",null),400)' },
+  { id:'tk-sla',          label:'Tickets SLA dépassé',     icon:'', sub:'Voir les demandes hors délai SLA',                   tags:['sla','délai'],        action:'switchSection("tickets",document.getElementById("nav-tickets"))' },
+  { id:'live-view',       label:'Voir l\'activité live',   icon:'', sub:'Commandes en cours en temps réel',                   tags:['live','commande'],    action:'switchSection("live",document.getElementById("nav-live"))' },
+  { id:'refresh-data',    label:'Actualiser le dashboard', icon:'', sub:'Recharger toutes les statistiques',                  tags:['refresh','actualiser'],action:'refreshDashboard()' },
+];
+
+const GS_CAT_CFG = {
+  navigation: { label:' Navigation',    countId:'gs-count-nav',   scopeKey:'navigation' },
+  restaurant: { label:' Restaurants',   countId:'gs-count-resto', scopeKey:'restaurant' },
+  employe:    { label:' Employés',       countId:'gs-count-emp',   scopeKey:'employe' },
+  ticket:     { label:' Tickets',        countId:'gs-count-tk',    scopeKey:'ticket' },
+  broadcast:  { label:' Broadcasts',     countId:'gs-count-bc',    scopeKey:'broadcast' },
+  audit:      { label:' Audit',          countId:'gs-count-aud',   scopeKey:'audit' },
+  action:     { label:' Actions rapides',countId:'gs-count-act',   scopeKey:'action' },
+};
+
+// ── Smart query parser ──
+function parseGsQuery(raw) {
+  const q = (raw||'').trim();
+  // #TKT-XXXX → direct ticket
+  if (/^#(TKT-\d+)$/i.test(q)) return { op:'ticket-id', val:q.slice(1).toUpperCase(), term:'', scope:null };
+  // @token → attribute filter on tickets
+  if (/^@(\w+)/.test(q)) return { op:'attr', val:q.slice(1).toLowerCase(), term:q.slice(1), scope:'ticket' };
+  // >section → navigation jump
+  if (/^>(\w+)/.test(q)) return { op:'navigate', val:q.slice(1).toLowerCase(), term:'', scope:'navigation' };
+  // scope:term
+  const sm = q.match(/^(restaurant|employe|ticket|broadcast|audit|action|navigation)s?:(.*)$/i);
+  if (sm) return { op:'scope', val:sm[1].toLowerCase(), term:sm[2].trim(), scope:sm[1].toLowerCase() };
+  return { op:'text', val:'', term:q, scope:null };
 }
 
-function runSearch(q) {
-  const res = document.getElementById('search-results');
-  if (!q || q.length < 2) { res.innerHTML = '<div class="loading" style="color:#2a3a2a">Commencez à taper pour chercher...</div>'; return; }
-  const q2 = q.toLowerCase();
-  const found = [];
-  allRestaurants.forEach(r => {
-    if ([r.nom,r.email,r.telephone,r.id,r.adresse].some(f => (f||'').toLowerCase().includes(q2))) {
-      found.push({ type:'restaurant', name:r.nom||'—', sub:`${r.email||''} · ${r.statut||''} · ${r.abonnement||''}`, onClick:`switchSection('restaurants',document.getElementById('nav-restaurants'))` });
+// ── Highlight matched text ──
+function gsHL(text, q) {
+  if (!q || !text) return escapeHtml(text||'');
+  const safe = escapeHtml(String(text));
+  const qe = escapeHtml(q).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  return safe.replace(new RegExp('('+qe+')', 'gi'), '<mark class="gs-highlight">$1</mark>');
+}
+
+// ── Collect all results ──
+async function collectGsResults(raw) {
+  if (!raw || raw.length < 2) return {};
+  const parsed = parseGsQuery(raw);
+  const q = parsed.term.toLowerCase();
+  const groups = { navigation:[], restaurant:[], employe:[], ticket:[], broadcast:[], audit:[], action:[] };
+
+  // DIRECT TICKET LOOKUP
+  if (parsed.op === 'ticket-id') {
+    if (!allTickets.length) { try { const r = await fetch('/tickets'); allTickets = await r.json(); } catch(e) {} }
+    const t = allTickets.find(tk => tk.id.toUpperCase() === parsed.val);
+    if (t) groups.ticket = [t];
+    return groups;
+  }
+
+  // NAVIGATION JUMP
+  if (parsed.op === 'navigate') {
+    groups.navigation = GS_NAV.filter(n => n.id.includes(parsed.val) || n.label.toLowerCase().includes(parsed.val) || n.keywords.some(k=>k.includes(parsed.val)));
+    return groups;
+  }
+
+  // ATTRIBUTE FILTER (tickets @priorité/@statut/@type)
+  if (parsed.op === 'attr') {
+    if (!allTickets.length) { try { const r = await fetch('/tickets'); allTickets = await r.json(); } catch(e) {} }
+    const v = parsed.val;
+    groups.ticket = allTickets.filter(t => t.priorite===v || t.statut===v.replace('_',' ') || t.statut===v || t.type===v || (t.restaurantNom||'').toLowerCase().includes(v));
+    return groups;
+  }
+
+  // FULL TEXT SEARCH (with optional scope)
+  const sc = parsed.scope;
+
+  // Navigation
+  if (!sc || sc==='navigation') {
+    groups.navigation = GS_NAV.filter(n =>
+      [n.label, n.sub, ...n.keywords].some(k => k.toLowerCase().includes(q))
+    ).slice(0,5);
+  }
+
+  // Restaurants
+  if (!sc || sc==='restaurant') {
+    groups.restaurant = allRestaurants.filter(r =>
+      [r.nom, r.email, r.telephone, r.id, r.adresse, r.statut, r.abonnement, r.onboarding].some(f => (f||'').toLowerCase().includes(q))
+    ).slice(0,20);
+  }
+
+  // Employés
+  if (!sc || sc==='employe') {
+    groups.employe = allEmployes.filter(e =>
+      [e.nom, e.email, e.role, e.restaurant, e.id, e.statut].some(f => (f||'').toLowerCase().includes(q))
+    ).slice(0,20);
+  }
+
+  // Tickets
+  if (!sc || sc==='ticket') {
+    if (!allTickets.length) { try { const r = await fetch('/tickets'); allTickets = await r.json(); } catch(e) {} }
+    groups.ticket = allTickets.filter(t =>
+      [t.id, t.titre, t.description, t.restaurantNom, t.restaurantId, t.type, t.priorite, t.statut, t.adminNote].some(f => (f||'').toLowerCase().includes(q))
+      || (t.comments||[]).some(c => (c.text||'').toLowerCase().includes(q))
+    ).slice(0,20);
+  }
+
+  // Broadcasts
+  if (!sc || sc==='broadcast') {
+    try {
+      const bcRes = await fetch('/admin/broadcast');
+      const bcs = bcRes.ok ? await bcRes.json() : [];
+      groups.broadcast = bcs.filter(b =>
+        (b.message||'').toLowerCase().includes(q) || (b.type||'').toLowerCase().includes(q) || (b.author||'').toLowerCase().includes(q)
+      ).slice(0,10);
+    } catch(e) {}
+  }
+
+  // Audit log
+  if (!sc || sc==='audit') {
+    groups.audit = auditLog.filter(a =>
+      [a.action, a.detail, a.user].some(f => (f||'').toLowerCase().includes(q))
+    ).slice(0,15);
+  }
+
+  // Quick actions
+  if (!sc || sc==='action') {
+    groups.action = GS_ACTIONS.filter(a =>
+      [a.label, a.sub, ...(a.tags||[])].some(f => f.toLowerCase().includes(q))
+    ).slice(0,8);
+  }
+
+  return groups;
+}
+
+// ── Render result card (full section) ──
+function renderGsFullItem(item, type, q) {
+  switch(type) {
+    case 'navigation': {
+      const onclick = item.href ? `window.location.href='${item.href}'` : `switchSection('${item.id}',document.getElementById('nav-${item.id}'))`;
+      return `<div class="gs-full-item" onclick="${onclick}">
+        <div class="gs-full-item-icon" style="background:#f0f7e8">${item.icon}</div>
+        <div class="gs-full-item-body">
+          <div class="gs-full-item-name">${gsHL(item.label,q)}</div>
+          <div class="gs-full-item-sub">${gsHL(item.sub,q)}</div>
+        </div>
+        <div class="gs-full-item-actions"><span class="gs-badge g">section</span></div>
+      </div>`;
     }
-  });
-  allEmployes.forEach(e => {
-    if ([e.nom,e.email,e.role,e.restaurant].some(f => (f||'').toLowerCase().includes(q2))) {
-      found.push({ type:'employe', name:e.nom||'—', sub:`${e.email||''} · ${e.role||''} · ${e.restaurant||''}`, onClick:`switchSection('employes',document.getElementById('nav-employes'))` });
+    case 'restaurant': {
+      const statusCls = item.statut==='Actif'?'g':item.statut==='Maintenance'?'o':'r';
+      const aboCls   = item.abonnement==='Annuel'?'b':item.abonnement==='Mensuel'?'g':'gray';
+      const oc = `switchSection('restaurants',document.getElementById('nav-restaurants'))`;
+      return `<div class="gs-full-item" onclick="${oc}">
+        <div class="gs-full-item-icon" style="background:#f0f7e8;font-size:12px;font-weight:700;color:#2d6a0a">${(item.nom||'?').slice(0,2).toUpperCase()}</div>
+        <div class="gs-full-item-body">
+          <div class="gs-full-item-name">${gsHL(item.nom,q)}</div>
+          <div class="gs-full-item-sub">${gsHL(item.email||'',q)} · ${item.telephone||'—'} · ${item.adresse||''}</div>
+          <div class="gs-full-item-tags">
+            <span class="gs-badge ${statusCls}">${item.statut||'—'}</span>
+            <span class="gs-badge ${aboCls}">${item.abonnement||'—'}</span>
+            ${item.onboarding==='Complété'?'<span class="gs-badge g">Onboarding ✓</span>':''}
+          </div>
+        </div>
+        <div class="gs-full-item-actions">
+          <button class="gs-item-action" onclick="event.stopPropagation();ouvrirOnboarding('${item.id}','${encodeURIComponent(item.nom||'')}')">${item.onboarding==='Complété'?'Modifier':'Config'}</button>
+          <button class="gs-item-action" onclick="event.stopPropagation();toggleStatut('${item.id}','${item.statut==='Actif'?'Suspendu':'Actif'}','restaurant');setTimeout(()=>runSearch(document.getElementById('search-input').value),500)">${item.statut==='Actif'?'Suspendre':'Activer'}</button>
+          <button class="gs-item-action" onclick="event.stopPropagation();resetPassword('${item.id}','restaurant')">MDP</button>
+        </div>
+      </div>`;
     }
+    case 'employe': {
+      const roleCls = {Admin:'r',Gérant:'o',Hôte:'b',Cuisine:'g'}[item.role]||'gray';
+      const av = (item.nom||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+      return `<div class="gs-full-item" onclick="switchSection('employes',document.getElementById('nav-employes'))">
+        <div class="gs-full-item-icon" style="background:linear-gradient(135deg,#101a30,#1a2a50);font-size:11px;font-weight:700;color:#a8c8f8">${av}</div>
+        <div class="gs-full-item-body">
+          <div class="gs-full-item-name">${gsHL(item.nom,q)}</div>
+          <div class="gs-full-item-sub">${gsHL(item.email||'',q)} · ${gsHL(item.restaurant||'',q)}</div>
+          <div class="gs-full-item-tags">
+            <span class="gs-badge ${roleCls}">${item.role||'—'}</span>
+            <span class="gs-badge ${item.statut==='Actif'?'g':'r'}">${item.statut||'—'}</span>
+          </div>
+        </div>
+        <div class="gs-full-item-actions">
+          <button class="gs-item-action" onclick="event.stopPropagation();resetPassword('${item.id}','employe')">MDP</button>
+          <button class="gs-item-action" onclick="event.stopPropagation();toggleStatut('${item.id}','${item.statut==='Actif'?'Suspendu':'Actif'}','employe');setTimeout(()=>runSearch(document.getElementById('search-input').value),500)">${item.statut==='Actif'?'Suspendre':'Activer'}</button>
+        </div>
+      </div>`;
+    }
+    case 'ticket': {
+      const prioCls = {critique:'r',haute:'o',normale:'gray',basse:'g'}[item.priorite]||'gray';
+      const statCls = {ouvert:'b',en_cours:'o',resolu:'g',ferme:'gray',en_attente:'gray'}[item.statut]||'gray';
+      const sla = getSlaInfo(item);
+      return `<div class="gs-full-item" onclick="switchSection('tickets',document.getElementById('nav-tickets'));setTimeout(()=>openTkPanel('${item.id}'),420)">
+        <div class="gs-full-item-icon" style="background:#f5eeff;font-size:11px;font-weight:700;color:#7030c0">${item.id.slice(-4)}</div>
+        <div class="gs-full-item-body">
+          <div class="gs-full-item-name">${gsHL(item.titre||'—',q)}</div>
+          <div class="gs-full-item-sub">${gsHL(item.restaurantNom||item.restaurantId||'',q)} · ${new Date(item.createdAt).toLocaleDateString('fr-FR')} ${sla?'· <span class="tk-sla '+sla.cls+'">'+sla.label+'</span>':''}</div>
+          <div class="gs-full-item-tags">
+            <span class="gs-badge ${prioCls}">${TK_PRIOS[item.priorite]||item.priorite||'—'}</span>
+            <span class="gs-badge ${statCls}">${TK_STATUTS_LABEL[item.statut]||item.statut||'—'}</span>
+            ${item.type?`<span class="gs-badge gray">${TK_TYPES[item.type]||item.type}</span>`:''}
+          </div>
+        </div>
+        <div class="gs-full-item-actions">
+          <button class="gs-item-action" onclick="event.stopPropagation();switchSection('tickets',document.getElementById('nav-tickets'));setTimeout(()=>openTkPanel('${item.id}'),420)">Ouvrir →</button>
+        </div>
+      </div>`;
+    }
+    case 'broadcast': {
+      const typeCls = {info:'b',warning:'o',urgent:'r',success:'g'}[item.type]||'gray';
+      const d = new Date(item.createdAt||Date.now());
+      return `<div class="gs-full-item" onclick="switchSection('broadcast',document.getElementById('nav-broadcast'))">
+        <div class="gs-full-item-icon" style="background:#fff8ec">📢</div>
+        <div class="gs-full-item-body">
+          <div class="gs-full-item-name">${gsHL((item.message||'—').slice(0,90),q)}</div>
+          <div class="gs-full-item-sub">${d.toLocaleString('fr-FR')} · par ${item.author||'Admin'} · ${(item.dismissedBy||[]).length} lu(s)</div>
+          <div class="gs-full-item-tags"><span class="gs-badge ${typeCls}">${item.type||'info'}</span></div>
+        </div>
+        <div class="gs-full-item-actions"><span class="gs-badge o">broadcast</span></div>
+      </div>`;
+    }
+    case 'audit': {
+      const d = new Date(item.ts||Date.now());
+      return `<div class="gs-full-item" onclick="switchSection('audit',document.getElementById('nav-audit'))">
+        <div class="gs-full-item-icon" style="background:#f5f5f5">📋</div>
+        <div class="gs-full-item-body">
+          <div class="gs-full-item-name">${gsHL(item.action||'—',q)}</div>
+          <div class="gs-full-item-sub">${gsHL((item.detail||'').slice(0,80),q)} · par ${item.user||'admin'} · ${d.toLocaleString('fr-FR')}</div>
+        </div>
+      </div>`;
+    }
+    case 'action': {
+      return `<div class="gs-full-item" onclick="${item.action}">
+        <div class="gs-full-item-icon" style="background:#f0f7e8">${item.icon}</div>
+        <div class="gs-full-item-body">
+          <div class="gs-full-item-name">${gsHL(item.label,q)}</div>
+          <div class="gs-full-item-sub">${item.sub}</div>
+          <div class="gs-full-item-tags">${(item.tags||[]).map(t=>`<span class="gs-badge g">${t}</span>`).join('')}</div>
+        </div>
+        <div class="gs-full-item-actions"><span class="gs-badge g">action</span></div>
+      </div>`;
+    }
+    default: return '';
+  }
+}
+
+// ── Render result item (dropdown) ──
+function renderGsDropItem(item, type, q) {
+  let icon='', name='', sub='', onclick='', badge='';
+  switch(type) {
+    case 'navigation':
+      icon=`<div class="gs-item-icon" style="background:#f0f7e8">${item.icon}</div>`;
+      name=item.label; sub=item.sub; badge='<span class="gs-badge g">nav</span>';
+      onclick=item.href?`closeGsDrop();window.location.href='${item.href}'`:`closeGsDrop();switchSection('${item.id}',document.getElementById('nav-${item.id}'))`;
+      break;
+    case 'restaurant':
+      icon=`<div class="gs-item-icon" style="background:#f0f7e8;font-size:11px;font-weight:700;color:#2d6a0a">${(item.nom||'?').slice(0,2).toUpperCase()}</div>`;
+      name=item.nom||'—'; sub=`${item.email||''} · ${item.statut||''}`;
+      badge=`<span class="gs-badge ${item.statut==='Actif'?'g':item.statut==='Maintenance'?'o':'r'}">${item.statut||''}</span>`;
+      onclick=`closeGsDrop();switchSection('restaurants',document.getElementById('nav-restaurants'))`;
+      break;
+    case 'employe': {
+      const av=(item.nom||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+      icon=`<div class="gs-item-icon" style="background:#eff4ff;font-size:11px;font-weight:700;color:#2a50aa">${av}</div>`;
+      name=item.nom||'—'; sub=`${item.role||''} · ${item.restaurant||''}`;
+      badge=`<span class="gs-badge b">${item.role||'—'}</span>`;
+      onclick=`closeGsDrop();switchSection('employes',document.getElementById('nav-employes'))`;
+      break; }
+    case 'ticket':
+      icon=`<div class="gs-item-icon" style="background:#f5eeff;font-size:11px;font-weight:700;color:#7030c0">${item.id.slice(-4)}</div>`;
+      name=item.titre||item.id; sub=`${item.restaurantNom||''} · ${TK_PRIOS[item.priorite]||item.priorite||''}`;
+      badge=`<span class="gs-badge ${item.priorite==='critique'?'r':item.priorite==='haute'?'o':'gray'}">${item.priorite||''}</span>`;
+      onclick=`closeGsDrop();switchSection('tickets',document.getElementById('nav-tickets'));setTimeout(()=>openTkPanel('${item.id}'),420)`;
+      break;
+    case 'broadcast':
+      icon=`<div class="gs-item-icon" style="background:#fff8ec">📢</div>`;
+      name=(item.message||'').slice(0,60); sub=item.type||'info';
+      badge=`<span class="gs-badge o">bc</span>`;
+      onclick=`closeGsDrop();switchSection('broadcast',document.getElementById('nav-broadcast'))`;
+      break;
+    case 'audit':
+      icon=`<div class="gs-item-icon" style="background:#f5f5f5">📋</div>`;
+      name=item.action||'—'; sub=(item.detail||'').slice(0,50);
+      badge='';
+      onclick=`closeGsDrop();switchSection('audit',document.getElementById('nav-audit'))`;
+      break;
+    case 'action':
+      icon=`<div class="gs-item-icon" style="background:#f0f7e8">${item.icon}</div>`;
+      name=item.label; sub=item.sub;
+      badge='<span class="gs-badge g">⚡</span>';
+      onclick=`closeGsDrop();${item.action}`;
+      break;
+    default: return '';
+  }
+  return `<div class="gs-item" onclick="${onclick}" data-gs-drop-item>
+    ${icon}
+    <div class="gs-item-body">
+      <div class="gs-item-name">${gsHL(name,q)}</div>
+      <div class="gs-item-sub">${escapeHtml(sub)}</div>
+    </div>
+    <div class="gs-item-badges">${badge}</div>
+  </div>`;
+}
+
+// ── Full section render ──
+function setGsTab(tab, el) {
+  gsTab = tab;
+  document.querySelectorAll('.gs-tab').forEach(b => b.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderGsSection(gsAllResults, document.getElementById('search-input')?.value?.trim()||'');
+}
+
+function updateGsCounts(groups) {
+  let total = 0;
+  Object.keys(GS_CAT_CFG).forEach(k => {
+    const cnt = (groups[k]||[]).length;
+    total += cnt;
+    const el = document.getElementById(GS_CAT_CFG[k].countId);
+    if (el) el.textContent = cnt;
   });
-  if (!found.length) { res.innerHTML = '<div class="loading" style="color:#2a3a2a">Aucun résultat pour "' + q + '"</div>'; return; }
-  res.innerHTML = `<div class="search-results">${found.map(f=>`
-    <div class="search-result-item" onclick="${f.onClick}">
-      <span class="sr-type ${f.type}">${f.type}</span>
-      <div><div class="sr-name">${f.name}</div><div class="sr-sub">${f.sub}</div></div>
-    </div>`).join('')}</div>`;
+  const allEl = document.getElementById('gs-count-all');
+  if (allEl) allEl.textContent = total;
+  return total;
+}
+
+function renderGsSection(groups, q) {
+  const resEl = document.getElementById('search-results');
+  const statsEl = document.getElementById('gs-stats-bar');
+  if (!resEl) return;
+
+  const total = updateGsCounts(groups);
+
+  if (statsEl) {
+    if (!q || q.length < 2) {
+      statsEl.textContent = 'Commencez à taper pour rechercher dans l\'ensemble de la plateforme admin...';
+    } else if (total === 0) {
+      statsEl.innerHTML = `Aucun résultat pour "<b>${escapeHtml(q)}</b>" — essayez <code>#TKT-0001</code>, <code>@critique</code> ou <code>&gt;tickets</code>`;
+    } else {
+      const cats = Object.keys(groups).filter(k => (groups[k]||[]).length > 0);
+      const parsed = parseGsQuery(q);
+      const smartHint = parsed.op!=='text' ? `<span class="gs-smart-pill">🎯 Filtre actif : <code>${escapeHtml(q)}</code></span>` : '';
+      statsEl.innerHTML = `<b>${total}</b> résultat${total>1?'s':''} dans <b>${cats.length}</b> catégorie${cats.length>1?'s':''} pour "<b>${escapeHtml(q)}</b>" ${smartHint}`;
+    }
+  }
+
+  if (!q || q.length < 2) { resEl.innerHTML = ''; return; }
+  if (total === 0) {
+    resEl.innerHTML = `<div style="text-align:center;padding:48px 0;color:#bbb">
+      <div style="font-size:40px;margin-bottom:12px">🔍</div>
+      <div style="font-size:14px;font-weight:600;color:#888">Aucun résultat</div>
+      <div style="font-size:12px;margin-top:6px">Essayez <code>#TKT-0001</code>, <code>@critique</code> ou <code>&gt;tickets</code></div>
+    </div>`;
+    return;
+  }
+
+  const cats = gsTab === 'all' ? Object.keys(GS_CAT_CFG) : [gsTab];
+  const termForHL = parseGsQuery(q).term || q;
+  let html = '';
+  cats.forEach(cat => {
+    const items = groups[cat]||[];
+    if (!items.length) return;
+    html += `<div class="gs-section-block">
+      <div class="gs-section-title">${GS_CAT_CFG[cat].label} <span class="gs-badge gray">${items.length}</span></div>
+      ${items.map(i => renderGsFullItem(i, cat, termForHL)).join('')}
+    </div>`;
+  });
+  resEl.innerHTML = html || `<div style="text-align:center;padding:32px;color:#bbb;font-size:13px">Aucun résultat dans cette catégorie.</div>`;
+}
+
+async function runSearch(q) {
+  clearTimeout(gsSearchTimeout);
+  gsSearchTimeout = setTimeout(async () => {
+    if (!q || q.length < 2) {
+      renderGsSection({}, q);
+      return;
+    }
+    const resEl = document.getElementById('search-results');
+    if (resEl) resEl.innerHTML = '<div style="padding:32px;text-align:center;color:#bbb;font-size:12px">🔍 Recherche...</div>';
+    gsAllResults = await collectGsResults(q);
+    renderGsSection(gsAllResults, q);
+  }, 250);
+}
+
+// ── Floating dropdown ──
+function openGsDrop(v) {
+  if (v && v.length >= 2) runDropSearch(v);
+}
+
+function closeGsDrop() {
+  document.getElementById('gs-drop')?.classList.remove('open');
+  gsSelectedIdx = -1;
+  gsDropItems = [];
+}
+
+async function runDropSearch(q) {
+  const drop = document.getElementById('gs-drop');
+  const dropRes = document.getElementById('gs-drop-results');
+  if (!drop || !dropRes) return;
+
+  if (!q || q.length < 2) { drop.classList.remove('open'); return; }
+  drop.classList.add('open');
+  dropRes.innerHTML = '<div style="padding:20px;text-align:center;color:#bbb;font-size:12px">🔍 Recherche...</div>';
+
+  const groups = await collectGsResults(q);
+  const termForHL = parseGsQuery(q).term || q;
+  let html = '';
+  let hasResults = false;
+
+  Object.keys(GS_CAT_CFG).forEach(cat => {
+    const items = (groups[cat]||[]).slice(0,3);
+    if (!items.length) return;
+    hasResults = true;
+    const total = (groups[cat]||[]).length;
+    html += `<div>
+      <div class="gs-group-head">
+        <span class="gs-group-label">${GS_CAT_CFG[cat].label}</span>
+        ${total > 3 ? `<span class="gs-group-more">+${total-3} autres</span>` : ''}
+      </div>
+      ${items.map(i => renderGsDropItem(i, cat, termForHL)).join('')}
+    </div>`;
+  });
+
+  if (!hasResults) html = `<div class="gs-empty-drop">😔 Aucun résultat pour "${escapeHtml(q)}"<br><span style="font-size:11px">Essayez @critique · #TKT-0001 · >tickets</span></div>`;
+  else html += `<div class="gs-see-all">
+    <button class="gs-see-all-btn" onclick="closeGsDrop();switchSection('recherche',document.getElementById('nav-recherche'));document.getElementById('search-input').value=${JSON.stringify(q)};runSearch(${JSON.stringify(q)})">Voir tous les résultats (${Object.values(groups).reduce((s,a)=>s+a.length,0)}) →</button>
+  </div>`;
+
+  dropRes.innerHTML = html;
+  // Rebuild keyboard nav items
+  gsDropItems = Array.from(dropRes.querySelectorAll('[data-gs-drop-item]'));
+  gsSelectedIdx = -1;
+}
+
+function onGlobalSearch(v) {
+  clearTimeout(gsDropTimeout);
+  gsDropTimeout = setTimeout(() => runDropSearch(v), 180);
+  // Mirror to section search if open
+  const si = document.getElementById('search-input');
+  if (si) si.value = v;
+  clearTimeout(gsSearchTimeout);
+  gsSearchTimeout = setTimeout(() => {
+    if (document.getElementById('section-recherche')?.classList.contains('active')) runSearch(v);
+  }, 350);
 }
 
 // ── ACTIONS ──
@@ -1182,12 +1899,290 @@ function openModal(type) {
 }
 function closeModal(type) { document.getElementById('modal-' + type).classList.remove('open'); }
 
+// ── TICKETS ──
+let allTickets = [], tkFilter = 'all', currentTkId = null;
+
+const TK_TYPES = { bug:'🐛 Bug', question:'❓ Question', feature:'✨ Fonctionnalité', urgent:'🚨 Urgent' };
+const TK_STATUTS_LABEL = { ouvert:'Ouvert', en_cours:'En cours', en_attente:'En attente', resolu:'Résolu', ferme:'Fermé' };
+const TK_PRIOS = { critique:'🔴 Critique', haute:'🟠 Haute', normale:'🟡 Normale', basse:'🟢 Basse' };
+
+function escapeHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>');
+}
+
+function getSlaInfo(ticket) {
+  if (!ticket.slaTarget || !ticket.createdAt) return null;
+  const deadline = new Date(ticket.createdAt).getTime() + ticket.slaTarget * 3600000;
+  const diff = deadline - Date.now();
+  if (diff < 0) return { label: 'Dépassé de ' + fmtSla(-diff), cls: 'breach' };
+  if (diff < 3600000) return { label: fmtSla(diff) + ' restant', cls: 'warn' };
+  return { label: fmtSla(diff) + ' restant', cls: 'ok' };
+}
+
+function getSlaDeadline(ticket) {
+  if (!ticket.slaTarget || !ticket.createdAt) return null;
+  return new Date(new Date(ticket.createdAt).getTime() + ticket.slaTarget * 3600000);
+}
+
+function fmtSla(ms) {
+  const h = Math.floor(ms / 3600000), m = Math.floor((ms % 3600000) / 60000);
+  return h > 0 ? h + 'h ' + m + 'm' : m + 'm';
+}
+
+function tkProgress(statut) {
+  return { ouvert:10, en_cours:50, en_attente:70, resolu:100, ferme:100 }[statut] || 10;
+}
+
+async function loadTickets() {
+  try {
+    const [tkRes, statsRes] = await Promise.all([fetch('/tickets'), fetch('/tickets/stats')]);
+    allTickets = await tkRes.json();
+    const stats = await statsRes.json();
+    document.getElementById('tk-kpi-total').textContent = stats.total ?? allTickets.length;
+    document.getElementById('tk-kpi-open').textContent = stats.ouverts ?? 0;
+    document.getElementById('tk-kpi-critique').textContent = stats.critiques ?? allTickets.filter(t=>t.priorite==='critique').length;
+    document.getElementById('tk-kpi-sla').textContent = stats.sla_breach ?? 0;
+    const openCount = stats.ouverts ?? allTickets.filter(t=>t.statut==='ouvert').length;
+    const badge = document.getElementById('count-tickets');
+    if (openCount > 0) { badge.textContent = openCount; badge.style.display = 'inline-block'; }
+    else badge.style.display = 'none';
+    renderTickets();
+  } catch(e) { console.error('Tickets:', e); }
+}
+
+function renderTickets() {
+  const tbody = document.getElementById('tk-tbody');
+  let data = allTickets;
+  if (tkFilter === 'critique') data = data.filter(t => t.priorite === 'critique');
+  else if (tkFilter !== 'all') data = data.filter(t => t.statut === tkFilter);
+
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#bbb">Aucun ticket trouvé</td></tr>';
+    return;
+  }
+  tbody.innerHTML = data.map(t => {
+    const sla = getSlaInfo(t);
+    const hasReply = (t.comments||[]).some(c => c.from === 'restaurant' && !c.readByAdmin);
+    const d = new Date(t.createdAt);
+    const dateStr = d.toLocaleDateString('fr-FR') + ' ' + d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    const pct = tkProgress(t.statut);
+    return `<tr onclick="openTkPanel('${t.id}')">
+      <td style="font-size:11px;font-weight:700;color:#aaa;white-space:nowrap">${t.id}${hasReply?'<span class="tk-badge new-reply" style="font-size:9px;margin-left:5px">Rép.</span>':''}</td>
+      <td style="font-size:12px;font-weight:500;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(t.restaurantNom||t.restaurantId||'—')}</td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px">${escapeHtml(t.titre||'—')}</td>
+      <td style="font-size:11px;white-space:nowrap">${TK_TYPES[t.type]||t.type||'—'}</td>
+      <td><span class="tk-badge ${t.priorite||'normale'}">${TK_PRIOS[t.priorite]||t.priorite||'—'}</span></td>
+      <td>
+        <span class="tk-badge ${t.statut||'ouvert'}">${TK_STATUTS_LABEL[t.statut]||t.statut||'—'}</span>
+        <div class="tk-progress-mini"><div class="tk-progress-mini-fill" style="width:${pct}%"></div></div>
+      </td>
+      <td>${sla?`<span class="tk-sla ${sla.cls}">${sla.label}</span>`:'—'}</td>
+      <td style="font-size:11px;color:#bbb;white-space:nowrap">${dateStr}</td>
+    </tr>`;
+  }).join('');
+}
+
+function setTkFilter(filter, el) {
+  tkFilter = filter;
+  document.querySelectorAll('.tk-filter-btn').forEach(b => b.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderTickets();
+}
+
+async function openTkPanel(ticketId) {
+  currentTkId = ticketId;
+  const ticket = allTickets.find(t => t.id === ticketId);
+  if (!ticket) return;
+  document.getElementById('tp-id').textContent = ticket.id;
+  document.getElementById('tp-title').textContent = ticket.titre || '—';
+  document.getElementById('tp-delete-btn').onclick = () => deleteTk(ticketId);
+  document.getElementById('tp-reply').value = '';
+  document.getElementById('tp-status-change').value = '';
+  renderTkBody(ticket);
+  document.getElementById('tk-panel').classList.add('open');
+  document.getElementById('tk-panel-overlay').classList.add('open');
+}
+
+function closeTkPanel() {
+  document.getElementById('tk-panel').classList.remove('open');
+  document.getElementById('tk-panel-overlay').classList.remove('open');
+  currentTkId = null;
+}
+
+function renderTkBody(ticket) {
+  const sla = getSlaInfo(ticket);
+  const pct = tkProgress(ticket.statut);
+  const comments = ticket.comments || [];
+  const meta = ticket.metadata || {};
+
+  const slaHtml = sla ? `
+    <div class="tk-sla-bar ${sla.cls}" style="margin-top:0">
+      <div>
+        <div style="font-size:11px;font-weight:700">SLA — ${sla.label}</div>
+        <div style="font-size:10px;color:#999;margin-top:1px">Échéance : ${getSlaDeadline(ticket) ? getSlaDeadline(ticket).toLocaleString('fr-FR') : '—'} (${ticket.slaTarget}h SLA)</div>
+      </div>
+      <span class="tk-badge ${sla.cls === 'breach' ? 'critique' : sla.cls === 'warn' ? 'haute' : 'basse'}">${sla.cls === 'breach' ? 'Dépassé ⚠️' : sla.cls === 'warn' ? 'Proche ⏰' : 'OK ✓'}</span>
+    </div>` : '';
+
+  const commentsHtml = comments.length ? comments.map(c => `
+    <div class="tk-comment ${c.from}">
+      <div class="tk-comment-author">${c.from === 'admin' ? '🛡️ Admin' : '🍽️ ' + escapeHtml(c.fromName||'Restaurant')}</div>
+      <div class="tk-comment-text">${escapeHtml(c.text||'')}</div>
+      <div class="tk-comment-time">${new Date(c.at).toLocaleString('fr-FR')}</div>
+    </div>`).join('') : '<div style="font-size:12px;color:#bbb;padding:8px 0">Aucun message pour l\'instant.</div>';
+
+  const metaHtml = Object.keys(meta).length ? `
+    <div class="tk-section-label">Métadonnées techniques</div>
+    <div class="tk-tech-meta">
+      ${meta.page ? `<div>📄 <b>Page :</b> ${escapeHtml(meta.page)}</div>` : ''}
+      ${meta.url ? `<div>🔗 <b>URL :</b> ${escapeHtml(meta.url)}</div>` : ''}
+      ${meta.browser ? `<div>🌐 <b>Navigateur :</b> ${escapeHtml(meta.browser)}</div>` : ''}
+      ${meta.resolution ? `<div>📐 <b>Résolution :</b> ${escapeHtml(meta.resolution)}</div>` : ''}
+      ${meta.timestamp ? `<div>🕐 <b>Soumis :</b> ${new Date(meta.timestamp).toLocaleString('fr-FR')}</div>` : ''}
+    </div>` : '';
+
+  const ratingHtml = (ticket.statut === 'resolu' || ticket.statut === 'ferme') ? `
+    <div class="tk-section-label">Évaluation client</div>
+    <div style="margin-bottom:4px">
+      ${ticket.rating ? `<span style="font-size:22px">${'⭐'.repeat(ticket.rating)}</span> <span style="font-size:12px;color:#aaa">${ticket.rating}/5</span>` : '<span style="font-size:12px;color:#bbb;font-style:italic">Pas encore évalué</span>'}
+    </div>` : '';
+
+  document.getElementById('tp-body').innerHTML = `
+    <div class="tk-meta-row">
+      <div class="tk-meta-item"><div class="tk-meta-label">Restaurant</div><div class="tk-meta-val">${escapeHtml(ticket.restaurantNom||ticket.restaurantId||'—')}</div></div>
+      <div class="tk-meta-item"><div class="tk-meta-label">Type</div><div class="tk-meta-val">${TK_TYPES[ticket.type]||ticket.type||'—'}</div></div>
+      <div class="tk-meta-item"><div class="tk-meta-label">Priorité</div><div class="tk-meta-val"><span class="tk-badge ${ticket.priorite||'normale'}">${TK_PRIOS[ticket.priorite]||ticket.priorite||'—'}</span></div></div>
+      <div class="tk-meta-item"><div class="tk-meta-label">Statut</div><div class="tk-meta-val"><span class="tk-badge ${ticket.statut||'ouvert'}">${TK_STATUTS_LABEL[ticket.statut]||ticket.statut||'—'}</span></div></div>
+      <div class="tk-meta-item"><div class="tk-meta-label">Créé le</div><div class="tk-meta-val">${ticket.createdAt ? new Date(ticket.createdAt).toLocaleString('fr-FR') : '—'}</div></div>
+      ${ticket.resolvedAt ? `<div class="tk-meta-item"><div class="tk-meta-label">Résolu le</div><div class="tk-meta-val">${new Date(ticket.resolvedAt).toLocaleString('fr-FR')}</div></div>` : ''}
+    </div>
+
+    ${slaHtml}
+
+    <div class="tk-section-label" style="margin-top:${sla?'14px':'0'}">Progression</div>
+    <div class="tk-progress-bar"><div class="tk-progress-fill" style="width:${pct}%"></div></div>
+    <div class="tk-progress-label" style="margin-bottom:4px">${pct}% — ${TK_STATUTS_LABEL[ticket.statut]||ticket.statut}</div>
+
+    <div class="tk-section-label">Changer la priorité</div>
+    <div style="display:flex;gap:6px;margin-bottom:4px;flex-wrap:wrap">
+      ${Object.entries(TK_PRIOS).map(([k,v]) => `<button class="tk-filter-btn ${ticket.priorite===k?'active':''}" style="font-size:11px;padding:4px 10px" onclick="updateTkPrio('${ticket.id}','${k}',this)">${v}</button>`).join('')}
+    </div>
+
+    <div class="tk-section-label">Description</div>
+    <div class="tk-desc-box">${escapeHtml(ticket.description||'Aucune description.')}</div>
+
+    <div class="tk-section-label">Note interne admin</div>
+    <div class="tk-admin-note">
+      <div class="tk-admin-note-title">📝 Visible admin uniquement</div>
+      <textarea id="tp-admin-note" placeholder="Notes internes, observations...">${escapeHtml(ticket.adminNote||'')}</textarea>
+      <div style="display:flex;justify-content:flex-end;margin-top:6px">
+        <button class="btn-sm btn-primary" style="font-size:11px" onclick="saveTkNote('${ticket.id}')">💾 Sauvegarder</button>
+      </div>
+    </div>
+
+    ${ratingHtml}
+
+    <div class="tk-section-label">Historique (${comments.length} message${comments.length!==1?'s':''})</div>
+    <div class="tk-comments">${commentsHtml}</div>
+
+    ${metaHtml}
+    <div style="height:8px"></div>
+  `;
+}
+
+async function sendTkReply() {
+  if (!currentTkId) return;
+  const text = document.getElementById('tp-reply').value.trim();
+  const newStatus = document.getElementById('tp-status-change').value;
+  if (!text && !newStatus) { alert('Écrivez une réponse ou choisissez un nouveau statut.'); return; }
+
+  if (text) {
+    await fetch('/tickets/' + currentTkId + '/comment', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ from:'admin', fromName:'Admin', text })
+    });
+    addAudit('Réponse ticket', currentTkId, '#5ac8fa');
+  }
+  if (newStatus) {
+    await fetch('/tickets/' + currentTkId, {
+      method:'PATCH', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ statut: newStatus })
+    });
+    addAudit('Ticket → ' + TK_STATUTS_LABEL[newStatus], currentTkId, newStatus==='resolu'?'#7ee83a':'#ffaa44');
+  }
+  document.getElementById('tp-reply').value = '';
+  document.getElementById('tp-status-change').value = '';
+  toast('Réponse envoyée ✉️');
+  await loadTickets();
+  const fresh = allTickets.find(t => t.id === currentTkId);
+  if (fresh) { document.getElementById('tp-id').textContent = fresh.id; document.getElementById('tp-title').textContent = fresh.titre||'—'; renderTkBody(fresh); }
+}
+
+async function saveTkNote(ticketId) {
+  const note = document.getElementById('tp-admin-note').value;
+  await fetch('/tickets/' + ticketId, {
+    method:'PATCH', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ adminNote: note })
+  });
+  toast('Note sauvegardée 📝');
+  addAudit('Note interne', ticketId, '#fad880');
+}
+
+async function updateTkPrio(ticketId, prio, el) {
+  await fetch('/tickets/' + ticketId, {
+    method:'PATCH', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ priorite: prio })
+  });
+  document.querySelectorAll('#tp-body .tk-filter-btn').forEach(b => b.classList.remove('active'));
+  if (el) el.classList.add('active');
+  toast('Priorité → ' + (TK_PRIOS[prio]||prio));
+  addAudit('Priorité ticket', ticketId + ' → ' + prio, '#5ac8fa');
+  await loadTickets();
+  const fresh = allTickets.find(t => t.id === ticketId);
+  if (fresh) renderTkBody(fresh);
+}
+
+async function deleteTk(ticketId) {
+  if (!confirm('Supprimer ce ticket définitivement ?')) return;
+  await fetch('/tickets/' + ticketId, { method:'DELETE' });
+  toast('Ticket supprimé');
+  addAudit('Ticket supprimé', ticketId, '#e05555');
+  closeTkPanel();
+  await loadTickets();
+}
+
 // ── SOCKET.IO LIVE ──
 const socket = io();
 socket.on('nouvelle_commande', cmd => addLiveEvent(cmd, 'new'));
 socket.on('commande_mise_a_jour', cmd => addLiveEvent(cmd, 'done'));
 socket.on('commande_terminee', cmd => addLiveEvent(cmd, 'done'));
 socket.on('broadcast', b => toast('📢 Broadcast: ' + b.message.slice(0,50), 'success'));
+
+socket.on('new_ticket', (ticket) => {
+  allTickets.unshift(ticket);
+  const badge = document.getElementById('count-tickets');
+  const n = parseInt(badge.textContent||'0') + 1;
+  badge.textContent = n; badge.style.display = 'inline-block';
+  const openEl = document.getElementById('tk-kpi-open');
+  if (openEl) openEl.textContent = parseInt(openEl.textContent||'0') + 1;
+  const totalEl = document.getElementById('tk-kpi-total');
+  if (totalEl) totalEl.textContent = parseInt(totalEl.textContent||'0') + 1;
+  if (document.getElementById('section-tickets').classList.contains('active')) renderTickets();
+  toast(`🎫 Nouveau ticket ${ticket.id} de ${ticket.restaurantNom||ticket.restaurantId||'?'} : ${(ticket.titre||'').slice(0,40)}`);
+  addAudit('Nouveau ticket', `${ticket.id} — ${ticket.restaurantNom||ticket.restaurantId}`, '#5ac8fa');
+});
+
+socket.on('admin_ticket_comment', ({ ticketId, comment }) => {
+  const t = allTickets.find(t => t.id === ticketId);
+  if (t) { t.comments = t.comments || []; t.comments.push(comment); }
+  if (currentTkId === ticketId) {
+    const fresh = allTickets.find(t => t.id === ticketId);
+    if (fresh) renderTkBody(fresh);
+  }
+  if (document.getElementById('section-tickets').classList.contains('active')) renderTickets();
+  toast(`💬 Réponse restaurant sur ${ticketId}`);
+});
+
 socket.on('admin_new_msg', ({ restaurantId, msg }) => {
   if (msg.from === 'restaurant') {
     let n = parseInt(document.getElementById('count-msgs').textContent || '0') + 1;
@@ -1206,11 +2201,72 @@ fetch('/admin/conversations').then(r=>r.json()).then(convs => {
   }
 }).catch(()=>{});
 
+// ── KEYBOARD SHORTCUTS + NAVIGATION ──
+document.addEventListener('keydown', e => {
+  const drop = document.getElementById('gs-drop');
+  const isOpen = drop?.classList.contains('open');
+  const inp = document.getElementById('global-search');
+
+  // Ctrl+K / Cmd+K → focus search
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+    e.preventDefault();
+    inp?.focus(); inp?.select();
+    if (!inp?.value || inp.value.length < 2) {
+      drop?.classList.remove('open');
+    } else {
+      openGsDrop(inp.value);
+    }
+    // Also switch to search section for full results
+    switchSection('recherche', document.getElementById('nav-recherche'));
+    return;
+  }
+
+  // Escape → close dropdown
+  if (e.key === 'Escape' && isOpen) { closeGsDrop(); return; }
+
+  // Arrow Up/Down → navigate dropdown items
+  if (isOpen && gsDropItems.length > 0) {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      gsSelectedIdx = Math.min(gsSelectedIdx + 1, gsDropItems.length - 1);
+      gsDropItems.forEach((el, i) => el.classList.toggle('gs-selected', i === gsSelectedIdx));
+      gsDropItems[gsSelectedIdx]?.scrollIntoView({ block:'nearest' });
+      return;
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      gsSelectedIdx = Math.max(gsSelectedIdx - 1, 0);
+      gsDropItems.forEach((el, i) => el.classList.toggle('gs-selected', i === gsSelectedIdx));
+      gsDropItems[gsSelectedIdx]?.scrollIntoView({ block:'nearest' });
+      return;
+    }
+    // Enter → click selected item
+    if (e.key === 'Enter' && gsSelectedIdx >= 0) {
+      e.preventDefault();
+      gsDropItems[gsSelectedIdx]?.click();
+      return;
+    }
+  }
+});
+
+// Close dropdown on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('#gs-drop') && !e.target.closest('#global-search')) closeGsDrop();
+});
+
 // ── INIT ──
 Promise.all([loadRestaurants(), loadEmployes(), refreshDashboard()]);
+// Load ticket badge count on startup
+fetch('/tickets/stats').then(r=>r.json()).then(s => {
+  const open = s.ouvert || 0;
+  if (open > 0) {
+    const b = document.getElementById('count-tickets');
+    b.textContent = open; b.style.display = 'inline-block';
+  }
+}).catch(()=>{});
 addAudit('Connexion admin', currentUser.nom + ' s\'est connecté', '#5ac8fa');
 setInterval(refreshDashboard, 30000);
 setInterval(loadHealth, 60000);
 </script>
 </body>
-</html>
+</html

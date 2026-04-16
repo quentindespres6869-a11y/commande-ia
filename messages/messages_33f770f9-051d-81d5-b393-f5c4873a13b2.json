@@ -84,7 +84,8 @@
     "meta": null,
     "timestamp": "2026-04-16T01:49:07.309Z",
     "readBy": [
-      "admin"
+      "admin",
+      "33f770f9-051d-81d5-b393-f5c4873a13b2"
     ],
     "dismissed": false
   },
@@ -98,7 +99,8 @@
     "meta": null,
     "timestamp": "2026-04-16T01:49:15.949Z",
     "readBy": [
-      "admin"
+      "admin",
+      "33f770f9-051d-81d5-b393-f5c4873a13b2"
     ],
     "dismissed": false
   }

@@ -1,0 +1,29 @@
+[
+  {
+    "id": "TKT-0001",
+    "restaurantId": "33f770f9-051d-81d5-b393-f5c4873a13b2",
+    "restaurantNom": "mcdo",
+    "titre": "bug stock",
+    "description": "Pourquoi je ne peux pas acceder a mon stock",
+    "type": "feature",
+    "priorite": "normale",
+    "statut": "en_attente",
+    "tags": [],
+    "createdAt": "2026-04-16T12:42:35.731Z",
+    "updatedAt": "2026-04-16T12:43:48.300Z",
+    "resolvedAt": null,
+    "slaTarget": 24,
+    "comments": [],
+    "metadata": {
+      "page": "/",
+      "url": "http://localhost:3000/",
+      "navigateur": "Chrome/147.0.0.0",
+      "resolution": "2560×1440",
+      "horodatage": "16/04/2026 14:42:35"
+    },
+    "rating": null,
+    "adminNote": "",
+    "assignedTo": null,
+    "progress": 0
+  }
+]
