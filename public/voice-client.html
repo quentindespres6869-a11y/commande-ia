@@ -3,185 +3,763 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Conversation IA — Commande-IA</title>
+  <title>Commande vocale — Commande-IA</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', system-ui, sans-serif; background: #f4f6f4; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
 
-    .container { background: #fff; border-radius: 16px; width: 100%; max-width: 600px; display: flex; flex-direction: column; height: 80vh; max-height: 800px; box-shadow: 0 8px 40px rgba(0,0,0,0.1); }
+    :root {
+      --green: #3B6D11;
+      --green-light: #5ab52a;
+      --green-pale: #f0f7e8;
+      --green-border: #d0e8b8;
+      --bg: #f2f5f0;
+      --surface: #fff;
+      --text: #1a2a1a;
+      --muted: #7a9a7a;
+    }
 
-    .header { padding: 20px; border-bottom: 1px solid #e0ecd8; }
-    .header h2 { font-size: 18px; color: #1a2a1a; margin-bottom: 6px; }
-    .header p { font-size: 12px; color: #9ab89a; }
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
 
-    .panier-summary { padding: 12px 20px; background: #f8fdf4; border-bottom: 1px solid #e0ecd8; font-size: 12px; color: #5a7a5a; }
-    .panier-summary strong { color: #3B6D11; }
+    /* ── CONTAINER ── */
+    .container {
+      background: var(--surface);
+      border-radius: 24px;
+      width: 100%;
+      max-width: 520px;
+      display: flex;
+      flex-direction: column;
+      height: 90vh;
+      max-height: 820px;
+      box-shadow: 0 16px 60px rgba(0,0,0,0.12);
+      overflow: hidden;
+      position: relative;
+    }
 
-    .messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-    .message { display: flex; gap: 12px; animation: slideIn 0.3s ease-out; }
-    @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    /* ── HEADER ── */
+    .header {
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid #edf2e8;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .header-logo {
+      width: 38px; height: 38px; border-radius: 11px;
+      background: var(--green);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .header-info { flex: 1; min-width: 0; }
+    .header-name { font-size: 15px; font-weight: 700; color: var(--text); }
+    .header-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+    .header-status {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 11px; font-weight: 600;
+    }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #5ab52a; }
+    .back-btn {
+      font-size: 12px; font-weight: 600; color: var(--muted);
+      background: none; border: 1px solid #eaeeea; border-radius: 7px;
+      padding: 5px 10px; cursor: pointer; text-decoration: none;
+      transition: all 0.12s;
+    }
+    .back-btn:hover { color: var(--green); border-color: var(--green-border); }
 
+    /* ── PANIER ── */
+    .panier-bar {
+      padding: 9px 20px;
+      background: var(--green-pale);
+      border-bottom: 1px solid var(--green-border);
+      display: flex; align-items: center; gap: 10px;
+      font-size: 12px; color: var(--green);
+    }
+    .panier-bar strong { font-weight: 700; }
+    .lieu-badge {
+      display: none; font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 5px; margin-left: auto;
+    }
+
+    /* ── MESSAGES ── */
+    .messages {
+      flex: 1; overflow-y: auto; padding: 16px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .message { display: flex; gap: 9px; animation: msgIn 0.25s ease-out; }
+    @keyframes msgIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
     .message.user { justify-content: flex-end; }
     .message.ai { justify-content: flex-start; }
+    .ai-avatar {
+      width: 28px; height: 28px; border-radius: 8px;
+      background: var(--green); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; flex-shrink: 0; margin-top: 2px;
+    }
+    .bubble {
+      max-width: 76%; padding: 10px 14px;
+      border-radius: 14px; font-size: 14px; line-height: 1.5;
+    }
+    .message.user .bubble {
+      background: var(--green); color: #fff;
+      border-bottom-right-radius: 4px;
+      display: flex; align-items: flex-start; gap: 8px;
+    }
+    .message.ai .bubble {
+      background: #f0f3ee; color: var(--text);
+      border-bottom-left-radius: 4px;
+    }
+    .bubble-mic-icon { font-size: 12px; opacity: 0.7; flex-shrink: 0; margin-top: 2px; }
 
-    .bubble { max-width: 70%; padding: 12px 16px; border-radius: 12px; font-size: 14px; line-height: 1.4; }
-    .message.user .bubble { background: #3B6D11; color: #fff; }
-    .message.ai .bubble { background: #e0ecd8; color: #1a2a1a; }
+    /* Typing indicator */
+    .typing-bubble { background: #f0f3ee; border-radius: 14px; border-bottom-left-radius: 4px; padding: 12px 16px; display: flex; gap: 4px; align-items: center; }
+    .typing-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: bounce 1.2s infinite; }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce { 0%, 100% { transform: translateY(0); opacity: 0.4; } 50% { transform: translateY(-5px); opacity: 1; } }
 
-    .input-section { padding: 20px; border-top: 1px solid #e0ecd8; display: flex; gap: 10px; }
-    .input-section input { flex: 1; padding: 12px 14px; border: 1.5px solid #e0ecd8; border-radius: 10px; font-size: 14px; font-family: 'Inter', sans-serif; }
-    .input-section button { padding: 12px 24px; background: #3B6D11; color: #fff; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; }
-    .input-section button:hover { background: #2d5c0a; }
-
-    .loading { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #9ab89a; animation: pulse 1.5s infinite; margin-right: 4px; }
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-
-    .order-summary { background: #f0fae8; border: 1px solid #c0e090; border-radius: 10px; padding: 12px; margin: 12px 0; font-size: 12px; }
-    .order-item { display: flex; justify-content: space-between; color: #2d5c2d; margin: 4px 0; }
-    .order-total { font-weight: 700; color: #3B6D11; border-top: 1px solid #c0e090; padding-top: 6px; margin-top: 6px; }
-
-    .btn-confirm { width: 100%; padding: 14px; background: #3B6D11; color: #fff; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+    /* Order summary */
+    .order-summary {
+      background: var(--green-pale); border: 1px solid var(--green-border);
+      border-radius: 12px; padding: 12px 14px; margin: 4px 0;
+    }
+    .order-item { display: flex; justify-content: space-between; font-size: 13px; color: #2d5c2d; padding: 3px 0; }
+    .order-total { font-weight: 700; color: var(--green); border-top: 1px solid var(--green-border); padding-top: 8px; margin-top: 6px; }
+    .btn-confirm {
+      width: 100%; padding: 13px; background: var(--green); color: #fff;
+      border: none; border-radius: 10px; font-weight: 700; cursor: pointer;
+      font-family: 'DM Sans', sans-serif; font-size: 14px; margin-top: 8px;
+      transition: background 0.15s;
+    }
     .btn-confirm:hover { background: #2d5c0a; }
+
+    /* ── VOICE CONTROLS ── */
+    .voice-section {
+      padding: 16px 20px 20px;
+      border-top: 1px solid #edf2e8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Status text */
+    .voice-status {
+      font-size: 12px; font-weight: 600; color: var(--muted);
+      letter-spacing: 0.3px; min-height: 18px;
+      transition: color 0.2s;
+      text-align: center;
+    }
+    .voice-status.listening { color: #e05555; }
+    .voice-status.speaking { color: var(--green); }
+    .voice-status.processing { color: #906010; }
+
+    /* Live transcript */
+    .live-transcript {
+      font-size: 13px; color: var(--text); font-style: italic;
+      min-height: 20px; text-align: center; opacity: 0.7;
+      max-width: 360px; line-height: 1.4;
+    }
+
+    /* Mic button + ripple */
+    .mic-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .mic-ripple {
+      position: absolute;
+      width: 90px; height: 90px;
+      border-radius: 50%;
+      background: rgba(224, 85, 85, 0.15);
+      animation: none;
+    }
+    .mic-ripple.active { animation: ripple 1.2s ease-in-out infinite; }
+    @keyframes ripple {
+      0% { transform: scale(1); opacity: 0.6; }
+      100% { transform: scale(1.9); opacity: 0; }
+    }
+    .mic-btn {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      border: none;
+      background: var(--green);
+      color: #fff;
+      font-size: 28px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
+      transition: all 0.18s;
+      box-shadow: 0 6px 24px rgba(59,109,17,0.35);
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .mic-btn:active { transform: scale(0.94); }
+    .mic-btn.listening {
+      background: #e05555;
+      box-shadow: 0 6px 24px rgba(224,85,85,0.4);
+    }
+    .mic-btn.speaking {
+      background: var(--green-light);
+      box-shadow: 0 6px 24px rgba(90,181,42,0.35);
+      cursor: default;
+    }
+    .mic-btn.disabled {
+      background: #ccc;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    /* Wave bars (visible when listening) */
+    .wave-bars {
+      display: flex; align-items: center; gap: 3px; height: 24px;
+      opacity: 0; transition: opacity 0.2s;
+    }
+    .wave-bars.visible { opacity: 1; }
+    .wave-bar {
+      width: 3px; border-radius: 2px;
+      background: #e05555;
+      height: 8px;
+      animation: none;
+    }
+    .wave-bars.visible .wave-bar { animation: wave 0.7s ease-in-out infinite; }
+    .wave-bar:nth-child(1) { animation-delay: 0s; }
+    .wave-bar:nth-child(2) { animation-delay: 0.1s; }
+    .wave-bar:nth-child(3) { animation-delay: 0.2s; }
+    .wave-bar:nth-child(4) { animation-delay: 0.3s; }
+    .wave-bar:nth-child(5) { animation-delay: 0.4s; }
+    .wave-bar:nth-child(6) { animation-delay: 0.3s; }
+    .wave-bar:nth-child(7) { animation-delay: 0.2s; }
+    @keyframes wave {
+      0%, 100% { height: 6px; }
+      50% { height: 20px; }
+    }
+
+    /* Bottom row: text toggle + instructions */
+    .bottom-row {
+      display: flex; align-items: center; gap: 12px; width: 100%;
+    }
+    .text-input-row {
+      display: none; flex: 1; gap: 8px;
+    }
+    .text-input-row.visible { display: flex; }
+    .text-input {
+      flex: 1; padding: 10px 14px;
+      border: 1.5px solid #e0ecd8; border-radius: 10px;
+      font-size: 13px; font-family: 'DM Sans', sans-serif;
+      outline: none; color: var(--text);
+      transition: border-color 0.15s;
+    }
+    .text-input:focus { border-color: var(--green); }
+    .send-btn {
+      padding: 10px 18px; background: var(--green); color: #fff;
+      border: none; border-radius: 10px; font-weight: 600;
+      cursor: pointer; font-size: 13px; font-family: 'DM Sans', sans-serif;
+      transition: background 0.15s; white-space: nowrap;
+    }
+    .send-btn:hover { background: #2d5c0a; }
+    .toggle-text-btn {
+      font-size: 11px; font-weight: 600; color: var(--muted);
+      background: none; border: 1px solid #eaeeea; border-radius: 7px;
+      padding: 6px 10px; cursor: pointer; transition: all 0.12s;
+      font-family: 'DM Sans', sans-serif; white-space: nowrap;
+    }
+    .toggle-text-btn:hover { color: var(--green); border-color: var(--green-border); }
+
+    /* TTS toggle */
+    .tts-toggle {
+      font-size: 18px; cursor: pointer; opacity: 0.6;
+      transition: opacity 0.15s; user-select: none;
+    }
+    .tts-toggle.active { opacity: 1; }
+    .tts-toggle:hover { opacity: 1; }
+
+    /* Setup modal */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.4); z-index: 100;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: #fff; border-radius: 18px; padding: 28px;
+      width: 90%; max-width: 400px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+    .modal h3 { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .modal p { font-size: 13px; color: var(--muted); margin-bottom: 18px; }
+    .modal label { font-size: 13px; font-weight: 600; color: #555; display: block; margin-bottom: 5px; }
+    .modal input {
+      width: 100%; padding: 11px 14px; border: 1.5px solid #e0ecd8; border-radius: 9px;
+      font-size: 13px; font-family: 'DM Sans', sans-serif; outline: none; margin-bottom: 14px;
+      transition: border-color 0.15s; color: var(--text);
+    }
+    .modal input:focus { border-color: var(--green); }
+    .modal-btn {
+      width: 100%; padding: 13px; background: var(--green); color: #fff;
+      border: none; border-radius: 10px; font-weight: 700; cursor: pointer;
+      font-family: 'DM Sans', sans-serif; font-size: 14px; transition: background 0.15s;
+    }
+    .modal-btn:hover { background: #2d5c0a; }
+    .modal-err { font-size: 12px; color: #e05555; margin-top: -8px; margin-bottom: 10px; display: none; }
+
+    /* Voice not supported */
+    .no-voice-warn {
+      display: none; background: #fff8ec; border: 1px solid #f0d080;
+      border-radius: 9px; padding: 10px 14px; font-size: 12px; color: #906010;
+      text-align: center; width: 100%;
+    }
+
+    /* Scrollbar */
+    .messages::-webkit-scrollbar { width: 3px; }
+    .messages::-webkit-scrollbar-track { background: transparent; }
+    .messages::-webkit-scrollbar-thumb { background: #ddd; border-radius: 2px; }
   </style>
 </head>
 <body>
 
+<!-- SETUP MODAL -->
+<div class="modal-overlay open" id="setup-modal">
+  <div class="modal">
+    <h3>🎙️ Commande vocale</h3>
+    <p>Entrez l'ID de votre restaurant pour commencer.</p>
+    <label>ID du restaurant</label>
+    <input type="text" id="setup-resto-id" placeholder="Ex: abc123..." />
+    <div class="modal-err" id="setup-err">Erreur de connexion. Vérifiez l'ID.</div>
+    <button class="modal-btn" onclick="startSession()">Démarrer 🎙️</button>
+  </div>
+</div>
+
+<!-- MAIN UI -->
 <div class="container">
+  <!-- Header -->
   <div class="header">
-    <h2 id="restaurant-name">Restaurant</h2>
-    <p id="session-id">Session: —</p>
+    <div class="header-logo">🍽️</div>
+    <div class="header-info">
+      <div class="header-name" id="restaurant-name">Chargement...</div>
+      <div class="header-sub" id="session-id">Session en cours</div>
+    </div>
+    <div class="header-status">
+      <div class="status-dot" id="status-dot"></div>
+      <span id="status-text" style="color:var(--muted);font-size:11px">Connecté</span>
+    </div>
+    <a href="/" class="back-btn">← Retour</a>
   </div>
 
-  <div class="panier-summary">
-    Panier: <strong id="panier-count">0 articles</strong> · <strong id="panier-total">0€</strong>
-    · <span id="lieu-badge" style="display:none;font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;"></span>
+  <!-- Panier bar -->
+  <div class="panier-bar">
+    🛒 <strong id="panier-count">0 article</strong>
+    · <strong id="panier-total">0 €</strong>
+    <span class="lieu-badge" id="lieu-badge"></span>
   </div>
 
-  <div class="messages" id="messages"></div>
+  <!-- Messages -->
+  <div class="messages" id="messages">
+    <div class="message ai">
+      <div class="ai-avatar">🤖</div>
+      <div class="bubble">Bonjour ! Appuyez sur le micro pour passer votre commande. 🎙️</div>
+    </div>
+  </div>
 
-  <div class="input-section">
-    <input type="text" id="input-msg" placeholder="Votre message..." />
-    <button onclick="sendMessage()">Envoyer</button>
+  <!-- Voice Controls -->
+  <div class="voice-section">
+    <!-- Status + live transcript -->
+    <div class="voice-status" id="voice-status">Appuyez pour parler</div>
+    <div class="live-transcript" id="live-transcript"></div>
+
+    <!-- Mic + wave bars -->
+    <div style="display:flex;align-items:center;gap:16px">
+      <div class="wave-bars" id="wave-bars">
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+      </div>
+      <div class="mic-wrap">
+        <div class="mic-ripple" id="mic-ripple"></div>
+        <button class="mic-btn" id="mic-btn" onclick="toggleMic()">🎙️</button>
+      </div>
+      <span class="tts-toggle active" id="tts-toggle" onclick="toggleTTS()" title="Activer/désactiver la voix">🔊</span>
+    </div>
+
+    <div class="no-voice-warn" id="no-voice-warn">
+      ⚠️ Votre navigateur ne supporte pas la reconnaissance vocale.<br>
+      Utilisez Chrome, Edge ou Safari. Vous pouvez quand même taper ci-dessous.
+    </div>
+
+    <!-- Bottom row -->
+    <div class="bottom-row" style="justify-content:center; gap:12px; flex-wrap:wrap;">
+      <button class="toggle-text-btn" id="toggle-text-btn" onclick="toggleTextInput()">⌨️ Écrire à la place</button>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span style="font-size:11px;color:var(--muted);font-weight:600;">Vitesse</span>
+        <input type="range" id="rate-slider" min="0.8" max="2.0" step="0.05" value="1.35"
+          oninput="updateRate(this.value)"
+          style="width:72px;accent-color:var(--green);cursor:pointer;">
+        <span id="rate-label" style="font-size:11px;color:var(--muted);font-weight:600;min-width:28px;">1.4×</span>
+      </div>
+    </div>
+    <div class="text-input-row" id="text-input-row">
+      <input class="text-input" id="text-input" type="text" placeholder="Écrivez votre commande..." />
+      <button class="send-btn" onclick="sendTextMessage()">Envoyer</button>
+    </div>
   </div>
 </div>
 
 <script>
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
 let sessionId = null;
 let restaurantData = null;
 let currentSurPlace = null;
+let isListening = false;
+let isSpeaking = false;
+let ttsEnabled = true;
+let recognition = null;
+let synth = window.speechSynthesis;
+let voiceSupported = false;
+let frVoice = null;
+let ttsRate = 1.35;
 
-async function startSession() {
-  const restaurantId = prompt('Entrez l\'ID du restaurant:');
-  if (!restaurantId || restaurantId.trim() === '') {
-    alert('ID restaurant requis');
+// ═══════════════════════════════════════
+// SPEECH RECOGNITION SETUP
+// ═══════════════════════════════════════
+function setupSpeechRecognition() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    document.getElementById('no-voice-warn').style.display = 'block';
+    document.getElementById('mic-btn').classList.add('disabled');
+    document.getElementById('mic-btn').disabled = true;
+    document.getElementById('toggle-text-btn').click();
+    voiceSupported = false;
     return;
   }
+
+  voiceSupported = true;
+  recognition = new SpeechRecognition();
+  recognition.lang = 'fr-FR';
+  recognition.interimResults = true;   // Résultats partiels en temps réel
+  recognition.continuous = false;
+  recognition.maxAlternatives = 1;
+
+  recognition.onstart = () => {
+    isListening = true;
+    setVoiceState('listening');
+  };
+
+  recognition.onresult = (event) => {
+    let interim = '';
+    let final = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const transcript = event.results[i][0].transcript;
+      if (event.results[i].isFinal) final += transcript;
+      else interim += transcript;
+    }
+    // Show live transcript
+    document.getElementById('live-transcript').textContent = final || interim;
+    if (final) {
+      document.getElementById('live-transcript').textContent = final;
+    }
+  };
+
+  recognition.onend = () => {
+    const transcript = document.getElementById('live-transcript').textContent.trim();
+    isListening = false;
+    if (transcript && sessionId) {
+      sendVoiceMessage(transcript);
+    } else {
+      setVoiceState('idle');
+      document.getElementById('live-transcript').textContent = '';
+    }
+  };
+
+  recognition.onerror = (event) => {
+    isListening = false;
+    setVoiceState('idle');
+    document.getElementById('live-transcript').textContent = '';
+    if (event.error === 'no-speech') {
+      setStatus('Rien capté — réessayez');
+    } else if (event.error === 'not-allowed') {
+      setStatus('Microphone refusé — autorisez l\'accès');
+    } else {
+      setStatus('Erreur : ' + event.error);
+    }
+  };
+}
+
+// ═══════════════════════════════════════
+// TEXT-TO-SPEECH SETUP
+// ═══════════════════════════════════════
+function setupTTS() {
+  if (!synth) return;
+  function loadVoices() {
+    const voices = synth.getVoices();
+    // Préférer les voix Google/Microsoft (Neural) en français — bien plus naturelles
+    frVoice =
+      voices.find(v => v.lang === 'fr-FR' && /google/i.test(v.name)) ||
+      voices.find(v => v.lang === 'fr-FR' && /microsoft/i.test(v.name)) ||
+      voices.find(v => v.lang === 'fr-FR') ||
+      voices.find(v => v.lang.startsWith('fr')) ||
+      voices[0];
+  }
+  loadVoices();
+  synth.onvoiceschanged = loadVoices;
+}
+
+// Nettoie le texte avant lecture : retire markdown, emojis, parenthèses inutiles
+function cleanForTTS(text) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '$1')   // **gras**
+    .replace(/\*(.*?)\*/g, '$1')        // *italique*
+    .replace(/#{1,6}\s/g, '')           // # titres
+    .replace(/`[^`]*`/g, '')            // `code`
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // [lien](url)
+    .replace(/[\u{1F300}-\u{1FFFF}]/gu, '') // emojis
+    .replace(/[•·‒–—]/g, ',')          // puces → pause naturelle
+    .replace(/\n{2,}/g, '. ')           // doubles sauts de ligne
+    .replace(/\n/g, ', ')               // sauts simples
+    .replace(/\s{2,}/g, ' ')            // espaces multiples
+    .replace(/\(([^)]{0,40})\)/g, (_, g) => g.length < 20 ? g : '') // courtes parenthèses → incluses
+    .trim();
+}
+
+function speak(text) {
+  if (!ttsEnabled || !synth) return;
+  synth.cancel();
+  const clean = cleanForTTS(text);
+  if (!clean) return;
+
+  const utterance = new SpeechSynthesisUtterance(clean);
+  utterance.lang = 'fr-FR';
+  utterance.rate = ttsRate; // Ajustable via le curseur
+  utterance.pitch = 0.97;  // Légèrement plus grave = moins robotique
+  utterance.volume = 1.0;
+  if (frVoice) utterance.voice = frVoice;
+
+  utterance.onstart = () => {
+    isSpeaking = true;
+    setVoiceState('speaking');
+  };
+  utterance.onend = () => {
+    isSpeaking = false;
+    setVoiceState('idle');
+  };
+  utterance.onerror = () => {
+    isSpeaking = false;
+    setVoiceState('idle');
+  };
+  synth.speak(utterance);
+}
+
+function stopSpeaking() {
+  if (synth) { synth.cancel(); isSpeaking = false; }
+}
+
+// ═══════════════════════════════════════
+// MIC TOGGLE
+// ═══════════════════════════════════════
+function toggleMic() {
+  if (!voiceSupported) return;
+  if (!sessionId) { alert('Session non démarrée'); return; }
+
+  if (isSpeaking) {
+    stopSpeaking();
+    return;
+  }
+
+  if (isListening) {
+    recognition.stop();
+  } else {
+    document.getElementById('live-transcript').textContent = '';
+    try { recognition.start(); } catch(e) { console.warn(e); }
+  }
+}
+
+// ═══════════════════════════════════════
+// VISUAL STATES
+// ═══════════════════════════════════════
+function setVoiceState(state) {
+  const btn = document.getElementById('mic-btn');
+  const ripple = document.getElementById('mic-ripple');
+  const waves = document.getElementById('wave-bars');
+  const statusEl = document.getElementById('voice-status');
+  const statusDot = document.getElementById('status-dot');
+
+  btn.classList.remove('listening', 'speaking', 'disabled');
+  ripple.classList.remove('active');
+  waves.classList.remove('visible');
+  statusEl.classList.remove('listening', 'speaking', 'processing');
+
+  switch(state) {
+    case 'listening':
+      btn.textContent = '⏹️';
+      btn.classList.add('listening');
+      ripple.classList.add('active');
+      waves.classList.add('visible');
+      statusEl.textContent = 'Je vous écoute...';
+      statusEl.classList.add('listening');
+      statusDot.style.background = '#e05555';
+      break;
+    case 'speaking':
+      btn.textContent = '⏸️';
+      btn.classList.add('speaking');
+      statusEl.textContent = "L'IA répond...";
+      statusEl.classList.add('speaking');
+      statusDot.style.background = '#5ab52a';
+      break;
+    case 'processing':
+      btn.textContent = '⏳';
+      btn.classList.add('disabled');
+      statusEl.textContent = 'Traitement...';
+      statusEl.classList.add('processing');
+      statusDot.style.background = '#e08a10';
+      break;
+    default: // idle
+      btn.textContent = '🎙️';
+      statusEl.textContent = sessionId ? 'Appuyez pour parler' : 'Session non démarrée';
+      statusDot.style.background = '#5ab52a';
+      break;
+  }
+}
+
+function setStatus(msg) {
+  document.getElementById('voice-status').textContent = msg;
+}
+
+// ═══════════════════════════════════════
+// SESSION
+// ═══════════════════════════════════════
+async function startSession() {
+  const restoId = document.getElementById('setup-resto-id').value.trim();
+  const errEl = document.getElementById('setup-err');
+  errEl.style.display = 'none';
+
+  if (!restoId) { errEl.textContent = 'ID restaurant requis.'; errEl.style.display = 'block'; return; }
+
+  const btn = document.querySelector('.modal-btn');
+  btn.textContent = 'Connexion...'; btn.disabled = true;
 
   try {
     const res = await fetch('/api/order/voice/session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ restaurantId: restaurantId.trim() })
+      body: JSON.stringify({ restaurantId: restoId })
     });
-    
+
     if (!res.ok) {
-      const error = await res.json().catch(() => ({}));
-      alert('Erreur: ' + (error.error || 'Erreur serveur (' + res.status + ')'));
+      const err = await res.json().catch(() => ({}));
+      errEl.textContent = err.error || 'Erreur serveur (' + res.status + ')';
+      errEl.style.display = 'block';
+      btn.textContent = 'Démarrer 🎙️'; btn.disabled = false;
       return;
     }
-    
+
     const data = await res.json();
-    
     sessionId = data.sessionId;
     restaurantData = data.restaurantData;
-    
+
     document.getElementById('restaurant-name').textContent = restaurantData.nom || 'Restaurant';
-    document.getElementById('session-id').textContent = `Session: ${sessionId.slice(0, 8)}...`;
-    
-    addMessage('ai', data.greeting || 'Bienvenue!');
-  } catch (e) {
-    alert('Erreur de connexion: ' + e.message);
-    console.error(e);
+    document.getElementById('session-id').textContent = `Session ${sessionId.slice(0,8)}...`;
+    document.getElementById('setup-modal').classList.remove('open');
+
+    // Message de bienvenue
+    const greeting = data.greeting || 'Bonjour ! Comment puis-je vous aider ?';
+    addMessage('ai', greeting);
+    speak(greeting);
+    setVoiceState('idle');
+
+  } catch(e) {
+    errEl.textContent = 'Connexion impossible : ' + e.message;
+    errEl.style.display = 'block';
+    btn.textContent = 'Démarrer 🎙️'; btn.disabled = false;
   }
 }
 
-function addMessage(role, text) {
-  const msg = document.createElement('div');
-  msg.className = `message ${role}`;
-  msg.innerHTML = `<div class="bubble">${escapeHtml(text)}</div>`;
-  document.getElementById('messages').appendChild(msg);
-  document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
-}
+// ═══════════════════════════════════════
+// SEND MESSAGE
+// ═══════════════════════════════════════
+async function sendVoiceMessage(text) {
+  if (!text || !sessionId) return;
+  setVoiceState('processing');
+  document.getElementById('live-transcript').textContent = '';
 
-function updatePanier(panier, totalPrice) {
-  const count = panier.reduce((sum, p) => sum + p.quantite, 0);
-  document.getElementById('panier-count').textContent = `${count} article${count > 1 ? 's' : ''}`;
-  document.getElementById('panier-total').textContent = `${totalPrice}€`;
-}
-
-function updateLieuBadge() {
-  const badge = document.getElementById('lieu-badge');
-  if (currentSurPlace === true) {
-    badge.style.display = 'inline';
-    badge.textContent = '🍽 Sur place';
-    badge.style.background = '#fff4e0';
-    badge.style.color = '#906010';
-    badge.style.border = '1px solid #f0d090';
-  } else if (currentSurPlace === false) {
-    badge.style.display = 'inline';
-    badge.textContent = '📦 À emporter';
-    badge.style.background = '#f0f5ee';
-    badge.style.color = '#5a8a5a';
-    badge.style.border = '1px solid #d0e0c8';
-  } else {
-    badge.style.display = 'none';
-  }
-}
-
-async function sendMessage() {
-  const input = document.getElementById('input-msg');
-  const message = input.value.trim();
-  if (!message || !sessionId) return;
-
-  addMessage('user', message);
-  input.value = '';
+  addMessage('user', text, true);
+  showTyping();
 
   try {
     const res = await fetch('/api/order/voice/message', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sessionId, message })
+      body: JSON.stringify({ sessionId, message: text })
     });
     const data = await res.json();
-    
-    addMessage('ai', data.response);
-    updatePanier(data.panier, data.totalPrice);
-    if (data.surPlace !== null && data.surPlace !== undefined) {
-      currentSurPlace = data.surPlace;
-      updateLieuBadge();
-    }
-
-    // Si la commande est prête, afficher le bouton confirmer
-    if (data.commandePrete) {
-      const lieuLabel = currentSurPlace === true ? '🍽 Sur place' : currentSurPlace === false ? '📦 À emporter' : '';
-      const confirmDiv = document.createElement('div');
-      confirmDiv.innerHTML = `
-        <div class="order-summary">
-          ${data.panier.map(p => `<div class="order-item"><span>${p.quantite}x ${p.nom}${p.modifications ? ' (' + p.modifications + ')' : ''}</span><span>${p.prix}€</span></div>`).join('')}
-          <div class="order-item order-total"><span>Total</span><span>${data.totalPrice}€</span></div>
-          ${lieuLabel ? `<div class="order-item" style="margin-top:6px;padding-top:6px;border-top:1px dashed #c0e090;"><span style="color:#5a7a5a;">${lieuLabel}</span></div>` : ''}
-        </div>
-        <button class="btn-confirm" onclick="confirmOrder()">✅ Confirmer la commande</button>`;
-      document.getElementById('messages').appendChild(confirmDiv);
-      document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
-    }
-  } catch (e) {
-    addMessage('ai', '❌ Erreur: ' + e.message);
+    hideTyping();
+    handleAIResponse(data);
+  } catch(e) {
+    hideTyping();
+    const errMsg = '❌ Erreur de communication';
+    addMessage('ai', errMsg);
+    speak(errMsg);
+    setVoiceState('idle');
   }
 }
+
+async function sendTextMessage() {
+  const input = document.getElementById('text-input');
+  const text = input.value.trim();
+  if (!text || !sessionId) return;
+  input.value = '';
+  await sendVoiceMessage(text);
+}
+
+function handleAIResponse(data) {
+  const response = data.response || '...';
+  addMessage('ai', response);
+  updatePanier(data.panier, data.totalPrice);
+
+  if (data.surPlace !== null && data.surPlace !== undefined) {
+    currentSurPlace = data.surPlace;
+    updateLieuBadge();
+  }
+
+  // Bouton de confirmation
+  if (data.commandePrete) {
+    const lieuLabel = currentSurPlace === true ? '🍽 Sur place' : currentSurPlace === false ? '📦 À emporter' : '';
+    const div = document.createElement('div');
+    div.innerHTML = `
+      <div class="order-summary">
+        ${data.panier.map(p => `<div class="order-item"><span>${p.quantite}× ${p.nom}${p.modifications ? ' (' + p.modifications + ')' : ''}</span><span>${p.prix} €</span></div>`).join('')}
+        <div class="order-item order-total"><span>Total</span><span>${data.totalPrice} €</span></div>
+        ${lieuLabel ? `<div class="order-item" style="margin-top:6px;padding-top:6px;border-top:1px dashed var(--green-border)"><span style="color:var(--muted)">${lieuLabel}</span></div>` : ''}
+      </div>
+      <button class="btn-confirm" onclick="confirmOrder()">✅ Confirmer la commande</button>`;
+    document.getElementById('messages').appendChild(div);
+    document.getElementById('messages').scrollTop = 9999;
+  }
+
+  speak(response);
+}
+
+// ═══════════════════════════════════════
+// CONFIRM ORDER
+// ═══════════════════════════════════════
 async function confirmOrder() {
-  const name = prompt('Votre nom (optionnel):') || 'Anonyme';
-  const phone = prompt('Votre téléphone (optionnel):') || '';
+  const name = prompt('Votre nom (optionnel) :') || 'Anonyme';
+  const phone = prompt('Votre téléphone (optionnel) :') || '';
 
   try {
     const res = await fetch('/api/order/voice/confirm', {
@@ -190,28 +768,116 @@ async function confirmOrder() {
       body: JSON.stringify({ sessionId, clientName: name, clientPhone: phone })
     });
     const data = await res.json();
-    
-    addMessage('ai', `✅ Commande #${data.commande.id} confirmée ! Merci pour votre commande.`);
-    document.getElementById('input-msg').disabled = true;
-    document.querySelector('button').disabled = true;
-  } catch (e) {
-    addMessage('ai', '❌ Erreur confirmation: ' + e.message);
+    const msg = `✅ Commande #${data.commande?.id || '—'} confirmée ! Merci ${name} 🙏`;
+    addMessage('ai', msg);
+    speak(msg);
+    document.getElementById('mic-btn').classList.add('disabled');
+    document.getElementById('mic-btn').disabled = true;
+    setStatus('Commande confirmée — merci !');
+  } catch(e) {
+    addMessage('ai', '❌ Erreur lors de la confirmation');
   }
 }
 
-function escapeHtml(text) {
+// ═══════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════
+function addMessage(role, text, isMic = false) {
+  const msgs = document.getElementById('messages');
   const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
+  div.className = `message ${role}`;
+  if (role === 'ai') {
+    div.innerHTML = `<div class="ai-avatar">🤖</div><div class="bubble">${escapeHtml(text)}</div>`;
+  } else {
+    div.innerHTML = `<div class="bubble">${isMic ? '<span class="bubble-mic-icon">🎙️</span>' : ''}<span>${escapeHtml(text)}</span></div>`;
+  }
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
 }
 
-document.getElementById('input-msg').addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') sendMessage();
+let typingEl = null;
+function showTyping() {
+  if (typingEl) return;
+  const msgs = document.getElementById('messages');
+  typingEl = document.createElement('div');
+  typingEl.className = 'message ai';
+  typingEl.innerHTML = `<div class="ai-avatar">🤖</div><div class="typing-bubble"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
+  msgs.appendChild(typingEl);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+function hideTyping() {
+  if (typingEl) { typingEl.remove(); typingEl = null; }
+}
+
+function updatePanier(panier, totalPrice) {
+  if (!panier) return;
+  const count = panier.reduce((s, p) => s + (p.quantite || 1), 0);
+  document.getElementById('panier-count').textContent = `${count} article${count > 1 ? 's' : ''}`;
+  document.getElementById('panier-total').textContent = `${totalPrice || 0} €`;
+}
+
+function updateLieuBadge() {
+  const badge = document.getElementById('lieu-badge');
+  if (currentSurPlace === true) {
+    badge.style.display = 'inline'; badge.textContent = '🍽 Sur place';
+    badge.style.cssText += ';background:#fff4e0;color:#906010;border:1px solid #f0d090;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:700';
+  } else if (currentSurPlace === false) {
+    badge.style.display = 'inline'; badge.textContent = '📦 À emporter';
+    badge.style.cssText += ';background:#f0f5ee;color:#5a8a5a;border:1px solid #d0e0c8;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:700';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function toggleTextInput() {
+  const row = document.getElementById('text-input-row');
+  const btn = document.getElementById('toggle-text-btn');
+  const show = !row.classList.contains('visible');
+  row.classList.toggle('visible', show);
+  btn.textContent = show ? '🎙️ Revenir au micro' : '⌨️ Écrire à la place';
+  if (show) document.getElementById('text-input').focus();
+}
+
+function toggleTTS() {
+  ttsEnabled = !ttsEnabled;
+  const el = document.getElementById('tts-toggle');
+  el.textContent = ttsEnabled ? '🔊' : '🔇';
+  el.classList.toggle('active', ttsEnabled);
+  if (!ttsEnabled) stopSpeaking();
+}
+
+function updateRate(val) {
+  ttsRate = parseFloat(val);
+  document.getElementById('rate-label').textContent = ttsRate.toFixed(1) + '×';
+}
+
+function escapeHtml(text) {
+  const d = document.createElement('div');
+  d.textContent = text;
+  return d.innerHTML;
+}
+
+// Keyboard shortcut: Space bar = toggle mic
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space' && e.target === document.body) {
+    e.preventDefault();
+    toggleMic();
+  }
+  if (e.key === 'Enter' && document.getElementById('text-input') === document.activeElement) {
+    sendTextMessage();
+  }
 });
 
-// Au chargement
-window.addEventListener('load', startSession);
-</script>
+// Enter in text input
+document.getElementById('text-input').addEventListener('keypress', e => {
+  if (e.key === 'Enter') sendTextMessage();
+});
 
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+setupSpeechRecognition();
+setupTTS();
+</script>
 </body>
 </html>
