@@ -197,8 +197,14 @@
 
     /* ── ABONNEMENTS ── */
     .abo-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 5px; }
-    .abo-badge.mensuel { background: #eff4ff; color: #2a50aa; }
-    .abo-badge.annuel { background: #f0f7e8; color: #2d6a0a; }
+    .abo-badge.starter { background: #f5f5f5; color: #555; }
+    .abo-badge.pro { background: #f0f7e8; color: #2d6a0a; }
+    .abo-badge.chaine { background: #eff4ff; color: #2a50aa; }
+    .abo-badge.essai { background: #fff8ec; color: #906010; }
+    .abo-badge.pioneer { background: #ffeef5; color: #c0207a; }
+    /* Legacy (backward compat) */
+    .abo-badge.mensuel { background: #f0f7e8; color: #2d6a0a; }
+    .abo-badge.annuel { background: #eff4ff; color: #2a50aa; }
     .abo-badge.gratuit { background: #f5f5f5; color: #666; }
     .toggle-switch { position: relative; width: 36px; height: 20px; display: inline-block; }
     .toggle-switch input { opacity: 0; width: 0; height: 0; }
@@ -500,6 +506,11 @@
       <svg class="sidebar-icon" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="12" height="4" rx="1" stroke="currentColor" stroke-width="1.2"/><rect x="1" y="7" width="12" height="4" rx="1" stroke="currentColor" stroke-width="1.2"/></svg>
       Stocks
     </div>
+    <div class="sidebar-item" onclick="window.open('/analyse-strategique.html','_blank')" style="margin-top:2px">
+      <svg class="sidebar-icon" viewBox="0 0 14 14" fill="none"><path d="M7 1L13 4v6l-6 3L1 10V4L7 1z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M7 1v12M1 4l6 3 6-3" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+      Stratégie
+      <span style="margin-left:auto;font-size:9px;font-weight:700;padding:1px 6px;border-radius:6px;background:rgba(168,224,122,0.15);color:#5ab52a">PDF</span>
+    </div>
   </div>
 
   <!-- MAIN -->
@@ -522,6 +533,29 @@
         <div class="kpi-card blue"><div class="kpi-label">CA aujourd'hui</div><div class="kpi-val" id="kpi-ca">—</div><div class="kpi-sub">toutes enseignes confondues</div></div>
         <div class="kpi-card orange"><div class="kpi-label">Sessions vocales</div><div class="kpi-val" id="kpi-sessions">—</div><div class="kpi-sub">en cours en ce moment</div></div>
         <div class="kpi-card"><div class="kpi-label">Restaurants actifs</div><div class="kpi-val" id="kpi-restos">—</div><div class="kpi-sub">avec données en mémoire</div></div>
+      </div>
+      <!-- MRR + Business KPIs -->
+      <div class="kpi-grid" id="dash-biz-kpis" style="margin-bottom:24px">
+        <div class="kpi-card green" style="border-left:3px solid #2d6a0a">
+          <div class="kpi-label">MRR estimé</div>
+          <div class="kpi-val" id="kpi-mrr" style="color:#2d6a0a">—</div>
+          <div class="kpi-sub">revenu mensuel récurrent</div>
+        </div>
+        <div class="kpi-card blue" style="border-left:3px solid #2a50aa">
+          <div class="kpi-label">Clients payants</div>
+          <div class="kpi-val" id="kpi-paying">—</div>
+          <div class="kpi-sub">objectif : 20 au mois 6 · 50 au mois 12</div>
+        </div>
+        <div class="kpi-card orange">
+          <div class="kpi-label">Progression objectif M6</div>
+          <div class="kpi-val" id="kpi-target-pct" style="color:#906010">—</div>
+          <div class="kpi-sub">cible = 20 clients · <span id="kpi-target-remaining">—</span> restants</div>
+        </div>
+        <div class="kpi-card" style="cursor:pointer" onclick="window.open('/analyse-strategique.html','_blank')">
+          <div class="kpi-label">ARR projeté</div>
+          <div class="kpi-val" id="kpi-arr">—</div>
+          <div class="kpi-sub">CA annuel estimé · voir stratégie →</div>
+        </div>
       </div>
       <div class="grid-2">
         <div class="chart-block">
@@ -571,16 +605,30 @@
     <!-- ══ ABONNEMENTS ══ -->
     <div class="section-view" id="section-abonnements">
       <div class="page-header">
-        <div><div class="page-title">Abonnements</div><div class="page-sub">Gestion des plans et statuts de facturation</div></div>
+        <div><div class="page-title">Abonnements</div><div class="page-sub">Plans Starter · Pro · Chaîne · Pioneer — grille tarifaire 2026</div></div>
+        <button class="add-btn" style="background:none;border:1px solid #eaeeea;color:#555" onclick="window.open('/analyse-strategique.html','_blank')">
+          <svg viewBox="0 0 14 14" fill="none" style="width:13px;height:13px"><path d="M7 1L13 4v6l-6 3L1 10V4L7 1z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+          Voir stratégie
+        </button>
+      </div>
+      <!-- MRR Summary -->
+      <div class="kpi-grid" style="margin-bottom:20px">
+        <div class="kpi-card green"><div class="kpi-label">MRR actif</div><div class="kpi-val" id="abo-mrr">—</div><div class="kpi-sub">revenu mensuel récurrent</div></div>
+        <div class="kpi-card blue"><div class="kpi-label">Plan Pro</div><div class="kpi-val" id="abo-count-pro">—</div><div class="kpi-sub">249€/mois · plan phare</div></div>
+        <div class="kpi-card orange"><div class="kpi-label">Starter</div><div class="kpi-val" id="abo-count-starter">—</div><div class="kpi-sub">149€/mois · entrée de gamme</div></div>
+        <div class="kpi-card"><div class="kpi-label">Essai/Gratuit</div><div class="kpi-val" id="abo-count-free">—</div><div class="kpi-sub">à convertir → Pioneer/Pro</div></div>
       </div>
       <div class="table-wrap">
         <div class="table-head">
           <div class="table-title">Tous les restaurants</div>
-          <select class="form-select" style="width:160px;padding:6px 10px;font-size:11px" onchange="filterAbonnements(this.value)">
+          <select class="form-select" style="width:180px;padding:6px 10px;font-size:11px" onchange="filterAbonnements(this.value)">
             <option value="">Tous les plans</option>
-            <option value="Mensuel">Mensuel</option>
-            <option value="Annuel">Annuel</option>
-            <option value="Gratuit">Gratuit</option>
+            <option value="Starter">🔹 Starter — 149€/mois</option>
+            <option value="Pro">⭐ Pro — 249€/mois</option>
+            <option value="Chaîne">🏢 Chaîne — 449€+/mois</option>
+            <option value="Pioneer">🚀 Pioneer — 199€ à vie</option>
+            <option value="Essai">🎁 Essai gratuit 14j</option>
+            <option value="Gratuit">Gratuit (legacy)</option>
           </select>
         </div>
         <table id="abo-table">
@@ -860,7 +908,14 @@
     </div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">Nom</label><input class="form-input" id="r-nom" placeholder="Burger Express" /></div>
-      <div class="form-group"><label class="form-label">Abonnement</label><select class="form-select" id="r-abo"><option value="Mensuel">Mensuel</option><option value="Annuel">Annuel</option><option value="Gratuit">Gratuit</option></select></div>
+      <div class="form-group"><label class="form-label">Plan</label><select class="form-select" id="r-abo">
+        <option value="Essai">🎁 Essai gratuit 14 jours</option>
+        <option value="Starter">🔹 Starter — 149€/mois</option>
+        <option value="Pro">⭐ Pro — 249€/mois</option>
+        <option value="Chaîne">🏢 Chaîne — 449€+/mois</option>
+        <option value="Pioneer">🚀 Pioneer — 199€ à vie</option>
+        <option value="Gratuit">Gratuit (legacy)</option>
+      </select></div>
     </div>
     <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="r-email" type="email" placeholder="contact@restaurant.fr" /></div>
     <div class="form-group"><label class="form-label">Téléphone</label><input class="form-input" id="r-tel" placeholder="+33 6 00 00 00 00" /></div>
@@ -969,6 +1024,7 @@ async function loadRestaurants() {
   document.getElementById('count-restaurants').textContent = allRestaurants.length;
   renderRestaurants(allRestaurants);
   renderAbonnements(allRestaurants);
+  refreshBizKpis();
   return allRestaurants;
 }
 
@@ -1068,13 +1124,22 @@ function renderEmployes(data) {
 // ── ABONNEMENTS ──
 function renderAbonnements(data) {
   data = data || allRestaurants;
+  updateAboKpis(data);
   const tbody = document.getElementById('abo-tbody');
   if (!data.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:#2a3a2a">Aucun restaurant.</td></tr>'; return; }
+  // MRR by plan
+  const PLAN_PRICES = { 'Starter':149, 'Pro':249, 'Chaîne':449, 'Pioneer':199, 'Mensuel':199, 'Annuel':199, 'Essai':0, 'Gratuit':0 };
+  const totalMRR = data.filter(r=>r.statut==='Actif').reduce((s,r)=>s+(PLAN_PRICES[r.abonnement]||0),0);
+  const mrrEl = document.getElementById('abo-mrr');
+  if (mrrEl) mrrEl.textContent = totalMRR.toLocaleString('fr-FR') + ' €';
   tbody.innerHTML = data.map(r => {
-    const aboClass = r.abonnement === 'Mensuel' ? 'mensuel' : r.abonnement === 'Annuel' ? 'annuel' : 'gratuit';
+    const aboLower = (r.abonnement||'gratuit').toLowerCase().replace('î','i').replace('ê','e');
+    const aboClass = aboLower;
+    const price = PLAN_PRICES[r.abonnement];
+    const priceStr = price ? price + ' €/mois' : '—';
     return `<tr>
       <td><div class="td-main">${r.nom||'—'}</div><div style="font-size:10px;color:#2a3a2a;margin-top:2px">${(r.id||'').slice(0,16)}...</div></td>
-      <td><span class="abo-badge ${aboClass}">${r.abonnement||'—'}</span></td>
+      <td><span class="abo-badge ${aboClass}">${r.abonnement||'—'}</span><div style="font-size:10px;color:#aaa;margin-top:2px">${priceStr}</div></td>
       <td><span class="tag ${r.statut==='Actif'?'green':r.statut==='Maintenance'?'orange':'red'}" style="display:inline-block">${r.statut||'—'}</span></td>
       <td><span class="tag ${r.onboarding==='Complété'?'green':r.onboarding==='En cours'?'orange':'gray'}" style="display:inline-block">${r.onboarding||'—'}</span></td>
       <td style="color:#5a6a5a">${r.email||'—'}</td>
@@ -1096,7 +1161,27 @@ function filterAbonnements(plan) {
   renderAbonnements(filtered);
 }
 
+function updateAboKpis(data) {
+  const PLAN_PRICES = { 'Starter':149, 'Pro':249, 'Chaîne':449, 'Pioneer':199, 'Mensuel':199, 'Annuel':199, 'Essai':0, 'Gratuit':0 };
+  const actifs = data.filter(r => r.statut === 'Actif');
+  const mrr = actifs.reduce((s,r) => s + (PLAN_PRICES[r.abonnement]||0), 0);
+  const proCount = data.filter(r => r.abonnement === 'Pro').length;
+  const starterCount = data.filter(r => r.abonnement === 'Starter').length;
+  const freeCount = data.filter(r => r.abonnement === 'Essai' || r.abonnement === 'Gratuit').length;
+  const mrrEl = document.getElementById('abo-mrr');
+  const proEl = document.getElementById('abo-count-pro');
+  const stEl = document.getElementById('abo-count-starter');
+  const frEl = document.getElementById('abo-count-free');
+  if (mrrEl) mrrEl.textContent = mrr.toLocaleString('fr-FR') + ' €';
+  if (proEl) proEl.textContent = proCount;
+  if (stEl) stEl.textContent = starterCount;
+  if (frEl) frEl.textContent = freeCount;
+}
+
 // ── DASHBOARD ──
+const PLAN_MRR = { 'Starter':149, 'Pro':249, 'Chaîne':449, 'Pioneer':199, 'Mensuel':199, 'Annuel':199, 'Essai':0, 'Gratuit':0 };
+const TARGET_M6 = 20;
+
 async function refreshDashboard() {
   try {
     const res = await fetch('/admin/stats');
@@ -1107,6 +1192,29 @@ async function refreshDashboard() {
     document.getElementById('kpi-restos').textContent = stats.restaurantsWithData;
     renderHourlyChart(stats.activityByHour);
   } catch(e) { console.error('Stats error', e); }
+  // Business KPIs (from restaurant data)
+  if (allRestaurants.length) refreshBizKpis();
+}
+
+function refreshBizKpis() {
+  const actifs = allRestaurants.filter(r => r.statut === 'Actif');
+  const payants = actifs.filter(r => r.abonnement && r.abonnement !== 'Gratuit' && r.abonnement !== 'Essai');
+  const mrr = actifs.reduce((s, r) => s + (PLAN_MRR[r.abonnement] || 0), 0);
+  const arr = mrr * 12;
+  const pct = Math.round((payants.length / TARGET_M6) * 100);
+  const remaining = Math.max(0, TARGET_M6 - payants.length);
+
+  const mrrEl = document.getElementById('kpi-mrr');
+  const payEl = document.getElementById('kpi-paying');
+  const pctEl = document.getElementById('kpi-target-pct');
+  const remEl = document.getElementById('kpi-target-remaining');
+  const arrEl = document.getElementById('kpi-arr');
+
+  if (mrrEl) mrrEl.textContent = mrr.toLocaleString('fr-FR') + ' €';
+  if (payEl) payEl.textContent = payants.length;
+  if (pctEl) pctEl.textContent = Math.min(pct, 100) + '%';
+  if (remEl) remEl.textContent = remaining + ' restants';
+  if (arrEl) arrEl.textContent = arr.toLocaleString('fr-FR') + ' €';
 }
 
 function renderHourlyChart(data) {
@@ -1351,7 +1459,7 @@ const GS_NAV = [
   { id:'dashboard',    label:'Vue d\'ensemble',  icon:'', sub:'KPIs, activité, graphiques en temps réel',              keywords:['dashboard','overview','stats','chiffre'] },
   { id:'restaurants',  label:'Restaurants',       icon:'', sub:'Gérer les restaurants, statuts, onboarding',            keywords:['restaurant','resto','gestion','local'] },
   { id:'employes',     label:'Employés',          icon:'', sub:'Comptes employés, rôles, accès',                        keywords:['employe','staff','equipe','personnel','user'] },
-  { id:'abonnements',  label:'Abonnements',       icon:'', sub:'Plans mensuel, annuel, gratuit',                        keywords:['abo','abonnement','plan','paiement','facture','billing'] },
+  { id:'abonnements',  label:'Abonnements',       icon:'💳', sub:'Plans Starter 149€ · Pro 249€ · Chaîne 449€ · Pioneer · MRR', keywords:['abo','abonnement','plan','paiement','facture','billing','mrr','starter','pro','chaine','pioneer'] },
   { id:'live',         label:'Activité live',     icon:'', sub:'Commandes en temps réel, flux direct',                  keywords:['live','temps reel','direct','stream','activite'] },
   { id:'alertes',      label:'Alertes',           icon:'', sub:'Problèmes détectés, avertissements système',            keywords:['alerte','alert','warning','probleme','erreur'] },
   { id:'sante',        label:'Santé système',     icon:'', sub:'Mémoire RAM, uptime, performance serveur',             keywords:['sante','health','systeme','memoire','ram','uptime','cpu'] },

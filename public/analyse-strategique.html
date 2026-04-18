@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analyse Pricing & Stratégie Commerciale — Commande-IA</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0c0f0a;
+  --surface: #151a12;
+  --surface-hover: #1c2318;
+  --border: #2a3524;
+  --text: #e8efe4;
+  --text-muted: #8a9a7e;
+  --accent: #7ed957;
+  --accent-dim: #3B6D11;
+  --red: #e85d5d;
+  --orange: #e8a34d;
+  --blue: #5da8e8;
+  --purple: #a57ded;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  padding: 40px 20px;
+}
+
+.container { max-width: 1100px; margin: 0 auto; }
+
+/* HEADER */
+.report-header {
+  text-align: center;
+  padding: 60px 0 40px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 60px;
+}
+.report-header .tag {
+  display: inline-block;
+  background: var(--accent-dim);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 6px 18px;
+  border-radius: 20px;
+  margin-bottom: 24px;
+}
+.report-header h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(32px, 5vw, 52px);
+  font-weight: 900;
+  line-height: 1.15;
+  margin-bottom: 16px;
+}
+.report-header h1 span { color: var(--accent); }
+.report-header .subtitle {
+  color: var(--text-muted);
+  font-size: 16px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* SECTIONS */
+.section {
+  margin-bottom: 64px;
+}
+.section-num {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+.section h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 24px;
+  line-height: 1.3;
+}
+.section p {
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  font-size: 15px;
+}
+.section p strong { color: var(--text); }
+
+/* COMPARISON TABLE */
+.table-wrap {
+  overflow-x: auto;
+  margin: 24px 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+thead { background: var(--surface); }
+th {
+  text-align: left;
+  padding: 16px;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
+td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+  vertical-align: top;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--surface-hover); }
+tr.highlight td {
+  background: rgba(126, 217, 87, 0.06);
+  color: var(--text);
+  font-weight: 500;
+}
+tr.highlight td:first-child { color: var(--accent); font-weight: 700; }
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.badge-green { background: rgba(126,217,87,0.15); color: var(--accent); }
+.badge-orange { background: rgba(232,163,77,0.15); color: var(--orange); }
+.badge-red { background: rgba(232,93,93,0.15); color: var(--red); }
+.badge-blue { background: rgba(93,168,232,0.15); color: var(--blue); }
+
+/* CARDS */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin: 24px 0;
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 28px;
+  transition: border-color 0.3s;
+}
+.card:hover { border-color: var(--accent-dim); }
+.card .card-icon {
+  font-size: 28px;
+  margin-bottom: 12px;
+}
+.card h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.card p { font-size: 14px; color: var(--text-muted); margin-bottom: 0; }
+
+/* PRICING RECOMMENDATION */
+.pricing-rec {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin: 24px 0;
+}
+.price-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px 24px;
+  text-align: center;
+  position: relative;
+  transition: all 0.3s;
+}
+.price-card:hover { transform: translateY(-4px); border-color: var(--accent-dim); }
+.price-card.recommended {
+  border-color: var(--accent);
+  background: linear-gradient(180deg, rgba(126,217,87,0.06) 0%, var(--surface) 100%);
+}
+.price-card.recommended::before {
+  content: 'RECOMMANDÉ';
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--accent);
+  color: var(--bg);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  padding: 4px 16px;
+  border-radius: 12px;
+}
+.price-card .tier { font-size: 13px; color: var(--text-muted); font-weight: 500; margin-bottom: 8px; }
+.price-card .price-val {
+  font-family: 'Playfair Display', serif;
+  font-size: 44px;
+  font-weight: 900;
+  color: var(--accent);
+}
+.price-card .price-val span { font-size: 16px; color: var(--text-muted); font-weight: 400; }
+.price-card .price-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 12px 0 20px;
+  font-style: italic;
+}
+.price-card ul {
+  list-style: none;
+  text-align: left;
+}
+.price-card li {
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+.price-card li:last-child { border-bottom: none; }
+.price-card li::before { content: '✓ '; color: var(--accent); font-weight: 700; }
+
+/* STRATEGY BLOCKS */
+.strat-block {
+  background: var(--surface);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 12px 12px 0;
+  padding: 24px 28px;
+  margin: 16px 0;
+}
+.strat-block h4 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.strat-block p { font-size: 14px; margin-bottom: 0; }
+
+/* FUNNEL */
+.funnel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 24px auto;
+  max-width: 700px;
+}
+.funnel-step {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: all 0.3s;
+}
+.funnel-step:first-child { border-radius: 14px 14px 4px 4px; }
+.funnel-step:last-child { border-radius: 4px 4px 14px 14px; }
+.funnel-step:hover { border-color: var(--accent-dim); }
+.funnel-num {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.funnel-text h5 { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+.funnel-text p { font-size: 13px; color: var(--text-muted); margin: 0; }
+
+/* METRICS ROW */
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin: 24px 0;
+}
+.metric {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+}
+.metric .val {
+  font-family: 'Playfair Display', serif;
+  font-size: 36px;
+  font-weight: 900;
+  color: var(--accent);
+}
+.metric .label {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* CALLOUT */
+.callout {
+  background: linear-gradient(135deg, rgba(126,217,87,0.08) 0%, rgba(59,109,17,0.08) 100%);
+  border: 1px solid var(--accent-dim);
+  border-radius: 14px;
+  padding: 28px;
+  margin: 24px 0;
+}
+.callout h4 { color: var(--accent); font-size: 16px; margin-bottom: 8px; }
+.callout p { font-size: 14px; margin-bottom: 0; }
+
+/* COST TABLE */
+.cost-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+.cost-row:last-child { border-bottom: none; }
+.cost-row .cost-label { color: var(--text-muted); }
+.cost-row .cost-val { font-weight: 700; }
+.cost-row.total { border-top: 2px solid var(--accent-dim); padding-top: 14px; margin-top: 6px; }
+.cost-row.total .cost-label { color: var(--text); font-weight: 700; }
+.cost-row.total .cost-val { color: var(--accent); font-size: 18px; }
+
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 48px 0;
+}
+
+/* TIMELINE */
+.timeline {
+  position: relative;
+  margin: 24px 0;
+  padding-left: 32px;
+}
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 12px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--border);
+}
+.tl-item {
+  position: relative;
+  margin-bottom: 28px;
+}
+.tl-item::before {
+  content: '';
+  position: absolute;
+  left: -24px;
+  top: 6px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.tl-item h5 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.tl-item .tl-time { font-size: 12px; color: var(--accent); font-weight: 700; margin-bottom: 4px; }
+.tl-item p { font-size: 13px; color: var(--text-muted); margin: 0; }
+
+@media (max-width: 640px) {
+  body { padding: 20px 12px; }
+  .report-header { padding: 40px 0 24px; margin-bottom: 40px; }
+  .pricing-rec { grid-template-columns: 1fr; }
+  table { font-size: 12px; }
+  th, td { padding: 10px 8px; }
+}
+
+/* ── ADMIN NAV BAR ── */
+.admin-nav {
+  position: fixed; top: 0; left: 0; right: 0; height: 52px;
+  background: rgba(12,15,10,0.94);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px; z-index: 1000;
+}
+.admin-nav-logo { font-size: 15px; font-weight: 700; color: var(--accent); letter-spacing: -0.3px; display:flex; align-items:center; gap:8px; }
+.admin-nav-logo span { color: var(--text); }
+.admin-nav-right { display: flex; align-items: center; gap: 12px; }
+.admin-back-btn {
+  font-size: 12px; font-weight: 600; color: var(--text-muted);
+  background: var(--surface); border: 1px solid var(--border);
+  padding: 6px 14px; border-radius: 7px; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; text-decoration: none; transition: all 0.15s;
+}
+.admin-back-btn:hover { color: var(--accent); border-color: var(--accent-dim); background: var(--surface-hover); }
+.admin-nav-badge { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 3px 10px; border-radius: 10px; background: var(--accent-dim); color: var(--accent); }
+.admin-nav-date { font-size: 11px; color: var(--text-muted); }
+.admin-toc { position:fixed; right:24px; top:72px; width:200px; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px 16px; z-index:900; }
+.admin-toc-title { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); margin-bottom:10px; }
+.admin-toc a { display:block; font-size:12px; color:var(--text-muted); text-decoration:none; padding:4px 0; border-bottom:1px solid var(--border); transition:color 0.12s; }
+.admin-toc a:last-child { border-bottom:none; }
+.admin-toc a:hover { color:var(--accent); }
+@media(max-width:1100px){.admin-toc{display:none}}
+body { padding-top: 72px; }
+</style>
+</head>
+<body>
+
+<!-- ADMIN NAV BAR -->
+<nav class="admin-nav">
+  <div class="admin-nav-logo">Commande<span>IA</span></div>
+  <div class="admin-nav-right">
+    <span class="admin-nav-date" id="nav-date"></span>
+    <span class="admin-nav-badge">Analyse stratégique</span>
+    <a href="/admin.html" class="admin-back-btn">← Retour admin</a>
+  </div>
+</nav>
+
+<!-- TABLE DES MATIÈRES -->
+<div class="admin-toc">
+  <div class="admin-toc-title">Sommaire</div>
+  <a href="#s1">01 — Marché</a>
+  <a href="#s2">02 — Coûts</a>
+  <a href="#s3">03 — Pricing</a>
+  <a href="#s4">04 — Techniques</a>
+  <a href="#s5">05 — Funnel</a>
+  <a href="#s6">06 — Objections</a>
+  <a href="#s7">07 — Objectifs</a>
+  <a href="#s8">08 — Plan 90j</a>
+  <a href="#s9">09 — Verdict</a>
+</div>
+
+<script>
+  document.getElementById('nav-date').textContent = new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+</script>
+
+<div class="container">
+
+<!-- HEADER -->
+<header class="report-header">
+  <div class="tag">Analyse stratégique</div>
+  <h1>Pricing & Stratégie <span>Commerciale</span></h1>
+  <p class="subtitle">Analyse complète du positionnement tarifaire et des techniques de vente pour Commande-IA — Avril 2026</p>
+</header>
+
+<!-- ===== SECTION 1 : CARTOGRAPHIE CONCURRENTIELLE ===== -->
+<section class="section" id="s1">
+  <div class="section-num">01 — Cartographie concurrentielle</div>
+  <h2>Où tu te situes sur le marché</h2>
+  <p>Le marché se divise en <strong>3 catégories</strong> : les logiciels de caisse/gestion classiques (Lightspeed, Zelty, L'Addition), les plateformes de stocks/achats avec IA (Inpulse, MarketMan), et les solutions de <strong>Voice AI pour prise de commande</strong> (Kea AI, Slang AI, Loman AI). Commande-IA se positionne dans cette 3e catégorie, quasiment <strong>inexistante en France</strong>.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Solution</th>
+          <th>Type</th>
+          <th>Prix/mois</th>
+          <th>IA Vocale</th>
+          <th>Marché</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Lightspeed</strong></td>
+          <td>Caisse + gestion</td>
+          <td>69€+</td>
+          <td><span class="badge badge-red">Non</span></td>
+          <td>International</td>
+        </tr>
+        <tr>
+          <td><strong>Zelty</strong></td>
+          <td>Caisse cloud</td>
+          <td>Sur devis</td>
+          <td><span class="badge badge-red">Non</span></td>
+          <td>France</td>
+        </tr>
+        <tr>
+          <td><strong>L'Addition</strong></td>
+          <td>Caisse iPad</td>
+          <td>39€+</td>
+          <td><span class="badge badge-red">Non</span></td>
+          <td>France</td>
+        </tr>
+        <tr>
+          <td><strong>Zenchef</strong></td>
+          <td>Réservation</td>
+          <td>79€+</td>
+          <td><span class="badge badge-orange">Partiel</span></td>
+          <td>Europe</td>
+        </tr>
+        <tr>
+          <td><strong>Inpulse</strong></td>
+          <td>Stocks IA</td>
+          <td>Sur devis</td>
+          <td><span class="badge badge-red">Non</span></td>
+          <td>France/EU</td>
+        </tr>
+        <tr>
+          <td><strong>Kea AI</strong></td>
+          <td>Voice AI commande</td>
+          <td>~300-500$ (estimé)</td>
+          <td><span class="badge badge-green">Oui</span></td>
+          <td>USA uniquement</td>
+        </tr>
+        <tr>
+          <td><strong>Slang AI</strong></td>
+          <td>Voice AI réservation</td>
+          <td>~200-400$</td>
+          <td><span class="badge badge-green">Oui</span></td>
+          <td>USA uniquement</td>
+        </tr>
+        <tr>
+          <td><strong>Loman AI</strong></td>
+          <td>Voice AI commande</td>
+          <td>~250$+ / surcoût appels</td>
+          <td><span class="badge badge-green">Oui</span></td>
+          <td>USA</td>
+        </tr>
+        <tr class="highlight">
+          <td>Commande-IA</td>
+          <td>Voice AI + gestion complète</td>
+          <td>199-249€</td>
+          <td><span class="badge badge-green">Oui</span></td>
+          <td>France 🇫🇷</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout">
+    <h4>💡 Avantage concurrentiel majeur</h4>
+    <p>Tu es <strong>le seul acteur en France</strong> à proposer de l'IA vocale pour la prise de commande téléphonique dans la restauration rapide. Kea, Slang et Loman opèrent exclusivement aux USA et en anglais. C'est un positionnement "first mover" en France qui justifie un <strong>premium pricing</strong>.</p>
+  </div>
+</section>
+
+<!-- ===== SECTION 2 : ANALYSE DES COÛTS ===== -->
+<section class="section" id="s2">
+  <div class="section-num">02 — Structure de coûts</div>
+  <h2>Ce que chaque client te coûte réellement</h2>
+  <p>Pour fixer un prix juste et rentable, il faut d'abord comprendre ta structure de coûts variables par client et par mois. Voici l'estimation pour un restaurant type qui reçoit <strong>~300 appels/mois</strong> :</p>
+
+  <div class="card" style="max-width: 500px; margin: 24px auto;">
+    <h3 style="margin-bottom: 16px;">Coûts variables mensuels / client</h3>
+    <div class="cost-row">
+      <span class="cost-label">Twilio (numéro FR + minutes)</span>
+      <span class="cost-val">~25-40€</span>
+    </div>
+    <div class="cost-row">
+      <span class="cost-label">Deepgram (transcription)</span>
+      <span class="cost-val">~8-15€</span>
+    </div>
+    <div class="cost-row">
+      <span class="cost-label">API Anthropic (Claude)</span>
+      <span class="cost-val">~10-20€</span>
+    </div>
+    <div class="cost-row">
+      <span class="cost-label">Railway (hébergement partagé)</span>
+      <span class="cost-val">~5-10€</span>
+    </div>
+    <div class="cost-row">
+      <span class="cost-label">SMS confirmation (Twilio)</span>
+      <span class="cost-val">~5-10€</span>
+    </div>
+    <div class="cost-row">
+      <span class="cost-label">Notion API (DB)</span>
+      <span class="cost-val">~0€ (plan gratuit)</span>
+    </div>
+    <div class="cost-row total">
+      <span class="cost-label">Coût total estimé / client</span>
+      <span class="cost-val">53 – 95€</span>
+    </div>
+  </div>
+
+  <p>Avec un prix à <strong>199€/mois</strong>, ta marge brute est de <strong>104 à 146€/client</strong> (soit 52-73%). À <strong>249€/mois</strong>, la marge monte à <strong>154-196€</strong> (62-79%). Ce sont des marges SaaS très saines qui te laissent de la marge pour le support et la croissance.</p>
+</section>
+
+<!-- ===== SECTION 3 : RECOMMANDATION PRICING ===== -->
+<section class="section" id="s3">
+  <div class="section-num">03 — Recommandation pricing</div>
+  <h2>La grille tarifaire optimale</h2>
+  <p>Après analyse du marché, de tes coûts et du positionnement, voici la <strong>grille tarifaire recommandée</strong>. La structure actuelle à 2 plans + Enterprise est bonne. Je recommande des ajustements précis :</p>
+
+  <div class="pricing-rec">
+    <!-- STARTER -->
+    <div class="price-card">
+      <div class="tier">Starter</div>
+      <div class="price-val">149€<span>/mois</span></div>
+      <div class="price-desc">Nouveau plan d'entrée — pour tester</div>
+      <ul>
+        <li>Dashboard commandes temps réel</li>
+        <li>Gestion des stocks basique</li>
+        <li>Statistiques essentielles</li>
+        <li>Support email (48h)</li>
+        <li>100 appels IA / mois inclus</li>
+        <li>SMS clients (50/mois)</li>
+      </ul>
+    </div>
+    <!-- PRO -->
+    <div class="price-card recommended">
+      <div class="tier">Pro</div>
+      <div class="price-val">249€<span>/mois</span></div>
+      <div class="price-desc">Le plan phare — tout inclus</div>
+      <ul>
+        <li>Appels IA illimités</li>
+        <li>Configuration par l'équipe</li>
+        <li>Formation personnalisée (2h)</li>
+        <li>Support prioritaire 7j/7</li>
+        <li>Analytics avancés + export</li>
+        <li>Stocks avec alertes auto</li>
+        <li>SMS illimités</li>
+        <li>Intégrations (caisse, livraison)</li>
+      </ul>
+    </div>
+    <!-- ENTERPRISE -->
+    <div class="price-card">
+      <div class="tier">Chaîne</div>
+      <div class="price-val">449€+<span>/mois</span></div>
+      <div class="price-desc">Multi-restaurants — sur devis</div>
+      <ul>
+        <li>Multi-sites (tableau centralisé)</li>
+        <li>Account manager dédié</li>
+        <li>SLA garanti 99.9%</li>
+        <li>API custom + intégrations</li>
+        <li>Formation équipe complète</li>
+        <li>Rapport mensuel personnalisé</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout">
+    <h4>⚡ Pourquoi 3 plans au lieu de 2 ?</h4>
+    <p><strong>Le plan Starter à 149€ est un "piège à conversion".</strong> Il sert de porte d'entrée psychologique : les restaurateurs hésitants peuvent tester à moindre coût, et 80% upgraderont vers Pro dans les 3 mois quand ils voient les résultats. C'est la technique du <strong>"Land & Expand"</strong> utilisée par les meilleurs SaaS. Le plan à 199€ actuel est supprimé — il cannibalisait le plan à 249€ sans être assez différent.</p>
+  </div>
+
+  <div class="strat-block">
+    <h4>🎯 Effet d'ancrage : pourquoi ton plan Pro paraît "pas cher"</h4>
+    <p>Les solutions Voice AI américaines (Kea, Slang) coûtent <strong>300-500$/mois</strong>. Les logiciels de caisse classiques (Lightspeed à 69€) ne font PAS d'IA vocale. Ton plan Pro à 249€ est donc perçu comme un excellent rapport qualité/prix : moins cher que les américains, et infiniment plus puissant que les français.</p>
+  </div>
+</section>
+
+<!-- ===== SECTION 4 : TECHNIQUES COMMERCIALES ===== -->
+<section class="section" id="s4">
+  <div class="section-num">04 — Techniques commerciales</div>
+  <h2>Les stratégies de vente qui marchent</h2>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-icon">🎣</div>
+      <h3>1. L'essai "Zéro Risque"</h3>
+      <p><strong>Offre 14 jours gratuits</strong> sans carte bancaire. Le restaurateur voit ses commandes arriver automatiquement. Après 14j, il ne peut plus s'en passer. <strong>Taux de conversion estimé : 60-70%.</strong> C'est la technique la plus puissante en SaaS restauration — les concurrents comme Zenchef l'utilisent déjà avec succès.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">📞</div>
+      <h3>2. La Démo "Appel en Direct"</h3>
+      <p>Ta killer feature : <strong>fais une démo live</strong>. Appelle le numéro IA devant le restaurateur, passe une commande en français, et montre-lui la commande apparaître en temps réel sur l'écran. Cet effet "wow" est imbattable. Aucun concurrent français ne peut le reproduire.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">💰</div>
+      <h3>3. Le Calcul ROI Personnalisé</h3>
+      <p>Demande au restaurateur : "Combien d'appels ratés par semaine ?" Puis calcule devant lui. Ex : <strong>10 appels manqués/sem × 15€ panier moyen = 600€/mois perdus</strong>. Ton outil à 249€ se "rembourse" dès le premier mois. Chiffre tes arguments.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🏃</div>
+      <h3>4. La Rareté Géographique</h3>
+      <p>Technique : <strong>"1 seul restaurant par quartier"</strong>. Annonce que tu limites l'accès à un seul fast-food par zone pour garantir l'exclusivité. Cela crée de l'urgence et du FOMO. Même si tu ne la maintiens pas à long terme, c'est un levier de closing redoutable au démarrage.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🎁</div>
+      <h3>5. Offre de Lancement "Pioneer"</h3>
+      <p>Pour tes <strong>20 premiers clients</strong> : prix bloqué à 199€/mois à vie (au lieu de 249€) + configuration gratuite. Le label "Pioneer" crée un sentiment d'exclusivité et accélère l'adoption. Les early adopters deviennent tes meilleurs ambassadeurs.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">📱</div>
+      <h3>6. Le Contenu TikTok "Problème → Solution"</h3>
+      <p>Format viral : filme un restaurateur débordé au téléphone (problème), puis montre l'IA qui prend la commande automatiquement (solution). <strong>Ce format "avant/après" génère 3-5x plus d'engagement</strong> sur TikTok. Poste 3-4 vidéos/semaine.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SECTION 5 : FUNNEL DE VENTE ===== -->
+<section class="section" id="s5">
+  <div class="section-num">05 — Parcours de conversion</div>
+  <h2>Le funnel qui transforme un prospect en client</h2>
+
+  <div class="funnel">
+    <div class="funnel-step">
+      <div class="funnel-num">1</div>
+      <div class="funnel-text">
+        <h5>Acquisition — TikTok / Instagram / Terrain</h5>
+        <p>Vidéos virales "avant/après" + visites physiques dans les fast-foods locaux. Objectif : <strong>200 vues qualifiées/semaine</strong>.</p>
+      </div>
+    </div>
+    <div class="funnel-step">
+      <div class="funnel-num">2</div>
+      <div class="funnel-text">
+        <h5>Landing Page — commande-ia.fr</h5>
+        <p>Page avec calculateur de rentabilité interactif (déjà en place) + <strong>bouton "Essai gratuit 14 jours"</strong> très visible. Objectif : <strong>15% taux de conversion</strong>.</p>
+      </div>
+    </div>
+    <div class="funnel-step">
+      <div class="funnel-num">3</div>
+      <div class="funnel-text">
+        <h5>Onboarding — Configuration en 30min</h5>
+        <p>Appel de bienvenue de 30min pour configurer le menu. Ton onboarding est déjà construit. <strong>C'est ton moment de confiance</strong> : le restaurateur voit que ça marche immédiatement.</p>
+      </div>
+    </div>
+    <div class="funnel-step">
+      <div class="funnel-num">4</div>
+      <div class="funnel-text">
+        <h5>Activation — Première commande IA</h5>
+        <p>La magie opère : le restaurateur reçoit sa <strong>première commande prise par l'IA</strong>. C'est le "Aha moment". Envoie un SMS de félicitations automatique.</p>
+      </div>
+    </div>
+    <div class="funnel-step">
+      <div class="funnel-num">5</div>
+      <div class="funnel-text">
+        <h5>Conversion — Jour 10-14</h5>
+        <p>Rappel : "Votre essai se termine dans 4 jours. Vous avez reçu <strong>X commandes</strong> et économisé <strong>Y heures</strong>." Passage au plan payant avec offre Pioneer si applicable.</p>
+      </div>
+    </div>
+    <div class="funnel-step">
+      <div class="funnel-num">6</div>
+      <div class="funnel-text">
+        <h5>Rétention — Rapport mensuel automatique</h5>
+        <p>Chaque mois, email automatique : "Ce mois, l'IA a pris <strong>X commandes</strong>, vous a fait gagner <strong>Y€</strong>." Le client voit la valeur en continu.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SECTION 6 : OBJECTIONS ===== -->
+<section class="section" id="s6">
+  <div class="section-num">06 — Traitement des objections</div>
+  <h2>Les 6 objections et comment les retourner</h2>
+
+  <div class="strat-block">
+    <h4>"C'est trop cher pour mon petit restaurant"</h4>
+    <p>→ Réponse : "Combien vous coûte un employé qui décroche le téléphone ? Un SMIC c'est ~1 800€/mois charges comprises. Commande-IA fait le même travail pour 249€, 24h/24, sans congés ni erreurs. C'est <strong>7x moins cher</strong> qu'un salarié."</p>
+  </div>
+
+  <div class="strat-block">
+    <h4>"Mes clients n'aimeront pas parler à un robot"</h4>
+    <p>→ Réponse : "Aux USA, les restaurants qui utilisent l'IA vocale rapportent <strong>96% de satisfaction client</strong> (données Slang AI). L'IA est naturelle, rapide, et ne fait jamais d'erreur. Vos clients gagnent du temps — et vous aussi."</p>
+  </div>
+
+  <div class="strat-block">
+    <h4>"Je veux voir si ça marche avant de payer"</h4>
+    <p>→ Réponse : "C'est exactement pour ça qu'on offre <strong>14 jours d'essai gratuit</strong>. Pas de carte bancaire, pas d'engagement. Si ça ne vous convient pas, on se quitte bons amis."</p>
+  </div>
+
+  <div class="strat-block">
+    <h4>"J'ai déjà un logiciel de caisse"</h4>
+    <p>→ Réponse : "Parfait ! Commande-IA <strong>ne remplace pas votre caisse</strong>, il la complète. On gère la prise de commande téléphonique et l'envoi en cuisine. Votre caisse reste pour l'encaissement."</p>
+  </div>
+
+  <div class="strat-block">
+    <h4>"La technologie, c'est pas mon truc"</h4>
+    <p>→ Réponse : "On sait que l'âge moyen des restaurateurs en France est de <strong>50 ans</strong>. C'est pour ça que le plan Pro inclut la configuration complète + formation. Vous n'avez rien à installer — on fait tout pour vous."</p>
+  </div>
+
+  <div class="strat-block">
+    <h4>"Et si je veux arrêter ?"</h4>
+    <p>→ Réponse : "Zéro engagement. Un clic et c'est annulé. On veut que vous restiez parce que ça marche, pas par obligation."</p>
+  </div>
+</section>
+
+<!-- ===== SECTION 7 : MÉTRIQUES CLÉS ===== -->
+<section class="section" id="s7">
+  <div class="section-num">07 — Objectifs chiffrés</div>
+  <h2>Les chiffres à viser sur 12 mois</h2>
+
+  <div class="metrics">
+    <div class="metric">
+      <div class="val">20</div>
+      <div class="label">Clients mois 6</div>
+    </div>
+    <div class="metric">
+      <div class="val">50</div>
+      <div class="label">Clients mois 12</div>
+    </div>
+    <div class="metric">
+      <div class="val">12 450€</div>
+      <div class="label">MRR cible mois 12</div>
+    </div>
+    <div class="metric">
+      <div class="val">&lt;5%</div>
+      <div class="label">Churn mensuel</div>
+    </div>
+  </div>
+
+  <p>Avec un mix de 30% Starter (149€) et 70% Pro (249€), le revenu moyen par client (ARPU) serait de <strong>~219€/mois</strong>. À 50 clients, ça représente un <strong>MRR de ~10 950€</strong>, soit <strong>~131 000€ de chiffre d'affaires annuel</strong>. Marge nette estimée après coûts variables : <strong>~60-65%</strong>, soit environ <strong>78 000 - 85 000€ net</strong>.</p>
+</section>
+
+<!-- ===== SECTION 8 : PLAN D'ACTION ===== -->
+<section class="section">
+  <div class="section-num">08 — Plan d'action</div>
+  <h2>Les 90 premiers jours — priorités</h2>
+
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-time">Semaines 1-2</div>
+      <h5>Débloquer Twilio France + finaliser le nom</h5>
+      <p>Priorité absolue : sans numéro français, pas de démo. Tranche entre OrderSync ou garde Commande-IA (ce dernier est plus clair en France). Prépare 3 vidéos TikTok de démo.</p>
+    </div>
+    <div class="tl-item">
+      <div class="tl-time">Semaines 3-4</div>
+      <h5>5 restaurants pilotes gratuits</h5>
+      <p>Démarchage terrain dans Mulhouse : cible les kebabs, pizzerias, fast-foods. Offre 1 mois gratuit en échange d'un témoignage vidéo. Ces cas clients seront ton meilleur argument de vente.</p>
+    </div>
+    <div class="tl-item">
+      <div class="tl-time">Mois 2</div>
+      <h5>Lancer l'offre Pioneer + contenu TikTok</h5>
+      <p>Avec tes témoignages pilotes, lance officiellement l'offre "20 premiers restaurants à 199€/mois à vie". Publie 4 TikToks/semaine. Commence le démarchage téléphonique/email sur Mulhouse, puis Strasbourg, Colmar.</p>
+    </div>
+    <div class="tl-item">
+      <div class="tl-time">Mois 3</div>
+      <h5>Automatiser et scaler</h5>
+      <p>Met en place les emails de rétention automatiques (rapport mensuel). Ajoute Stripe pour le paiement automatique. Cible 15-20 clients payants. Prépare l'expansion Île-de-France pour le mois 4.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SECTION 9 : RÉSUMÉ FINAL ===== -->
+<section class="section" id="s9">
+  <div class="section-num">09 — Verdict final</div>
+  <h2>En résumé</h2>
+
+  <div class="callout" style="border-color: var(--accent);">
+    <h4>🏆 Tes prix actuels sont bien calibrés — avec quelques ajustements</h4>
+    <p>
+      Ajoute un <strong>plan Starter à 149€</strong> pour capter les hésitants, garde ton <strong>plan Pro à 249€</strong> comme offre principale (ne descends PAS en dessous), et fixe un <strong>plancher Enterprise à 449€+</strong> pour les chaînes. Ta marge est confortable (60-65%), ton positionnement est unique en France, et le marché de la Voice AI restaurant est en pleine explosion (+7% d'adoption par an). Le timing est parfait.
+    </p>
+    <p style="margin-top: 12px;">
+      La clé du succès n'est pas le prix — c'est la <strong>démo live</strong>. Chaque restaurateur qui voit l'IA prendre une commande en direct devant ses yeux est convaincu. Concentre 80% de ton énergie commerciale sur ce moment "wow".
+    </p>
+  </div>
+</section>
+
+</div>
+</body>
+</html>
