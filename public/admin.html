@@ -501,6 +501,11 @@
       Demandes
       <span class="sidebar-count" id="count-tickets" style="background:rgba(224,85,85,0.12);color:#b03030;display:none">0</span>
     </div>
+    <div class="sidebar-item" id="nav-prospects" onclick="switchSection('prospects',this)">
+      <svg class="sidebar-icon" viewBox="0 0 14 14" fill="none"><circle cx="5" cy="4" r="2.5" stroke="currentColor" stroke-width="1.2"/><path d="M1 12c0-2.2 1.8-4 4-4s4 1.8 4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M10 2v4M8 4h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Prospects
+      <span class="sidebar-count" id="count-prospects" style="background:rgba(90,181,42,0.12);color:#3a8a0a;display:none">0</span>
+    </div>
     <div class="sidebar-divider"></div>
     <div class="sidebar-item" onclick="window.location.href='/stocks.html'">
       <svg class="sidebar-icon" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="12" height="4" rx="1" stroke="currentColor" stroke-width="1.2"/><rect x="1" y="7" width="12" height="4" rx="1" stroke="currentColor" stroke-width="1.2"/></svg>
@@ -614,8 +619,8 @@
       <!-- MRR Summary -->
       <div class="kpi-grid" style="margin-bottom:20px">
         <div class="kpi-card green"><div class="kpi-label">MRR actif</div><div class="kpi-val" id="abo-mrr">—</div><div class="kpi-sub">revenu mensuel récurrent</div></div>
-        <div class="kpi-card blue"><div class="kpi-label">Plan Pro</div><div class="kpi-val" id="abo-count-pro">—</div><div class="kpi-sub">249€/mois · plan phare</div></div>
-        <div class="kpi-card orange"><div class="kpi-label">Starter</div><div class="kpi-val" id="abo-count-starter">—</div><div class="kpi-sub">149€/mois · entrée de gamme</div></div>
+        <div class="kpi-card blue"><div class="kpi-label">Plan Pro</div><div class="kpi-val" id="abo-count-pro">—</div><div class="kpi-sub">269€/mois · plan phare</div></div>
+        <div class="kpi-card orange"><div class="kpi-label">Starter</div><div class="kpi-val" id="abo-count-starter">—</div><div class="kpi-sub">179€/mois · entrée de gamme</div></div>
         <div class="kpi-card"><div class="kpi-label">Essai/Gratuit</div><div class="kpi-val" id="abo-count-free">—</div><div class="kpi-sub">à convertir → Pioneer/Pro</div></div>
       </div>
       <div class="table-wrap">
@@ -623,8 +628,8 @@
           <div class="table-title">Tous les restaurants</div>
           <select class="form-select" style="width:180px;padding:6px 10px;font-size:11px" onchange="filterAbonnements(this.value)">
             <option value="">Tous les plans</option>
-            <option value="Starter">🔹 Starter — 149€/mois</option>
-            <option value="Pro">⭐ Pro — 249€/mois</option>
+            <option value="Starter">🔹 Starter — 179€/mois</option>
+            <option value="Pro">⭐ Pro — 269€/mois</option>
             <option value="Chaîne">🏢 Chaîne — 449€+/mois</option>
             <option value="Pioneer">🚀 Pioneer — 199€ à vie</option>
             <option value="Essai">🎁 Essai gratuit 14j</option>
@@ -861,8 +866,132 @@
       </div>
     </div>
 
+    <!-- ═══════════════════════════════════
+         SECTION PROSPECTS
+    ═══════════════════════════════════ -->
+    <div class="section-view" id="section-prospects">
+      <div class="section-header">
+        <h2 class="section-title">Prospects &amp; Comptes Démo</h2>
+        <button class="btn-primary" onclick="openProspectModal()">+ Nouveau prospect</button>
+      </div>
+
+      <!-- KPIs -->
+      <div class="kpi-grid" id="prospect-kpis" style="margin-bottom:24px">
+        <div class="kpi-card green"><div class="kpi-label">Total démos créées</div><div class="kpi-val" id="pr-kpi-total">—</div></div>
+        <div class="kpi-card blue"><div class="kpi-label">Connectés au moins 1×</div><div class="kpi-val" id="pr-kpi-connectes">—</div></div>
+        <div class="kpi-card orange"><div class="kpi-label">RDV confirmés</div><div class="kpi-val" id="pr-kpi-rdv">—</div></div>
+        <div class="kpi-card" style="cursor:pointer" onclick="filterProspects('converti')"><div class="kpi-label">Convertis ✅</div><div class="kpi-val" id="pr-kpi-convertis" style="color:#3a8a0a">—</div></div>
+      </div>
+
+      <!-- Filtres -->
+      <div class="tk-filter-row" style="margin-bottom:16px">
+        <button class="tk-filter-btn active" onclick="filterProspects('tous',this)">Tous</button>
+        <button class="tk-filter-btn" onclick="filterProspects('créé',this)">Créés</button>
+        <button class="tk-filter-btn" onclick="filterProspects('connecté',this)">Connectés</button>
+        <button class="tk-filter-btn" onclick="filterProspects('rdv_confirmé',this)">RDV</button>
+        <button class="tk-filter-btn" onclick="filterProspects('converti',this)">Convertis</button>
+        <button class="tk-filter-btn" onclick="filterProspects('perdu',this)">Perdus</button>
+        <div style="margin-left:auto">
+          <input type="text" id="prospect-search" placeholder="Rechercher..." oninput="renderProspects()"
+            style="border:1.5px solid #e0e8d8;border-radius:8px;padding:6px 12px;font-size:13px;font-family:inherit;outline:none;width:200px">
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div style="background:#fff;border:1px solid #e8ede4;border-radius:12px;overflow:hidden">
+        <table class="tk-table" id="prospect-table">
+          <thead>
+            <tr>
+              <th>Restaurant</th>
+              <th>Contact</th>
+              <th>Email démo</th>
+              <th>Mot de passe</th>
+              <th>Statut</th>
+              <th>Connexions</th>
+              <th>Créé le</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="prospect-tbody">
+            <tr><td colspan="8" style="text-align:center;padding:32px;color:#aaa">Chargement...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
   </div><!-- /main -->
 </div><!-- /layout -->
+
+<!-- MODAL NOUVEAU PROSPECT -->
+<div class="tk-panel-overlay" id="prospect-modal-overlay" onclick="closeProspectModal()" style="display:none;opacity:0;background:rgba(0,0,0,.45)"></div>
+<div id="prospect-modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1000;background:#fff;border-radius:20px;width:min(520px,92vw);box-shadow:0 24px 80px rgba(0,0,0,.2);overflow:hidden">
+  <div style="background:linear-gradient(135deg,#2d6a0f,#4a9c20);padding:24px 28px;color:#fff">
+    <div style="font-size:18px;font-weight:800">🎯 Nouveau prospect</div>
+    <div style="font-size:13px;opacity:.8;margin-top:4px">Crée un compte démo personnalisé &amp; sécurisé</div>
+  </div>
+  <div style="padding:28px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+      <div>
+        <label style="font-size:12px;font-weight:700;color:#7a9a6a;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Prénom *</label>
+        <input id="pr-prenom" type="text" placeholder="Jean" style="width:100%;border:1.5px solid #e0e8d8;border-radius:9px;padding:9px 12px;font-size:14px;font-family:inherit;outline:none">
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:700;color:#7a9a6a;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Nom</label>
+        <input id="pr-nom" type="text" placeholder="Dupont" style="width:100%;border:1.5px solid #e0e8d8;border-radius:9px;padding:9px 12px;font-size:14px;font-family:inherit;outline:none">
+      </div>
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="font-size:12px;font-weight:700;color:#7a9a6a;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Nom du restaurant *</label>
+      <input id="pr-restaurant" type="text" placeholder="Le Petit Bistro" oninput="previewDemoEmail()" style="width:100%;border:1.5px solid #e0e8d8;border-radius:9px;padding:9px 12px;font-size:14px;font-family:inherit;outline:none">
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="font-size:12px;font-weight:700;color:#7a9a6a;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Email réel du prospect</label>
+      <input id="pr-email" type="email" placeholder="jean@sonrestaurant.com" style="width:100%;border:1.5px solid #e0e8d8;border-radius:9px;padding:9px 12px;font-size:14px;font-family:inherit;outline:none">
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="font-size:12px;font-weight:700;color:#7a9a6a;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Date du RDV</label>
+      <input id="pr-rdv" type="datetime-local" style="width:100%;border:1.5px solid #e0e8d8;border-radius:9px;padding:9px 12px;font-size:14px;font-family:inherit;outline:none">
+    </div>
+    <div style="margin-bottom:20px">
+      <label style="font-size:12px;font-weight:700;color:#7a9a6a;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Notes</label>
+      <textarea id="pr-notes" rows="2" placeholder="Appelé le..., intéressé par..., rappeler à..." style="width:100%;border:1.5px solid #e0e8d8;border-radius:9px;padding:9px 12px;font-size:14px;font-family:inherit;outline:none;resize:none"></textarea>
+    </div>
+
+    <!-- Preview -->
+    <div id="pr-preview" style="background:#f0f7e8;border:1.5px solid #d0e8b8;border-radius:12px;padding:14px 16px;margin-bottom:20px;display:none">
+      <div style="font-size:11px;font-weight:700;color:#5a9a2a;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Identifiants générés</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+        <span style="font-size:12px;color:#7a9a6a;width:80px">Email</span>
+        <code id="pr-preview-email" style="font-size:13px;font-weight:700;color:#2d6a0f;background:#fff;border:1px solid #d0e8b8;border-radius:6px;padding:3px 8px"></code>
+        <button onclick="copyField('pr-preview-email')" style="border:none;background:none;cursor:pointer;font-size:12px;color:#7a9a6a">📋</button>
+      </div>
+      <div style="font-size:11px;color:#8aa87a">Le mot de passe sera généré automatiquement et affiché après création</div>
+    </div>
+
+    <div style="display:flex;gap:10px">
+      <button onclick="closeProspectModal()" style="flex:1;padding:11px;border:1.5px solid #e0e8d8;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;background:none;font-family:inherit;color:#555">Annuler</button>
+      <button onclick="createProspect()" id="pr-submit-btn" style="flex:2;padding:11px;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;background:#2d6a0f;color:#fff;font-family:inherit">Créer le compte démo →</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CREDENTIALS (après création) -->
+<div id="creds-modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1001;background:#fff;border-radius:20px;width:min(440px,92vw);box-shadow:0 24px 80px rgba(0,0,0,.25);overflow:hidden">
+  <div style="background:linear-gradient(135deg,#1a3a08,#2d6a0f);padding:22px 24px;color:#fff;text-align:center">
+    <div style="font-size:28px;margin-bottom:8px">🎉</div>
+    <div style="font-size:17px;font-weight:800">Compte démo créé !</div>
+    <div style="font-size:13px;opacity:.8;margin-top:4px">Partagez ces identifiants avec votre prospect</div>
+  </div>
+  <div style="padding:28px">
+    <div style="background:#f5f5f5;border-radius:12px;padding:16px;margin-bottom:16px;font-family:monospace;font-size:14px">
+      <div style="margin-bottom:8px"><span style="color:#888;font-size:12px">URL</span><br><strong id="creds-url" style="color:#2d6a0f;word-break:break-all"></strong></div>
+      <div style="margin-bottom:8px"><span style="color:#888;font-size:12px">Email</span><br><strong id="creds-email"></strong></div>
+      <div><span style="color:#888;font-size:12px">Mot de passe</span><br><strong id="creds-pwd" style="font-size:18px;letter-spacing:2px"></strong></div>
+    </div>
+    <button onclick="copyAllCreds()" style="width:100%;padding:11px;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;background:#2d6a0f;color:#fff;font-family:inherit;margin-bottom:10px">📋 Copier tout</button>
+    <button onclick="document.getElementById('creds-modal').style.display='none';document.getElementById('prospect-modal-overlay').style.display='none'" style="width:100%;padding:11px;border:1.5px solid #e0e8d8;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;background:none;font-family:inherit;color:#555">Fermer</button>
+  </div>
+</div>
 
 <!-- TICKET DETAIL PANEL -->
 <div class="tk-panel-overlay" id="tk-panel-overlay" onclick="closeTkPanel()"></div>
@@ -910,8 +1039,8 @@
       <div class="form-group"><label class="form-label">Nom</label><input class="form-input" id="r-nom" placeholder="Burger Express" /></div>
       <div class="form-group"><label class="form-label">Plan</label><select class="form-select" id="r-abo">
         <option value="Essai">🎁 Essai gratuit 14 jours</option>
-        <option value="Starter">🔹 Starter — 149€/mois</option>
-        <option value="Pro">⭐ Pro — 249€/mois</option>
+        <option value="Starter">🔹 Starter — 179€/mois</option>
+        <option value="Pro">⭐ Pro — 269€/mois</option>
         <option value="Chaîne">🏢 Chaîne — 449€+/mois</option>
         <option value="Pioneer">🚀 Pioneer — 199€ à vie</option>
         <option value="Gratuit">Gratuit (legacy)</option>
@@ -1008,6 +1137,7 @@ function switchSection(section, el) {
   if (section === 'audit') renderAudit();
   if (section === 'abonnements') renderAbonnements();
   if (section === 'tickets') loadTickets();
+  if (section === 'prospects') loadProspects();
   if (section === 'recherche') {
     const gsi = document.getElementById('global-search');
     const si = document.getElementById('search-input');
@@ -1128,7 +1258,7 @@ function renderAbonnements(data) {
   const tbody = document.getElementById('abo-tbody');
   if (!data.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:#2a3a2a">Aucun restaurant.</td></tr>'; return; }
   // MRR by plan
-  const PLAN_PRICES = { 'Starter':149, 'Pro':249, 'Chaîne':449, 'Pioneer':199, 'Mensuel':199, 'Annuel':199, 'Essai':0, 'Gratuit':0 };
+  const PLAN_PRICES = { 'Starter':179, 'Pro':269, 'Chaîne':449, 'Pioneer':199, 'Mensuel':199, 'Annuel':199, 'Essai':0, 'Gratuit':0 };
   const totalMRR = data.filter(r=>r.statut==='Actif').reduce((s,r)=>s+(PLAN_PRICES[r.abonnement]||0),0);
   const mrrEl = document.getElementById('abo-mrr');
   if (mrrEl) mrrEl.textContent = totalMRR.toLocaleString('fr-FR') + ' €';
@@ -1162,7 +1292,7 @@ function filterAbonnements(plan) {
 }
 
 function updateAboKpis(data) {
-  const PLAN_PRICES = { 'Starter':149, 'Pro':249, 'Chaîne':449, 'Pioneer':199, 'Mensuel':199, 'Annuel':199, 'Essai':0, 'Gratuit':0 };
+  const PLAN_PRICES = { 'Starter':179, 'Pro':269, 'Chaîne':449, 'Pioneer':199, 'Mensuel':199, 'Annuel':199, 'Essai':0, 'Gratuit':0 };
   const actifs = data.filter(r => r.statut === 'Actif');
   const mrr = actifs.reduce((s,r) => s + (PLAN_PRICES[r.abonnement]||0), 0);
   const proCount = data.filter(r => r.abonnement === 'Pro').length;
@@ -1179,7 +1309,7 @@ function updateAboKpis(data) {
 }
 
 // ── DASHBOARD ──
-const PLAN_MRR = { 'Starter':149, 'Pro':249, 'Chaîne':449, 'Pioneer':199, 'Mensuel':199, 'Annuel':199, 'Essai':0, 'Gratuit':0 };
+const PLAN_MRR = { 'Starter':179, 'Pro':269, 'Chaîne':449, 'Pioneer':199, 'Mensuel':199, 'Annuel':199, 'Essai':0, 'Gratuit':0 };
 const TARGET_M6 = 20;
 
 async function refreshDashboard() {
@@ -1459,7 +1589,7 @@ const GS_NAV = [
   { id:'dashboard',    label:'Vue d\'ensemble',  icon:'', sub:'KPIs, activité, graphiques en temps réel',              keywords:['dashboard','overview','stats','chiffre'] },
   { id:'restaurants',  label:'Restaurants',       icon:'', sub:'Gérer les restaurants, statuts, onboarding',            keywords:['restaurant','resto','gestion','local'] },
   { id:'employes',     label:'Employés',          icon:'', sub:'Comptes employés, rôles, accès',                        keywords:['employe','staff','equipe','personnel','user'] },
-  { id:'abonnements',  label:'Abonnements',       icon:'💳', sub:'Plans Starter 149€ · Pro 249€ · Chaîne 449€ · Pioneer · MRR', keywords:['abo','abonnement','plan','paiement','facture','billing','mrr','starter','pro','chaine','pioneer'] },
+  { id:'abonnements',  label:'Abonnements',       icon:'💳', sub:'Plans Starter 179€ · Pro 269€ · Chaîne 449€ · Pioneer · MRR', keywords:['abo','abonnement','plan','paiement','facture','billing','mrr','starter','pro','chaine','pioneer'] },
   { id:'live',         label:'Activité live',     icon:'', sub:'Commandes en temps réel, flux direct',                  keywords:['live','temps reel','direct','stream','activite'] },
   { id:'alertes',      label:'Alertes',           icon:'', sub:'Problèmes détectés, avertissements système',            keywords:['alerte','alert','warning','probleme','erreur'] },
   { id:'sante',        label:'Santé système',     icon:'', sub:'Mémoire RAM, uptime, performance serveur',             keywords:['sante','health','systeme','memoire','ram','uptime','cpu'] },
@@ -2375,6 +2505,209 @@ fetch('/tickets/stats').then(r=>r.json()).then(s => {
 addAudit('Connexion admin', currentUser.nom + ' s\'est connecté', '#5ac8fa');
 setInterval(refreshDashboard, 30000);
 setInterval(loadHealth, 60000);
+
+// ═══════════════════════════════════════════════════════
+// PROSPECTS & COMPTES DÉMO
+// ═══════════════════════════════════════════════════════
+let allProspects = [];
+let prospectFilter = 'tous';
+
+const STATUT_CFG = {
+  'créé':        { label:'Créé',      color:'#888',    bg:'#f5f5f5' },
+  'connecté':    { label:'Connecté',  color:'#2d6a0f', bg:'#f0f7e8' },
+  'rdv_confirmé':{ label:'RDV ✓',     color:'#a06000', bg:'#fff3e0' },
+  'converti':    { label:'Converti ✅',color:'#1a6a1a', bg:'#e0f7e0' },
+  'perdu':       { label:'Perdu',     color:'#b03030', bg:'#fef0f0' },
+};
+
+async function loadProspects() {
+  try {
+    const [demos, stats] = await Promise.all([
+      fetch('/demo-accounts').then(r=>r.json()),
+      fetch('/demo-accounts/stats').then(r=>r.json())
+    ]);
+    allProspects = demos;
+    document.getElementById('pr-kpi-total').textContent = stats.total;
+    document.getElementById('pr-kpi-connectes').textContent = stats.connectes;
+    document.getElementById('pr-kpi-rdv').textContent = stats.rdv;
+    document.getElementById('pr-kpi-convertis').textContent = stats.convertis;
+    const badge = document.getElementById('count-prospects');
+    if (demos.length > 0) { badge.textContent = demos.length; badge.style.display = 'inline-block'; }
+    renderProspects();
+  } catch(e) { console.error('loadProspects:', e); }
+}
+
+function renderProspects() {
+  const q = (document.getElementById('prospect-search')?.value || '').toLowerCase();
+  let list = allProspects.filter(p => {
+    if (prospectFilter !== 'tous' && p.statut !== prospectFilter) return false;
+    if (q && !p.restaurant?.toLowerCase().includes(q) && !p.prenom?.toLowerCase().includes(q) &&
+        !p.email?.toLowerCase().includes(q) && !p.demoEmail?.toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  const RAILWAY = 'https://charming-inspiration-production-4827.up.railway.app';
+  const tbody = document.getElementById('prospect-tbody');
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:32px;color:#aaa">Aucun prospect</td></tr>';
+    return;
+  }
+  const sc = STATUT_CFG;
+  tbody.innerHTML = list.map(p => {
+    const st = sc[p.statut] || sc['créé'];
+    const date = p.createdAt ? new Date(p.createdAt).toLocaleDateString('fr-FR') : '—';
+    const loginInfo = p.lastLogin
+      ? `<span title="Dernière: ${new Date(p.lastLogin).toLocaleString('fr-FR')}">${p.loginCount}×</span>`
+      : '<span style="color:#ccc">Jamais</span>';
+    return `<tr>
+      <td><strong>${p.restaurant}</strong></td>
+      <td>${p.prenom} ${p.nom || ''}<br><small style="color:#aaa">${p.email||'—'}</small></td>
+      <td><code style="font-size:12px;color:#2d6a0f">${p.demoEmail}</code></td>
+      <td>
+        <code style="font-size:13px;font-weight:700;letter-spacing:1px">${p.password}</code>
+        <button onclick="copyText('${p.password}')" style="border:none;background:none;cursor:pointer;font-size:12px;color:#aaa;padding:2px 4px">📋</button>
+      </td>
+      <td><span style="background:${st.bg};color:${st.color};border-radius:7px;padding:3px 9px;font-size:11px;font-weight:700">${st.label}</span></td>
+      <td style="text-align:center">${loginInfo}</td>
+      <td style="color:#aaa;font-size:12px">${date}</td>
+      <td>
+        <div style="display:flex;gap:4px;flex-wrap:wrap">
+          <button onclick="copyDemoLink('${p.demoEmail}','${p.password}','${p.restaurant}','${p.prenom}')" title="Copier le lien + identifiants" style="border:none;background:#f0f7e8;color:#2d6a0f;border-radius:6px;padding:4px 8px;font-size:11px;font-weight:700;cursor:pointer">🔗 Copier</button>
+          <select onchange="updateProspectStatut('${p.id}',this.value)" style="border:1.5px solid #e0e8d8;border-radius:6px;padding:3px 6px;font-size:11px;font-family:inherit;cursor:pointer;outline:none">
+            ${Object.entries(sc).map(([k,v])=>`<option value="${k}" ${p.statut===k?'selected':''}>${v.label}</option>`).join('')}
+          </select>
+          <button onclick="deleteProspect('${p.id}')" title="Supprimer" style="border:none;background:#fef0f0;color:#b03030;border-radius:6px;padding:4px 8px;font-size:11px;font-weight:700;cursor:pointer">🗑</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterProspects(f, btn) {
+  prospectFilter = f;
+  document.querySelectorAll('#section-prospects .tk-filter-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderProspects();
+}
+
+function openProspectModal() {
+  document.getElementById('prospect-modal').style.display = 'block';
+  document.getElementById('prospect-modal-overlay').style.display = 'block';
+  setTimeout(()=>{ document.getElementById('prospect-modal-overlay').style.opacity = '1'; }, 10);
+  document.getElementById('pr-prenom').focus();
+}
+function closeProspectModal() {
+  document.getElementById('prospect-modal').style.display = 'none';
+  document.getElementById('prospect-modal-overlay').style.display = 'none';
+  document.getElementById('prospect-modal-overlay').style.opacity = '0';
+  ['pr-prenom','pr-nom','pr-restaurant','pr-email','pr-rdv','pr-notes'].forEach(id=>{
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('pr-preview').style.display = 'none';
+}
+
+function previewDemoEmail() {
+  const restaurant = document.getElementById('pr-restaurant').value;
+  if (!restaurant.trim()) { document.getElementById('pr-preview').style.display = 'none'; return; }
+  const slug = restaurant.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'').slice(0,20);
+  document.getElementById('pr-preview-email').textContent = slug + '@essai.demo';
+  document.getElementById('pr-preview').style.display = 'block';
+}
+
+async function createProspect() {
+  const prenom = document.getElementById('pr-prenom').value.trim();
+  const restaurant = document.getElementById('pr-restaurant').value.trim();
+  if (!prenom || !restaurant) { showToastAdmin('Prénom et restaurant requis', 'error'); return; }
+  const btn = document.getElementById('pr-submit-btn');
+  btn.disabled = true; btn.textContent = 'Création...';
+  try {
+    const res = await fetch('/demo-accounts', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        prenom,
+        nom: document.getElementById('pr-nom').value.trim(),
+        email: document.getElementById('pr-email').value.trim(),
+        restaurant,
+        rdvDate: document.getElementById('pr-rdv').value || null,
+        rdvNotes: document.getElementById('pr-notes').value.trim()
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      showToastAdmin(data.error || 'Erreur création', 'error');
+      return;
+    }
+    closeProspectModal();
+    // Afficher les credentials
+    const RAILWAY = 'https://charming-inspiration-production-4827.up.railway.app';
+    document.getElementById('creds-url').textContent = RAILWAY + '/login.html';
+    document.getElementById('creds-email').textContent = data.demo.demoEmail;
+    document.getElementById('creds-pwd').textContent = data.demo.password;
+    document.getElementById('creds-modal').style.display = 'block';
+    document.getElementById('prospect-modal-overlay').style.display = 'block';
+    document.getElementById('prospect-modal-overlay').style.opacity = '1';
+    loadProspects();
+    addAudit('Prospect créé', `Compte démo ${data.demo.demoEmail} pour ${restaurant}`, '#5ab52a');
+  } catch(e) { showToastAdmin('Erreur serveur', 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'Créer le compte démo →'; }
+}
+
+async function updateProspectStatut(id, statut) {
+  await fetch(`/demo-accounts/${id}`, {
+    method:'PATCH', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ statut })
+  });
+  await loadProspects();
+  addAudit('Prospect mis à jour', `Statut → ${statut}`, '#7a9a6a');
+}
+
+async function deleteProspect(id) {
+  if (!confirm('Supprimer ce compte démo ?')) return;
+  await fetch(`/demo-accounts/${id}`, { method:'DELETE' });
+  await loadProspects();
+  addAudit('Prospect supprimé', id, '#e05555');
+}
+
+function copyText(txt) {
+  navigator.clipboard.writeText(txt).then(()=>showToastAdmin('Copié !'));
+}
+function copyField(id) {
+  const txt = document.getElementById(id)?.textContent;
+  if (txt) navigator.clipboard.writeText(txt).then(()=>showToastAdmin('Copié !'));
+}
+
+function copyDemoLink(email, pwd, restaurant, prenom) {
+  const RAILWAY = 'https://charming-inspiration-production-4827.up.railway.app';
+  const text = `Bonjour ${prenom},\n\nVoici votre accès démo personnalisée Commande-IA pour "${restaurant}" :\n\n🔗 Lien : ${RAILWAY}/login.html\n📧 Email : ${email}\n🔑 Mot de passe : ${pwd}\n\nUne fois connecté vous aurez accès à une démo interactive du logiciel.\n\nÀ très bientôt,\nCommande-IA`;
+  navigator.clipboard.writeText(text).then(()=>showToastAdmin('Message complet copié — prêt à coller dans un SMS/email !'));
+}
+
+function copyAllCreds() {
+  const url = document.getElementById('creds-url').textContent;
+  const email = document.getElementById('creds-email').textContent;
+  const pwd = document.getElementById('creds-pwd').textContent;
+  const restaurant = email.split('@')[0];
+  const text = `🔗 Lien : ${url}\n📧 Email : ${email}\n🔑 Mot de passe : ${pwd}`;
+  navigator.clipboard.writeText(text).then(()=>showToastAdmin('Identifiants copiés !'));
+}
+
+function showToastAdmin(msg, type='success') {
+  const t = document.createElement('div');
+  t.style.cssText = `position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:${type==='error'?'#b03030':'#1a2a10'};color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;font-weight:600;z-index:9999;transition:transform .3s ease;white-space:nowrap`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.style.transform='translateX(-50%) translateY(0)',10);
+  setTimeout(()=>{ t.style.transform='translateX(-50%) translateY(80px)'; setTimeout(()=>t.remove(),400); },3000);
+}
+
+// Init badge prospects au démarrage
+fetch('/demo-accounts/stats').then(r=>r.json()).then(s=>{
+  if (s.total > 0) {
+    const b = document.getElementById('count-prospects');
+    b.textContent = s.total; b.style.display = 'inline-block';
+  }
+}).catch(()=>{});
 </script>
 </body>
 </html

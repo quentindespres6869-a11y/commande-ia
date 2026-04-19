@@ -15,7 +15,7 @@
       background: #fff;
     }
 
-    /* PANNEAU GAUCHE */
+    /* ─── PANNEAU GAUCHE ─── */
     .left-panel {
       background: #1c3a1c;
       display: flex; flex-direction: column;
@@ -50,81 +50,348 @@
     .left-content { position: relative; z-index: 1; }
     .left-title { font-size: 38px; font-weight: 700; color: #fff; line-height: 1.15; letter-spacing: -1.5px; margin-bottom: 16px; }
     .left-title span { color: #a8e07a; }
-    .left-sub { font-size: 15px; color: rgba(255,255,255,0.45); line-height: 1.7; max-width: 320px; }
+    .left-sub { font-size: 15px; color: rgba(255,255,255,0.45); line-height: 1.7; max-width: 320px; margin-bottom: 32px; }
 
-    .left-features { display: flex; flex-direction: column; gap: 12px; position: relative; z-index: 1; }
-    .feature-item { display: flex; align-items: center; gap: 10px; }
-    .feature-dot { width: 6px; height: 6px; border-radius: 50%; background: #a8e07a; flex-shrink: 0; }
-    .feature-text { font-size: 13px; color: rgba(255,255,255,0.5); }
+    /* Témoignages */
+    .testimonials { position: relative; min-height: 105px; }
+    .testi { position: absolute; inset: 0; opacity: 0; transform: translateY(8px); transition: all .6s ease; pointer-events: none; }
+    .testi.active { opacity: 1; transform: none; pointer-events: auto; }
+    .testi-text { font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.6; font-style: italic; margin-bottom: 10px; border-left: 2px solid rgba(168,224,122,.4); padding-left: 12px; }
+    .testi-author { display: flex; align-items: center; gap: 9px; }
+    .testi-avatar { width: 28px; height: 28px; border-radius: 7px; background: rgba(168,224,122,.2); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; color: #a8e07a; flex-shrink: 0; }
+    .testi-name { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.65); }
+    .testi-role { font-size: 10px; color: rgba(255,255,255,0.3); }
+    .testi-dots { display: flex; gap: 5px; margin-top: 14px; }
+    .testi-dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,.2); cursor: pointer; transition: all .2s; }
+    .testi-dot.active { background: #a8e07a; width: 14px; border-radius: 3px; }
 
-    /* PANNEAU DROIT */
+    .left-footer { position: relative; z-index: 1; }
+
+    /* Métriques */
+    .left-metrics { display: flex; gap: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,.08); }
+    .lm-item { text-align: center; }
+    .lm-val { font-size: 20px; font-weight: 700; color: #a8e07a; line-height: 1; }
+    .lm-lbl { font-size: 9px; color: rgba(255,255,255,.3); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; margin-top: 3px; }
+
+    /* ─── PANNEAU DROIT ─── */
     .right-panel {
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
       padding: 48px;
-      background: #fff;
       position: relative;
+      overflow: hidden;
+      /* Fond structuré : pas blanc plein */
+      background: #f4f7f1;
     }
 
-    .login-form { width: 100%; max-width: 360px; }
+    /* Blobs décoratifs animés */
+    .rp-blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: .55;
+      pointer-events: none;
+      animation: blobDrift 12s ease-in-out infinite alternate;
+    }
+    .rp-blob-1 { width: 340px; height: 340px; background: #d4edb8; top: -80px; right: -60px; animation-delay: 0s; }
+    .rp-blob-2 { width: 240px; height: 240px; background: #c8e8f0; bottom: -60px; left: -40px; animation-delay: -4s; }
+    .rp-blob-3 { width: 180px; height: 180px; background: #e8f4c0; top: 50%; left: 60%; animation-delay: -8s; }
+    @keyframes blobDrift {
+      0%   { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(20px, 20px) scale(1.08); }
+    }
 
-    .form-header { margin-bottom: 36px; }
+    /* Grille de points subtile */
+    .rp-grid {
+      position: absolute; inset: 0;
+      background-image: radial-gradient(circle, rgba(59,109,17,.07) 1px, transparent 1px);
+      background-size: 24px 24px;
+      pointer-events: none;
+    }
+
+    /* Carte formulaire flottante */
+    .login-card {
+      width: 100%; max-width: 380px;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 2px 0 #e0ead0, 0 8px 32px rgba(59,109,17,.08), 0 32px 64px rgba(0,0,0,.06);
+      padding: 36px 36px 32px;
+      position: relative; z-index: 1;
+      transition: box-shadow .2s;
+    }
+    .login-card:focus-within {
+      box-shadow: 0 2px 0 #c0d890, 0 8px 32px rgba(59,109,17,.13), 0 32px 64px rgba(0,0,0,.08);
+    }
+
+    .form-header { margin-bottom: 28px; }
+    .form-greeting { font-size: 13px; color: #8aaa8a; font-weight: 500; margin-bottom: 4px; }
     .form-title { font-size: 24px; font-weight: 700; color: #1a2a1a; letter-spacing: -0.5px; margin-bottom: 6px; }
     .form-sub { font-size: 13px; color: #b0c8b0; }
 
-    .login-alert { padding: 12px 14px; border-radius: 10px; font-size: 13px; font-weight: 500; margin-bottom: 20px; display: none; }
+    /* Dernière connexion */
+    .last-login { display: none; font-size: 11px; color: #8aaa8a; margin-bottom: 14px; padding: 7px 12px; background: #f6faf2; border-radius: 8px; border: 1px solid #e0eed0; }
+    .last-login.show { display: block; }
+
+    /* Compte récent mémorisé */
+    .recent-account { display: none; align-items: center; gap: 10px; background: #f6faf2; border: 1.5px solid #d4e8b0; border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; cursor: pointer; transition: all .15s; }
+    .recent-account:hover { border-color: #3B6D11; background: #eef6e4; }
+    .recent-account.show { display: flex; }
+    .ra-avatar { width: 32px; height: 32px; border-radius: 8px; background: #3B6D11; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+    .ra-info { flex: 1; }
+    .ra-name { font-size: 13px; font-weight: 600; color: #1a2a1a; }
+    .ra-email { font-size: 11px; color: #9abaa0; }
+    .ra-use { font-size: 11px; font-weight: 700; color: #3B6D11; white-space: nowrap; }
+
+    .login-alert { padding: 12px 14px; border-radius: 10px; font-size: 13px; font-weight: 500; margin-bottom: 18px; display: none; animation: aIn .2s ease; }
+    @keyframes aIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
     .login-alert.error { background: #fef0f0; color: #b03030; border: 1px solid #f0c0c0; display: block; }
     .login-alert.success { background: #e8f5dc; color: #2d6a0a; border: 1px solid #c0e090; display: block; }
 
-    .form-group { margin-bottom: 16px; }
-    .form-label { font-size: 11px; font-weight: 600; color: #7aaa7a; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; display: block; }
+    .form-group { margin-bottom: 14px; }
+    .form-label { font-size: 11px; font-weight: 600; color: #7aaa7a; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
+
+    /* Tag type de compte */
+    .account-tag { font-size: 10px; font-weight: 700; border-radius: 5px; padding: 2px 7px; letter-spacing: .2px; display: none; }
+    .account-tag.demo { display: inline; background: #fff3e0; color: #a06000; }
+    .account-tag.admin { display: inline; background: #f0f0ff; color: #4040b0; }
+    .account-tag.staff { display: inline; background: #eaf4dc; color: #3B6D11; }
 
     .input-wrapper { position: relative; }
-    .input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); }
-    .input-icon svg { width: 16px; height: 16px; }
+    .input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #c0d8c0; pointer-events: none; }
+    .input-icon svg { width: 16px; height: 16px; display: block; }
     .form-input {
-      width: 100%; padding: 13px 14px 13px 42px;
-      border-radius: 10px; border: 1.5px solid #e8f0e0;
-      background: #f8faf6; font-size: 14px;
+      width: 100%; padding: 13px 44px 13px 42px;
+      border-radius: 10px; border: 1.5px solid #e4eedd;
+      background: #f9fbf6; font-size: 14px;
       font-family: 'Inter', sans-serif; color: #1a2a1a;
       outline: none; transition: all 0.15s;
     }
-    .form-input:focus { border-color: #3B6D11; background: #fff; box-shadow: 0 0 0 3px rgba(59,109,17,0.07); }
+    .form-input:focus { border-color: #3B6D11; background: #fff; box-shadow: 0 0 0 3px rgba(59,109,17,0.08); }
+    .form-input:hover:not(:focus) { border-color: #c8ddb0; }
+    .form-input.valid { border-color: #5ab52a; }
+    .form-input.shake { animation: shake .35s ease; }
+    @keyframes shake { 0%,100%{transform:none} 20%{transform:translateX(-5px)} 40%{transform:translateX(5px)} 60%{transform:translateX(-3px)} 80%{transform:translateX(3px)} }
+
+    /* Icônes droites champ */
+    .input-right { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 4px; }
+    .field-check { color: #5ab52a; display: none; }
+    .field-check.show { display: block; }
+    .toggle-pwd { background: none; border: none; cursor: pointer; color: #c0d8c0; padding: 3px; border-radius: 5px; transition: color .12s; display: flex; }
+    .toggle-pwd:hover { color: #3B6D11; }
+
+    /* Suggestion email */
+    .email-suggest { display: none; font-size: 12px; color: #3B6D11; font-weight: 600; margin-top: 5px; cursor: pointer; }
+    .email-suggest.show { display: block; }
+    .email-suggest:hover { text-decoration: underline; }
+
+    /* Caps lock */
+    .caps-warn { display: none; align-items: center; gap: 5px; font-size: 11px; color: #a06000; font-weight: 600; margin-top: 5px; padding: 4px 8px; background: #fff8e0; border-radius: 6px; }
+    .caps-warn.show { display: flex; }
+
+    /* Barre de force mot de passe */
+    .pwd-meter { margin-top: 5px; display: none; }
+    .pwd-meter.show { display: block; }
+    .pwd-meter-bar { height: 3px; border-radius: 2px; background: #e8f0e0; overflow: hidden; }
+    .pwd-meter-fill { height: 100%; border-radius: 2px; transition: width .3s, background .3s; }
+    .pwd-meter-label { font-size: 10px; font-weight: 700; margin-top: 3px; }
+
+    /* Options */
+    .field-options { display: flex; align-items: center; margin-bottom: 16px; }
+    .remember-me { display: flex; align-items: center; gap: 7px; cursor: pointer; font-size: 13px; color: #9ab09a; user-select: none; }
+    .remember-me input { width: 14px; height: 14px; accent-color: #3B6D11; cursor: pointer; }
 
     .login-btn {
       width: 100%; padding: 14px; border-radius: 10px; border: none;
-      background: #2d5c2d; color: #fff; font-size: 14px; font-weight: 600;
-      font-family: 'Inter', sans-serif; cursor: pointer; margin-top: 8px;
-      transition: all 0.15s; letter-spacing: -0.1px;
+      background: linear-gradient(135deg, #2d5c2d, #3e7a1e);
+      color: #fff; font-size: 14px; font-weight: 600;
+      font-family: 'Inter', sans-serif; cursor: pointer;
+      transition: all 0.18s; letter-spacing: -0.1px;
       display: flex; align-items: center; justify-content: center; gap: 8px;
+      position: relative; overflow: hidden;
+      box-shadow: 0 4px 14px rgba(45,92,45,.25);
     }
-    .login-btn:hover { background: #1a3a1a; box-shadow: 0 4px 20px rgba(45,92,45,0.2); }
-    .login-btn:disabled { background: #c0d8c0; cursor: not-allowed; box-shadow: none; }
+    .login-btn::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,.12), transparent);
+      opacity: 0; transition: opacity .15s;
+    }
+    .login-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(45,92,45,.35); }
+    .login-btn:hover::after { opacity: 1; }
+    .login-btn:active { transform: none; box-shadow: 0 2px 8px rgba(45,92,45,.2); }
+    .login-btn:disabled { background: #c0d8c0; cursor: not-allowed; box-shadow: none; transform: none; }
     .login-btn svg { width: 16px; height: 16px; }
+    .btn-progress { position: absolute; bottom: 0; left: 0; height: 3px; background: rgba(255,255,255,.4); width: 0; transition: width .9s ease; }
 
-    /* BADGE BAS DROITE */
+    /* Tentatives */
+    .attempts-bar { display: none; margin-top: 10px; font-size: 12px; color: #a05020; font-weight: 600; text-align: center; }
+    .attempts-bar.show { display: block; }
+    .lockout-timer { font-size: 20px; font-weight: 800; color: #b03030; text-align: center; margin: 8px 0; display: none; }
+
+    /* Overlay succès — sans emoji, SVG animé */
+    .success-overlay {
+      position: fixed; inset: 0;
+      background: rgba(12, 28, 8, .96);
+      z-index: 999; display: none;
+      flex-direction: column; align-items: center; justify-content: center;
+      animation: fadeIn .35s ease;
+    }
+    .success-overlay.show { display: flex; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* Cercle + checkmark SVG animé */
+    .so-check {
+      width: 80px; height: 80px;
+      margin-bottom: 24px;
+      animation: popIn .4s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    @keyframes popIn { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+    .so-circle {
+      stroke: #5ab52a;
+      stroke-width: 4;
+      fill: none;
+      stroke-dasharray: 220;
+      stroke-dashoffset: 220;
+      animation: drawCircle .6s ease .15s forwards;
+    }
+    @keyframes drawCircle { to { stroke-dashoffset: 0; } }
+    .so-tick {
+      stroke: #5ab52a;
+      stroke-width: 5;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 60;
+      stroke-dashoffset: 60;
+      animation: drawTick .35s ease .65s forwards;
+    }
+    @keyframes drawTick { to { stroke-dashoffset: 0; } }
+
+    .so-name { font-size: 26px; font-weight: 700; color: #fff; margin-bottom: 8px; letter-spacing: -.5px; }
+    .so-sub { font-size: 14px; color: rgba(255,255,255,.45); }
+    .so-bar { width: 200px; height: 3px; background: rgba(255,255,255,.1); border-radius: 2px; margin-top: 28px; overflow: hidden; }
+    .so-bar-fill { height: 100%; background: #5ab52a; border-radius: 2px; animation: progress 1.2s ease forwards; }
+    @keyframes progress { from { width: 0; } to { width: 100%; } }
+
+    /* Badge bas droite */
     .bottom-badge {
-      position: absolute;
-      bottom: 32px; right: 32px;
+      position: absolute; bottom: 24px; right: 24px;
       display: flex; align-items: center; gap: 8px;
-      background: #f8faf6; border: 1px solid #e0ecd8;
-      padding: 8px 14px; border-radius: 20px;
+      background: rgba(255,255,255,.8);
+      backdrop-filter: blur(8px);
+      border: 1px solid #e0ecd8;
+      padding: 7px 13px; border-radius: 20px;
+      z-index: 1;
     }
     .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: #5ab52a; animation: pulse 1.5s infinite; }
-    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
     .badge-text { font-size: 11px; font-weight: 600; color: #3B6D11; }
 
-    .form-footer { text-align: center; margin-top: 28px; font-size: 11px; color: #d0ddd0; }
+    /* Toast */
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: #1a2a10; color: #fff; padding: 11px 18px; border-radius: 12px; font-size: 13px; font-weight: 600; z-index: 9999; transition: transform .3s; white-space: nowrap; box-shadow: 0 4px 16px rgba(0,0,0,.2); }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    .form-footer { text-align: center; margin-top: 24px; font-size: 11px; color: #c0cfc0; }
+    .form-footer a { color: #9ab09a; text-decoration: none; }
+    .form-footer a:hover { color: #3B6D11; }
+
+    /* Séparateur décoratif en dessous du titre */
+    .form-divider {
+      width: 32px; height: 3px; border-radius: 2px;
+      background: linear-gradient(90deg, #3B6D11, #a8e07a);
+      margin-bottom: 24px;
+    }
+
+    /* ─── ZONE SOUS LA CARTE ─── */
+    .below-card {
+      width: 100%; max-width: 380px;
+      position: relative; z-index: 1;
+      margin-top: 20px;
+      display: flex; flex-direction: column; gap: 12px;
+      align-items: center;
+    }
+
+    /* Badges de confiance */
+    .trust-badges {
+      display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+    }
+    .trust-badge {
+      display: flex; align-items: center; gap: 5px;
+      background: rgba(255,255,255,.7);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(59,109,17,.12);
+      border-radius: 20px;
+      padding: 5px 11px;
+      font-size: 11px; font-weight: 600; color: #5a7a5a;
+      white-space: nowrap;
+    }
+    .trust-badge svg { flex-shrink: 0; }
+
+    /* Astuces rotatif */
+    .tip-strip {
+      width: 100%;
+      background: rgba(255,255,255,.6);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(59,109,17,.1);
+      border-radius: 10px;
+      padding: 9px 14px;
+      display: flex; align-items: center; gap: 9px;
+      min-height: 38px;
+    }
+    .tip-icon {
+      width: 22px; height: 22px; border-radius: 6px;
+      background: linear-gradient(135deg, #3B6D11, #5ab52a);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .tip-text {
+      font-size: 12px; color: #5a7a5a; line-height: 1.4;
+      flex: 1;
+      position: relative; overflow: hidden; height: 18px;
+    }
+    .tip-item {
+      position: absolute; inset: 0;
+      opacity: 0; transform: translateY(6px);
+      transition: all .5s ease;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .tip-item.active { opacity: 1; transform: none; }
+    .tip-dots {
+      display: flex; gap: 3px; flex-shrink: 0;
+    }
+    .tip-dot {
+      width: 4px; height: 4px; border-radius: 50%;
+      background: rgba(59,109,17,.2); transition: background .2s;
+    }
+    .tip-dot.active { background: #3B6D11; }
+
+    /* Raccourci clavier */
+    .kbd-hint {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11px; color: rgba(90,120,90,.6);
+    }
+    kbd {
+      display: inline-flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,.8);
+      border: 1px solid rgba(59,109,17,.15);
+      border-bottom: 2px solid rgba(59,109,17,.2);
+      border-radius: 5px;
+      padding: 2px 7px;
+      font-size: 11px; font-family: 'Inter', sans-serif;
+      font-weight: 600; color: #5a7a5a;
+    }
 
     @media (max-width: 768px) {
       body { grid-template-columns: 1fr; }
       .left-panel { display: none; }
-      .right-panel { padding: 32px 24px; }
+      .right-panel { padding: 24px; }
+      .login-card { padding: 28px 24px; }
     }
   </style>
 </head>
 <body>
 
+<!-- ══ PANNEAU GAUCHE ══ -->
 <div class="left-panel">
   <div class="left-logo">
     <div class="left-logo-icon">
@@ -135,106 +402,480 @@
 
   <div class="left-content">
     <div class="left-title">La prise de<br>commande<br><span>réinventée.</span></div>
-    <div class="left-sub" style="margin-top:16px;">Une IA qui prend les commandes, les structure et les envoie en cuisine sans erreur.</div>
+    <div class="left-sub">Une IA qui décroche, comprend et envoie chaque commande en cuisine — sans erreur, 24h/24.</div>
+
+    <div class="testimonials" id="testimonials">
+      <div class="testi active">
+        <div class="testi-text">"En 3 semaines, on a réduit les erreurs de commande de 90%. Les clients ne tombent plus jamais sur un répondeur."</div>
+        <div class="testi-author">
+          <div class="testi-avatar">M</div>
+          <div><div class="testi-name">Marc Delacroix</div><div class="testi-role">Gérant — Le Zinc Parisien</div></div>
+        </div>
+      </div>
+      <div class="testi">
+        <div class="testi-text">"Le système a payé son abonnement dès le premier mois. On a récupéré toutes nos commandes manquées aux heures de pointe."</div>
+        <div class="testi-author">
+          <div class="testi-avatar">S</div>
+          <div><div class="testi-name">Sophia Ramos</div><div class="testi-role">Propriétaire — La Bodega</div></div>
+        </div>
+      </div>
+      <div class="testi">
+        <div class="testi-text">"L'installation a pris 48h. Depuis, mon équipe se concentre sur les clients en salle plutôt que sur le téléphone."</div>
+        <div class="testi-author">
+          <div class="testi-avatar">A</div>
+          <div><div class="testi-name">Ahmed Bensali</div><div class="testi-role">Directeur — Kebab Palace</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="testi-dots">
+      <div class="testi-dot active" onclick="goTesti(0)"></div>
+      <div class="testi-dot" onclick="goTesti(1)"></div>
+      <div class="testi-dot" onclick="goTesti(2)"></div>
+    </div>
   </div>
 
-  <div class="left-features">
-    <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Commandes en temps réel</div></div>
-    <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Zéro erreur, zéro confusion</div></div>
-    <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Gestion des allergies automatique</div></div>
-    <div class="feature-item"><div class="feature-dot"></div><div class="feature-text">Dashboard hôte & cuisine</div></div>
+  <div class="left-footer">
+    <div class="left-metrics">
+      <div class="lm-item"><div class="lm-val">98%</div><div class="lm-lbl">Précision IA</div></div>
+      <div class="lm-item"><div class="lm-val">48h</div><div class="lm-lbl">Installation</div></div>
+      <div class="lm-item"><div class="lm-val">24/7</div><div class="lm-lbl">Disponible</div></div>
+      <div class="lm-item"><div class="lm-val">0€</div><div class="lm-lbl">Frais cachés</div></div>
+    </div>
   </div>
 </div>
 
+<!-- ══ PANNEAU DROIT ══ -->
 <div class="right-panel">
-  <div class="login-form">
+  <!-- Fond vivant -->
+  <div class="rp-blob rp-blob-1"></div>
+  <div class="rp-blob rp-blob-2"></div>
+  <div class="rp-blob rp-blob-3"></div>
+  <div class="rp-grid"></div>
+
+  <!-- Carte flottante -->
+  <div class="login-card">
+
     <div class="form-header">
+      <div class="form-greeting" id="form-greeting">Bienvenue</div>
       <div class="form-title">Connexion</div>
+      <div class="form-divider"></div>
       <div class="form-sub">Accès réservé au personnel autorisé</div>
+    </div>
+
+    <div class="last-login" id="last-login"></div>
+
+    <div class="recent-account" id="recent-account" onclick="useRecentAccount()">
+      <div class="ra-avatar" id="ra-avatar">?</div>
+      <div class="ra-info">
+        <div class="ra-name" id="ra-name">—</div>
+        <div class="ra-email" id="ra-email">—</div>
+      </div>
+      <div class="ra-use">Utiliser →</div>
     </div>
 
     <div class="login-alert" id="alert"></div>
 
+    <!-- Email -->
     <div class="form-group">
-      <label class="form-label">Email</label>
+      <label class="form-label">
+        Email
+        <span class="account-tag" id="account-tag"></span>
+      </label>
       <div class="input-wrapper">
-        <div class="input-icon">
-          <svg viewBox="0 0 16 16" fill="none"><path d="M2 4h12v8H2zM2 4l6 5 6-5" stroke="#c0d8c0" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </div>
-        <input class="form-input" type="email" id="email" placeholder="votre@email.com" />
+        <span class="input-icon">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M2 4h12v8H2z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M2 4l6 4.5L14 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        </span>
+        <input class="form-input" type="email" id="email" placeholder="votre@email.com"
+          oninput="onEmailInput(this.value)" autocomplete="email" />
+        <span class="input-right">
+          <svg class="field-check" id="email-check" viewBox="0 0 14 14" fill="none" width="14" height="14">
+            <circle cx="7" cy="7" r="6" fill="#5ab52a"/>
+            <path d="M4 7l2 2 4-4" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
       </div>
+      <div class="email-suggest" id="email-suggest" onclick="applySuggest()"></div>
     </div>
 
+    <!-- Mot de passe -->
     <div class="form-group">
       <label class="form-label">Mot de passe</label>
       <div class="input-wrapper">
-        <div class="input-icon">
-          <svg viewBox="0 0 16 16" fill="none"><rect x="3" y="7" width="10" height="7" rx="1.5" stroke="#c0d8c0" stroke-width="1.3"/><path d="M5.5 7V5a2.5 2.5 0 015 0v2" stroke="#c0d8c0" stroke-width="1.3" stroke-linecap="round"/></svg>
-        </div>
-        <input class="form-input" type="password" id="password" placeholder="••••••••" />
+        <span class="input-icon">
+          <svg viewBox="0 0 16 16" fill="none"><rect x="3" y="7" width="10" height="7" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M5.5 7V5a2.5 2.5 0 015 0v2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        </span>
+        <input class="form-input" type="password" id="password" placeholder="••••••••"
+          oninput="onPwdInput(this.value)" onkeyup="checkCapsLock(event)" autocomplete="current-password" />
+        <span class="input-right">
+          <button class="toggle-pwd" type="button" onclick="togglePwd()" title="Afficher/Masquer">
+            <svg id="eye-icon" viewBox="0 0 16 16" fill="none" width="15" height="15">
+              <path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z" stroke="currentColor" stroke-width="1.3"/>
+              <circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.3"/>
+            </svg>
+          </button>
+        </span>
       </div>
+      <div class="caps-warn" id="caps-warn">
+        <svg viewBox="0 0 12 12" fill="none" width="11" height="11"><path d="M6 1.5L11 6H8.5v4.5h-5V6H1L6 1.5z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+        Majuscules activées
+      </div>
+      <div class="pwd-meter" id="pwd-meter">
+        <div class="pwd-meter-bar"><div class="pwd-meter-fill" id="pwd-fill"></div></div>
+        <div class="pwd-meter-label" id="pwd-label"></div>
+      </div>
+    </div>
+
+    <div class="field-options">
+      <label class="remember-me">
+        <input type="checkbox" id="remember-me" onchange="onRememberChange()" />
+        Se souvenir de moi
+      </label>
     </div>
 
     <button class="login-btn" id="login-btn" onclick="login()">
       Se connecter
       <svg viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="btn-progress" id="btn-progress"></div>
     </button>
 
-    <div class="form-footer">Commande-IA © 2025 — Accès sécurisé</div>
+    <div class="attempts-bar" id="attempts-bar"></div>
+    <div class="lockout-timer" id="lockout-timer"></div>
+
+    <div class="form-footer">
+      Commande-IA © 2025 &nbsp;·&nbsp;
+      <a href="/landing.html">Site web</a> &nbsp;·&nbsp;
+      <a href="mailto:contact@commande-ia.com">Support</a>
+    </div>
+  </div>
+
+  <!-- ══ ZONE SOUS LA CARTE ══ -->
+  <div class="below-card">
+
+    <!-- Badges de confiance -->
+    <div class="trust-badges">
+      <div class="trust-badge">
+        <svg viewBox="0 0 12 12" fill="none" width="11" height="11"><path d="M6 1l1.5 3H11l-2.5 2 1 3L6 7.5 3.5 9l1-3L2 4h3.5z" stroke="#5a7a5a" stroke-width="1" stroke-linejoin="round"/></svg>
+        Chiffrement SSL
+      </div>
+      <div class="trust-badge">
+        <svg viewBox="0 0 12 12" fill="none" width="11" height="11"><rect x="2" y="2" width="8" height="8" rx="1.5" stroke="#5a7a5a" stroke-width="1"/><path d="M4 6l1.5 1.5L8 4" stroke="#5a7a5a" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        RGPD conforme
+      </div>
+      <div class="trust-badge">
+        <svg viewBox="0 0 12 12" fill="none" width="11" height="11"><path d="M6 1.5L10 3v3.5C10 9 6 11 6 11S2 9 2 6.5V3L6 1.5z" stroke="#5a7a5a" stroke-width="1" stroke-linejoin="round"/></svg>
+        Données sécurisées
+      </div>
+    </div>
+
+    <!-- Astuces rotatif -->
+    <div class="tip-strip">
+      <div class="tip-icon">
+        <svg viewBox="0 0 14 14" fill="none" width="12" height="12"><circle cx="7" cy="7" r="5.5" stroke="#fff" stroke-width="1.2"/><path d="M7 4v3.5M7 9.5v.5" stroke="#fff" stroke-width="1.3" stroke-linecap="round"/></svg>
+      </div>
+      <div class="tip-text" id="tip-text">
+        <span class="tip-item active">Appuyez sur <strong>Entrée</strong> pour vous connecter directement</span>
+        <span class="tip-item">Cochez "Se souvenir" pour rester connecté 30 jours</span>
+        <span class="tip-item">Votre session reste active 8h après connexion</span>
+        <span class="tip-item">En cas de problème, contactez votre administrateur</span>
+        <span class="tip-item">Les comptes <strong>@essai.demo</strong> accèdent au site de présentation</span>
+      </div>
+      <div class="tip-dots" id="tip-dots">
+        <div class="tip-dot active"></div>
+        <div class="tip-dot"></div>
+        <div class="tip-dot"></div>
+        <div class="tip-dot"></div>
+        <div class="tip-dot"></div>
+      </div>
+    </div>
+
+    <!-- Raccourci clavier -->
+    <div class="kbd-hint">
+      <kbd>↵ Entrée</kbd> pour valider
+      &nbsp;·&nbsp;
+      <kbd>Tab</kbd> pour naviguer
+    </div>
+
   </div>
 
   <div class="bottom-badge">
-    <div class="badge-dot"></div>
-    <div class="badge-text">Système opérationnel</div>
+    <div class="badge-dot" id="sb-dot"></div>
+    <div class="badge-text" id="sb-text">Système opérationnel</div>
   </div>
 </div>
 
-<script>
-  const params = new URLSearchParams(window.location.search);
-  const redirect = params.get('redirect') || '/';
-  if (sessionStorage.getItem('user')) window.location.href = redirect;
+<!-- ══ OVERLAY SUCCÈS (sans emoji, SVG animé) ══ -->
+<div class="success-overlay" id="success-overlay">
+  <svg class="so-check" viewBox="0 0 80 80">
+    <circle class="so-circle" cx="40" cy="40" r="34"/>
+    <polyline class="so-tick" points="24,40 35,52 56,28"/>
+  </svg>
+  <div class="so-name" id="so-name">Bienvenue !</div>
+  <div class="so-sub">Redirection en cours...</div>
+  <div class="so-bar"><div class="so-bar-fill"></div></div>
+</div>
 
-  async function login() {
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-    const btn = document.getElementById('login-btn');
-    const alertEl = document.getElementById('alert');
-    alertEl.className = 'login-alert';
-    alertEl.textContent = '';
-    if (!email || !password) {
-      alertEl.className = 'login-alert error';
-      alertEl.textContent = 'Veuillez remplir tous les champs.';
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════════
+// 0. ASTUCES ROTATIFS (bande sous la carte)
+// ════════════════════════════════════════════════════
+(function () {
+  const items = document.querySelectorAll('.tip-item');
+  const dots  = document.querySelectorAll('.tip-dot');
+  let idx = 0;
+  function nextTip() {
+    items[idx].classList.remove('active');
+    dots[idx].classList.remove('active');
+    idx = (idx + 1) % items.length;
+    items[idx].classList.add('active');
+    dots[idx].classList.add('active');
+  }
+  setInterval(nextTip, 4000);
+})();
+
+// ════════════════════════════════════════════════════
+// 1. TÉMOIGNAGES ROTATIFS
+// ════════════════════════════════════════════════════
+let testiIdx = 0;
+const testis = document.querySelectorAll('.testi');
+const testiDots = document.querySelectorAll('.testi-dot');
+function goTesti(i) {
+  testis[testiIdx].classList.remove('active');
+  testiDots[testiIdx].classList.remove('active');
+  testiIdx = i;
+  testis[testiIdx].classList.add('active');
+  testiDots[testiIdx].classList.add('active');
+}
+setInterval(() => goTesti((testiIdx + 1) % testis.length), 5000);
+
+// ════════════════════════════════════════════════════
+// 2. SALUTATION SELON L'HEURE
+// ════════════════════════════════════════════════════
+(function () {
+  const h = new Date().getHours();
+  const g = h < 6 ? 'Bonne nuit ' : h < 12 ? 'Bonjour ' : h < 18 ? 'Bon après-midi ' : 'Bonsoir ';
+  document.getElementById('form-greeting').textContent = g;
+})();
+
+// ════════════════════════════════════════════════════
+// 3. STATUT SERVEUR (badge discret)
+// ════════════════════════════════════════════════════
+async function checkServer() {
+  const t0 = Date.now();
+  try {
+    await fetch('/ping', { signal: AbortSignal.timeout(4000) });
+    const ping = Date.now() - t0;
+    document.getElementById('sb-dot').style.background = ping > 600 ? '#ffcc00' : '#5ab52a';
+    document.getElementById('sb-text').textContent = ping > 600 ? 'Latence élevée' : 'Système opérationnel';
+  } catch {
+    document.getElementById('sb-dot').style.background = '#ff5050';
+    document.getElementById('sb-text').textContent = 'Hors ligne';
+    document.getElementById('sb-text').style.color = '#b03030';
+  }
+}
+checkServer();
+setInterval(checkServer, 30000);
+
+// ════════════════════════════════════════════════════
+// 4. COMPTE RÉCENT + DERNIÈRE CONNEXION
+// ════════════════════════════════════════════════════
+const saved = (() => { try { return JSON.parse(localStorage.getItem('cia_remember')); } catch { return null; } })();
+if (saved?.email) {
+  document.getElementById('recent-account').classList.add('show');
+  document.getElementById('ra-name').textContent = saved.name || saved.email;
+  document.getElementById('ra-email').textContent = saved.email;
+  document.getElementById('ra-avatar').textContent = (saved.name || saved.email)[0].toUpperCase();
+  document.getElementById('email').value = saved.email;
+  document.getElementById('remember-me').checked = true;
+  detectAccountType(saved.email);
+  if (saved.lastLogin) {
+    const d = new Date(saved.lastLogin);
+    const ll = document.getElementById('last-login');
+    ll.textContent = '🕐 Dernière connexion : ' + d.toLocaleDateString('fr-FR') + ' à ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    ll.classList.add('show');
+  }
+  setTimeout(() => document.getElementById('password').focus(), 100);
+}
+function useRecentAccount() { document.getElementById('password').focus(); }
+function onRememberChange() {
+  if (!document.getElementById('remember-me').checked) {
+    localStorage.removeItem('cia_remember');
+    document.getElementById('recent-account').classList.remove('show');
+    document.getElementById('last-login').classList.remove('show');
+  }
+}
+
+// ════════════════════════════════════════════════════
+// 5. DÉTECTION TYPE DE COMPTE
+// ════════════════════════════════════════════════════
+function detectAccountType(email) {
+  const tag = document.getElementById('account-tag');
+  if (email.endsWith('@essai.demo')) { tag.className = 'account-tag demo'; tag.textContent = '🧪 Démo'; }
+  else if (email.includes('admin')) { tag.className = 'account-tag admin'; tag.textContent = '🔐 Admin'; }
+  else if (email.includes('@') && email.includes('.')) { tag.className = 'account-tag staff'; tag.textContent = '👤 Personnel'; }
+  else { tag.className = 'account-tag'; tag.textContent = ''; }
+}
+
+// ════════════════════════════════════════════════════
+// 6. VALIDATION EMAIL + SUGGESTION CORRECTION DOMAINE
+// ════════════════════════════════════════════════════
+const COMMON_DOMAINS = { 'gmai.com': 'gmail.com', 'gamil.com': 'gmail.com', 'gmail.fr': 'gmail.com', 'hotmai.com': 'hotmail.com', 'hotmial.com': 'hotmail.com', 'yahooo.com': 'yahoo.com', 'yaho.com': 'yahoo.com', 'outlok.com': 'outlook.com' };
+let suggestEmail = '';
+function onEmailInput(v) {
+  detectAccountType(v);
+  const valid = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+  document.getElementById('email').classList.toggle('valid', valid);
+  document.getElementById('email-check').classList.toggle('show', valid);
+  const parts = v.split('@');
+  const suggest = document.getElementById('email-suggest');
+  if (parts.length === 2 && COMMON_DOMAINS[parts[1]]) {
+    suggestEmail = parts[0] + '@' + COMMON_DOMAINS[parts[1]];
+    suggest.textContent = 'Vouliez-vous dire ' + suggestEmail + ' ?';
+    suggest.classList.add('show');
+  } else { suggest.classList.remove('show'); }
+}
+function applySuggest() {
+  document.getElementById('email').value = suggestEmail;
+  document.getElementById('email-suggest').classList.remove('show');
+  onEmailInput(suggestEmail);
+  document.getElementById('password').focus();
+  showToast('Email corrigé en ' + suggestEmail);
+}
+
+// ════════════════════════════════════════════════════
+// 7. TOGGLE MOT DE PASSE + FORCE
+// ════════════════════════════════════════════════════
+let pwdVisible = false;
+function togglePwd() {
+  pwdVisible = !pwdVisible;
+  document.getElementById('password').type = pwdVisible ? 'text' : 'password';
+  document.getElementById('eye-icon').innerHTML = pwdVisible
+    ? '<path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z" stroke="currentColor" stroke-width="1.3"/><line x1="2" y1="2" x2="14" y2="14" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>'
+    : '<path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.3"/>';
+}
+function onPwdInput(v) {
+  if (!v) { document.getElementById('pwd-meter').classList.remove('show'); return; }
+  document.getElementById('pwd-meter').classList.add('show');
+  let score = 0;
+  if (v.length >= 8) score++;
+  if (/[A-Z]/.test(v)) score++;
+  if (/[0-9]/.test(v)) score++;
+  if (/[^A-Za-z0-9]/.test(v)) score++;
+  const cfg = [
+    { w: '25%', bg: '#e05555', lbl: 'Faible' },
+    { w: '50%', bg: '#e0a020', lbl: 'Moyen' },
+    { w: '75%', bg: '#60a030', lbl: 'Bien' },
+    { w: '100%', bg: '#3B6D11', lbl: 'Fort' }
+  ];
+  const c = cfg[Math.max(0, score - 1)];
+  document.getElementById('pwd-fill').style.cssText = `width:${c.w};background:${c.bg}`;
+  document.getElementById('pwd-label').style.cssText = `color:${c.bg};font-size:10px;font-weight:700;margin-top:3px`;
+  document.getElementById('pwd-label').textContent = c.lbl;
+}
+
+// ════════════════════════════════════════════════════
+// 8. CAPS LOCK
+// ════════════════════════════════════════════════════
+function checkCapsLock(e) {
+  document.getElementById('caps-warn').classList.toggle('show', !!e.getModifierState?.('CapsLock'));
+}
+
+// ════════════════════════════════════════════════════
+// 9. PRÉ-REMPLISSAGE DEPUIS URL (?email=xxx)
+// ════════════════════════════════════════════════════
+const params = new URLSearchParams(window.location.search);
+const redirect = params.get('redirect') || '/';
+const urlEmail = params.get('email');
+if (urlEmail) {
+  document.getElementById('email').value = urlEmail;
+  onEmailInput(urlEmail);
+  document.getElementById('password').focus();
+  showToast('Email pré-rempli depuis le lien');
+}
+if (sessionStorage.getItem('user')) window.location.href = redirect;
+
+// ════════════════════════════════════════════════════
+// 10. TENTATIVES + VERROUILLAGE 30s
+// ════════════════════════════════════════════════════
+let failCount = 0, lockUntil = 0, lockInterval = null;
+function isLocked() { return Date.now() < lockUntil; }
+function recordFailure() {
+  failCount++;
+  const left = 5 - failCount;
+  const bar = document.getElementById('attempts-bar');
+  if (left > 0 && left <= 3) { bar.className = 'attempts-bar show'; bar.textContent = `⚠️ ${left} tentative${left > 1 ? 's' : ''} avant blocage`; }
+  if (failCount >= 5) {
+    lockUntil = Date.now() + 30000;
+    bar.className = 'attempts-bar show'; bar.textContent = '🔒 Compte bloqué temporairement';
+    document.getElementById('login-btn').disabled = true;
+    document.getElementById('lockout-timer').style.display = 'block';
+    lockInterval = setInterval(() => {
+      const s = Math.ceil((lockUntil - Date.now()) / 1000);
+      if (s <= 0) { clearInterval(lockInterval); document.getElementById('lockout-timer').style.display = 'none'; document.getElementById('login-btn').disabled = false; bar.className = 'attempts-bar'; failCount = 0; }
+      else document.getElementById('lockout-timer').textContent = `Réessayez dans ${s}s`;
+    }, 500);
+  }
+  ['email', 'password'].forEach(id => { const el = document.getElementById(id); el.classList.add('shake'); setTimeout(() => el.classList.remove('shake'), 400); });
+}
+
+// ════════════════════════════════════════════════════
+// 11. OVERLAY SUCCÈS
+// ════════════════════════════════════════════════════
+function showSuccessOverlay(name) {
+  document.getElementById('so-name').textContent = 'Bienvenue, ' + name + ' !';
+  document.getElementById('success-overlay').classList.add('show');
+}
+
+// ════════════════════════════════════════════════════
+// CONNEXION
+// ════════════════════════════════════════════════════
+async function login() {
+  if (isLocked()) { showToast('Compte bloqué — patientez quelques secondes'); return; }
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const btn = document.getElementById('login-btn');
+  const progress = document.getElementById('btn-progress');
+  document.getElementById('alert').className = 'login-alert';
+
+  if (!email || !password) { showAlert('error', 'Veuillez remplir tous les champs.'); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = 'Connexion... <div class="btn-progress" id="btn-progress" style="width:45%"></div>';
+
+  try {
+    const res = await fetch('/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
+    const data = await res.json();
+
+    if (!res.ok) {
+      recordFailure();
+      showAlert('error', data.error || 'Identifiants incorrects.');
+      btn.disabled = isLocked();
+      btn.innerHTML = btnHtml();
       return;
     }
-    btn.disabled = true;
-    btn.innerHTML = 'Connexion...';
-    try {
-      const res = await fetch('/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        alertEl.className = 'login-alert error';
-        alertEl.textContent = data.error || 'Erreur de connexion.';
-        btn.disabled = false;
-        btn.innerHTML = 'Se connecter <svg viewBox="0 0 16 16" fill="none" width="16" height="16"><path d="M3 8h10M9 4l4 4-4 4" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-        return;
-      }
-      sessionStorage.setItem('user', JSON.stringify(data.user));
-      alertEl.className = 'login-alert success';
-      alertEl.textContent = 'Bienvenue ' + data.user.nom + ' — Redirection...';
-      setTimeout(() => { window.location.href = redirect; }, 1000);
-    } catch (e) {
-      alertEl.className = 'login-alert error';
-      alertEl.textContent = 'Erreur réseau. Vérifiez que le serveur tourne.';
-      btn.disabled = false;
-      btn.innerHTML = 'Se connecter <svg viewBox="0 0 16 16" fill="none" width="16" height="16"><path d="M3 8h10M9 4l4 4-4 4" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-    }
-  }
 
-  document.addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+    failCount = 0;
+    sessionStorage.setItem('user', JSON.stringify(data.user));
+    if (document.getElementById('remember-me').checked) {
+      localStorage.setItem('cia_remember', JSON.stringify({ email, name: data.user.prenom || data.user.nom, lastLogin: new Date().toISOString() }));
+    }
+
+    const name = data.user.prenom || data.user.nom || 'Vous';
+    showSuccessOverlay(name);
+    setTimeout(() => { window.location.href = data.accountType === 'demo' ? '/landing.html' : redirect; }, 1400);
+
+  } catch {
+    showAlert('error', 'Erreur réseau — vérifiez la connexion.');
+    btn.disabled = false; btn.innerHTML = btnHtml();
+  }
+}
+
+function btnHtml() { return 'Se connecter <svg viewBox="0 0 16 16" fill="none" width="16" height="16"><path d="M3 8h10M9 4l4 4-4 4" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
+function showAlert(type, msg) { const el = document.getElementById('alert'); el.className = 'login-alert ' + type; el.textContent = msg; }
+function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
+
+document.addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
 </script>
 </body>
 </html>

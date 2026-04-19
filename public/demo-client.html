@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Démo Commande-IA</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --green:#2d6a0f;--green2:#4a9c20;--pale:#f0f7e8;--border:#d4e8b8;
+      --bg:#f5f7f2;--surface:#fff;--text:#1a2a10;--muted:#7a9a6a;
+      --accent:#ff6b35;--blue:#3a7bd5;
+    }
+    html{scroll-behavior:smooth}
+    body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+    /* ── TOPBAR ── */
+    .topbar{
+      position:fixed;top:0;left:0;right:0;z-index:100;
+      background:rgba(255,255,255,0.96);backdrop-filter:blur(12px);
+      border-bottom:1px solid var(--border);
+      display:flex;align-items:center;justify-content:space-between;
+      padding:0 32px;height:60px;
+    }
+    .topbar-logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:17px;color:var(--green)}
+    .topbar-logo span{background:var(--green);color:#fff;border-radius:8px;padding:4px 8px;font-size:13px}
+    .topbar-center{display:flex;align-items:center;gap:6px}
+    .tab-btn{padding:6px 14px;border-radius:20px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted);font-family:inherit;transition:all .15s}
+    .tab-btn.active,.tab-btn:hover{background:var(--pale);color:var(--green)}
+    .topbar-right{display:flex;align-items:center;gap:12px}
+    .welcome-tag{font-size:13px;color:var(--muted);font-weight:500}
+    .welcome-tag strong{color:var(--text)}
+    .cta-top{background:var(--green);color:#fff;border:none;border-radius:10px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s}
+    .cta-top:hover{background:var(--green2)}
+
+    /* ── SECTIONS ── */
+    .section{display:none;padding-top:60px;min-height:100vh}
+    .section.active{display:block}
+
+    /* ── HERO ── */
+    .hero{
+      background:linear-gradient(135deg,#1a3a08 0%,#2d6a0f 50%,#4a9c20 100%);
+      padding:80px 32px 60px;text-align:center;color:#fff;position:relative;overflow:hidden;
+    }
+    .hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+    .hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:20px;padding:6px 16px;font-size:13px;font-weight:600;margin-bottom:24px}
+    .hero-badge .dot{width:7px;height:7px;background:#7fff50;border-radius:50%;animation:pulse 1.5s infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    .hero h1{font-size:clamp(28px,5vw,52px);font-weight:800;line-height:1.15;margin-bottom:16px}
+    .hero h1 em{font-style:normal;color:#a8e063}
+    .hero-sub{font-size:17px;opacity:.85;max-width:560px;margin:0 auto 36px;line-height:1.6}
+    .hero-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+    .btn-hero-primary{background:#fff;color:var(--green);border:none;border-radius:12px;padding:14px 28px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
+    .btn-hero-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.15)}
+    .btn-hero-outline{background:rgba(255,255,255,0.15);color:#fff;border:1.5px solid rgba(255,255,255,0.4);border-radius:12px;padding:14px 28px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
+    .btn-hero-outline:hover{background:rgba(255,255,255,0.25)}
+
+    /* ── STATS BAND ── */
+    .stats-band{display:flex;justify-content:center;gap:0;background:#fff;border-bottom:1px solid var(--border)}
+    .stat-item{padding:20px 40px;text-align:center;border-right:1px solid var(--border)}
+    .stat-item:last-child{border-right:none}
+    .stat-num{font-size:28px;font-weight:800;color:var(--green)}
+    .stat-lbl{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+
+    /* ── FEATURES GRID ── */
+    .content-wrap{max-width:1100px;margin:0 auto;padding:60px 24px}
+    .section-head{text-align:center;margin-bottom:48px}
+    .section-tag{display:inline-block;background:var(--pale);color:var(--green);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;border-radius:20px;padding:5px 14px;margin-bottom:12px;border:1px solid var(--border)}
+    .section-head h2{font-size:clamp(22px,3.5vw,36px);font-weight:800;line-height:1.25}
+    .section-head p{font-size:16px;color:var(--muted);margin-top:10px}
+    .feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+    .feat-card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:28px;transition:all .2s;cursor:default}
+    .feat-card:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(45,106,15,.1);border-color:var(--green2)}
+    .feat-icon{width:48px;height:48px;background:var(--pale);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:16px}
+    .feat-card h3{font-size:16px;font-weight:700;margin-bottom:8px}
+    .feat-card p{font-size:14px;color:var(--muted);line-height:1.6}
+    .feat-badge{display:inline-block;background:#fff8e1;color:#a06000;font-size:11px;font-weight:600;border-radius:6px;padding:2px 8px;margin-top:10px}
+
+    /* ── DEMO DASHBOARD ── */
+    .demo-shell{background:#1a2210;border-radius:20px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.25);margin:0 auto;max-width:960px}
+    .demo-topbar{background:#243115;border-bottom:1px solid #3a4a25;display:flex;align-items:center;justify-content:space-between;padding:12px 20px}
+    .demo-topbar-left{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:#a8e063}
+    .demo-nav{display:flex;gap:4px}
+    .demo-nav-item{padding:5px 12px;border-radius:7px;font-size:12px;font-weight:600;color:#7a9a6a;cursor:pointer;transition:all .12s}
+    .demo-nav-item.active,.demo-nav-item:hover{background:#3a5a20;color:#c8f0a0}
+    .demo-body{display:grid;grid-template-columns:220px 1fr;min-height:500px}
+    .demo-sidebar{background:#1e2d12;border-right:1px solid #2a3a18;padding:16px 12px}
+    .demo-sidebar-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;font-size:13px;color:#7a9a6a;cursor:pointer;margin-bottom:4px;transition:all .12s}
+    .demo-sidebar-item:hover,.demo-sidebar-item.active{background:#2d4a18;color:#c8f0a0}
+    .demo-sidebar-icon{font-size:16px;width:24px;text-align:center}
+    .demo-sidebar-badge{margin-left:auto;background:#e05555;color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px}
+    .demo-main{padding:20px;background:#1a2210;overflow:auto}
+    .demo-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+    .demo-kpi{background:#243115;border:1px solid #2d4a18;border-radius:12px;padding:16px}
+    .demo-kpi-val{font-size:26px;font-weight:800;color:#a8e063;margin-bottom:4px}
+    .demo-kpi-lbl{font-size:11px;color:#7a9a6a;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+    .demo-orders{display:flex;flex-direction:column;gap:8px}
+    .demo-order{background:#243115;border:1px solid #2d4a18;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;animation:slideIn .4s ease}
+    @keyframes slideIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
+    .demo-order-avatar{width:36px;height:36px;border-radius:8px;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
+    .demo-order-info{flex:1}
+    .demo-order-name{font-size:13px;font-weight:700;color:#e0f0c8;margin-bottom:2px}
+    .demo-order-items{font-size:11px;color:#7a9a6a}
+    .demo-order-status{padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700}
+    .status-new{background:#1a4a1a;color:#7fff50}
+    .status-prep{background:#4a3a00;color:#ffc040}
+    .status-ready{background:#003a4a;color:#40d0ff}
+    .demo-time{font-size:11px;color:#5a7a4a;flex-shrink:0}
+    .demo-pulse{width:8px;height:8px;border-radius:50%;background:#7fff50;animation:pulse 1s infinite;margin-left:4px;display:inline-block}
+
+    /* ── PRICING SECTION ── */
+    .pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;max-width:900px;margin:0 auto}
+    .price-card{background:#fff;border:2px solid var(--border);border-radius:20px;padding:32px 28px;position:relative;transition:all .2s}
+    .price-card.featured{border-color:var(--green);box-shadow:0 8px 40px rgba(45,106,15,.15)}
+    .price-card .badge-top{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--green);color:#fff;font-size:11px;font-weight:700;border-radius:20px;padding:3px 14px;white-space:nowrap}
+    .price-card h3{font-size:18px;font-weight:800;margin-bottom:6px}
+    .price-card .amount{font-size:38px;font-weight:800;color:var(--green);line-height:1}
+    .price-card .amount span{font-size:15px;font-weight:500;color:var(--muted)}
+    .price-card .desc{font-size:13px;color:var(--muted);margin:12px 0 20px;line-height:1.5}
+    .price-feat{display:flex;gap:8px;margin-bottom:10px;font-size:13px;align-items:flex-start}
+    .price-feat::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0;margin-top:1px}
+    .price-cta{display:block;width:100%;padding:12px;border-radius:12px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;text-align:center;margin-top:24px;border:none;transition:all .15s}
+    .price-cta.primary{background:var(--green);color:#fff}
+    .price-cta.primary:hover{background:var(--green2)}
+    .price-cta.outline{background:none;border:2px solid var(--border);color:var(--text)}
+    .price-cta.outline:hover{border-color:var(--green);color:var(--green)}
+    .price-note{text-align:center;margin-top:20px;font-size:12px;color:var(--muted)}
+
+    /* ── CTA FINAL ── */
+    .cta-section{background:linear-gradient(135deg,#1a3a08,#2d6a0f);padding:80px 32px;text-align:center;color:#fff}
+    .cta-section h2{font-size:clamp(24px,4vw,42px);font-weight:800;margin-bottom:16px}
+    .cta-section p{font-size:16px;opacity:.85;max-width:500px;margin:0 auto 36px;line-height:1.6}
+    .cta-form-card{background:#fff;border-radius:20px;padding:36px;max-width:480px;margin:0 auto;text-align:left}
+    .cta-form-card h3{font-size:18px;font-weight:800;color:var(--text);margin-bottom:20px;text-align:center}
+    .cf-group{margin-bottom:14px}
+    .cf-group label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px}
+    .cf-group input,.cf-group textarea{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;font-size:14px;font-family:inherit;color:var(--text);outline:none;transition:border .15s;resize:none}
+    .cf-group input:focus,.cf-group textarea:focus{border-color:var(--green)}
+    .cf-submit{width:100%;background:var(--green);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:6px;transition:background .15s}
+    .cf-submit:hover{background:var(--green2)}
+    .cf-success{text-align:center;padding:20px;color:var(--green);font-weight:700;font-size:16px}
+
+    /* ── TOAST ── */
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1a2a10;color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;font-weight:600;z-index:9999;transition:transform .3s ease;white-space:nowrap}
+    .toast.show{transform:translateX(-50%) translateY(0)}
+
+    /* ── TIMELINE ── */
+    .timeline{max-width:680px;margin:0 auto;position:relative}
+    .timeline::before{content:'';position:absolute;left:28px;top:0;bottom:0;width:2px;background:var(--border)}
+    .tl-item{display:flex;gap:20px;margin-bottom:32px;position:relative}
+    .tl-dot{width:56px;height:56px;border-radius:14px;background:var(--pale);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;z-index:1}
+    .tl-dot.done{background:var(--green);border-color:var(--green)}
+    .tl-content{padding-top:10px}
+    .tl-content h4{font-size:16px;font-weight:700;margin-bottom:6px}
+    .tl-content p{font-size:14px;color:var(--muted);line-height:1.6}
+    .tl-tag{display:inline-block;font-size:11px;font-weight:600;border-radius:6px;padding:2px 8px;margin-top:8px}
+    .tl-tag.green{background:var(--pale);color:var(--green);border:1px solid var(--border)}
+    .tl-tag.orange{background:#fff3e0;color:#a06000;border:1px solid #f0d090}
+
+    /* ── RESPONSIVE ── */
+    @media(max-width:700px){
+      .demo-body{grid-template-columns:1fr}
+      .demo-sidebar{display:none}
+      .demo-kpi-grid{grid-template-columns:repeat(2,1fr)}
+      .stats-band{flex-wrap:wrap}
+      .stat-item{flex:1 1 40%;border-right:none;border-bottom:1px solid var(--border)}
+      .topbar-center{display:none}
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-logo">
+    <span>CIA</span>
+    Commande-IA
+  </div>
+  <div class="topbar-center">
+    <button class="tab-btn active" onclick="showSection('decouvrir',this)">🏠 Découvrir</button>
+    <button class="tab-btn" onclick="showSection('demo',this)">🖥️ Démo live</button>
+    <button class="tab-btn" onclick="showSection('tarifs',this)">💳 Tarifs</button>
+    <button class="tab-btn" onclick="showSection('demarrer',this)">🚀 Démarrer</button>
+  </div>
+  <div class="topbar-right">
+    <span class="welcome-tag">Démo pour <strong id="topbar-restaurant">votre restaurant</strong></span>
+    <button class="cta-top" onclick="showSection('demarrer',null);document.getElementById('tab-demarrer').classList.add('active')">Démarrer maintenant →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SECTION 1 : DÉCOUVRIR
+══════════════════════════════════════ -->
+<div class="section active" id="section-decouvrir">
+
+  <div class="hero">
+    <div class="hero-badge"><span class="dot"></span> Démo personnalisée · Accès exclusif</div>
+    <h1>Bonjour <em id="hero-prenom">Chef</em>,<br>voici Commande-IA</h1>
+    <p class="hero-sub">
+      Vous regardez une démo privée créée spécialement pour <strong id="hero-restaurant" style="color:#a8e063">votre restaurant</strong>.
+      Découvrez comment l'IA transforme la prise de commande — en 5 minutes.
+    </p>
+    <div class="hero-actions">
+      <button class="btn-hero-primary" onclick="showSection('demo',null);document.querySelectorAll('.tab-btn')[1].classList.add('active');document.querySelectorAll('.tab-btn')[0].classList.remove('active')">
+        🖥️ Voir la démo interactive
+      </button>
+      <button class="btn-hero-outline" onclick="showSection('demarrer',null);document.querySelectorAll('.tab-btn')[3].classList.add('active');document.querySelectorAll('.tab-btn')[0].classList.remove('active')">
+        Démarrer pour de vrai →
+      </button>
+    </div>
+  </div>
+
+  <div class="stats-band">
+    <div class="stat-item"><div class="stat-num">98%</div><div class="stat-lbl">Précision IA</div></div>
+    <div class="stat-item"><div class="stat-num">70%</div><div class="stat-lbl">Temps gagné</div></div>
+    <div class="stat-item"><div class="stat-num">48h</div><div class="stat-lbl">Installation</div></div>
+    <div class="stat-item"><div class="stat-num">0€</div><div class="stat-lbl">Frais cachés</div></div>
+  </div>
+
+  <div class="content-wrap">
+    <div class="section-head">
+      <div class="section-tag">Fonctionnalités clés</div>
+      <h2>Tout ce dont votre restaurant a besoin</h2>
+      <p>Une seule plateforme pour gérer commandes, équipe et stocks</p>
+    </div>
+
+    <div class="feat-grid">
+      <div class="feat-card">
+        <div class="feat-icon">🎙️</div>
+        <h3>IA Vocale 24h/24</h3>
+        <p>Votre téléphone ne sonne plus jamais dans le vide. L'IA répond, prend la commande, confirme — en français naturel.</p>
+        <span class="feat-badge">⭐ Exclusif France</span>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">📊</div>
+        <h3>Dashboard temps réel</h3>
+        <p>Toutes les commandes en cours, leur statut, les temps de préparation — visible depuis n'importe quel écran.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">📱</div>
+        <h3>SMS automatiques</h3>
+        <p>Vos clients reçoivent une confirmation et un suivi par SMS. Zéro appel "ma commande est prête ?".</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">📦</div>
+        <h3>Stocks intelligents</h3>
+        <p>Alertes automatiques quand un produit tombe bas. Jamais de rupture surprise devant un client.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">👥</div>
+        <h3>Gestion d'équipe</h3>
+        <p>Chaque employé a son accès, son rôle, ses commandes assignées. La coordination devient naturelle.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">📈</div>
+        <h3>Statistiques complètes</h3>
+        <p>Heures de pointe, plats populaires, temps moyen de service. Prenez de meilleures décisions chaque jour.</p>
+      </div>
+    </div>
+
+    <div style="margin-top:56px">
+      <div class="section-head">
+        <div class="section-tag">Comment ça marche</div>
+        <h2>De l'appel à la table en 4 étapes</h2>
+      </div>
+      <div class="timeline">
+        <div class="tl-item">
+          <div class="tl-dot done">📞</div>
+          <div class="tl-content">
+            <h4>1. Un client appelle</h4>
+            <p>L'IA décroche automatiquement en moins de 2 secondes. Le client commande naturellement, comme avec un humain.</p>
+            <span class="tl-tag green">Zéro attente</span>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot done">⚡</div>
+          <div class="tl-content">
+            <h4>2. La commande apparaît</h4>
+            <p>En temps réel sur votre dashboard et en cuisine. Avec toutes les spécificités (allergies, modifications).</p>
+            <span class="tl-tag green">Temps réel</span>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot">👨‍🍳</div>
+          <div class="tl-content">
+            <h4>3. La cuisine prépare</h4>
+            <p>L'écran cuisine affiche les priorités dans l'ordre. Un clic pour marquer "prêt".</p>
+            <span class="tl-tag orange">Simple & clair</span>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot">📱</div>
+          <div class="tl-content">
+            <h4>4. Le client est notifié</h4>
+            <p>SMS automatique envoyé dès que la commande est prête. Plus de files d'attente inutiles.</p>
+            <span class="tl-tag orange">100% automatique</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SECTION 2 : DÉMO INTERACTIVE
+══════════════════════════════════════ -->
+<div class="section" id="section-demo">
+  <div style="background:linear-gradient(135deg,#1a3a08,#243a15);padding:40px 32px 32px;text-align:center;color:#fff">
+    <div class="section-tag" style="background:rgba(255,255,255,.1);color:#a8e063;border-color:rgba(255,255,255,.2)">Simulation live</div>
+    <h2 style="font-size:clamp(22px,3.5vw,36px);font-weight:800;margin-top:8px">Voici votre futur dashboard</h2>
+    <p style="opacity:.8;margin-top:8px;font-size:15px">Les commandes arrivent en temps réel · Cliquez sur les éléments</p>
+  </div>
+
+  <div style="padding:32px;background:#1a2210;min-height:calc(100vh - 180px)">
+    <div class="demo-shell">
+      <div class="demo-topbar">
+        <div class="demo-topbar-left">
+          🌿 Commande-IA <span id="demo-restaurant-name" style="margin-left:4px;opacity:.7;font-weight:500"></span>
+          <span class="demo-pulse"></span>
+        </div>
+        <div class="demo-nav">
+          <div class="demo-nav-item active" onclick="setDemoView('commandes',this)">Commandes</div>
+          <div class="demo-nav-item" onclick="setDemoView('cuisine',this)">Cuisine</div>
+          <div class="demo-nav-item" onclick="setDemoView('stats',this)">Stats</div>
+        </div>
+        <div style="font-size:12px;color:#7a9a6a">En ligne — Actualisé <span id="demo-time">à l'instant</span></div>
+      </div>
+
+      <div class="demo-body">
+        <!-- Sidebar -->
+        <div class="demo-sidebar">
+          <div class="demo-sidebar-item active"><span class="demo-sidebar-icon">📋</span>Commandes <span class="demo-sidebar-badge" id="badge-orders">3</span></div>
+          <div class="demo-sidebar-item"><span class="demo-sidebar-icon">👨‍🍳</span>Cuisine</div>
+          <div class="demo-sidebar-item"><span class="demo-sidebar-icon">📦</span>Stocks</div>
+          <div class="demo-sidebar-item"><span class="demo-sidebar-icon">👥</span>Équipe</div>
+          <div class="demo-sidebar-item"><span class="demo-sidebar-icon">📊</span>Stats</div>
+          <div class="demo-sidebar-item"><span class="demo-sidebar-icon">📱</span>SMS</div>
+          <div style="margin-top:auto;padding-top:16px">
+            <div class="demo-sidebar-item" style="opacity:.5"><span class="demo-sidebar-icon">⚙️</span>Paramètres</div>
+          </div>
+        </div>
+
+        <!-- Main content -->
+        <div class="demo-main">
+          <div class="demo-kpi-grid">
+            <div class="demo-kpi"><div class="demo-kpi-val" id="kpi-encours">3</div><div class="demo-kpi-lbl">En cours</div></div>
+            <div class="demo-kpi"><div class="demo-kpi-val" id="kpi-today">14</div><div class="demo-kpi-lbl">Aujourd'hui</div></div>
+            <div class="demo-kpi"><div class="demo-kpi-val">18 min</div><div class="demo-kpi-lbl">Temps moyen</div></div>
+            <div class="demo-kpi"><div class="demo-kpi-val" style="color:#ffc040">2</div><div class="demo-kpi-lbl">En attente</div></div>
+          </div>
+
+          <div style="font-size:12px;font-weight:700;color:#7a9a6a;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">
+            Commandes actives
+          </div>
+          <div class="demo-orders" id="demo-orders-list">
+            <!-- Rempli par JS -->
+          </div>
+
+          <div style="margin-top:16px;text-align:center">
+            <button onclick="addDemoOrder()" style="background:#2d4a18;color:#a8e063;border:none;border-radius:10px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
+              + Simuler une nouvelle commande vocale
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SECTION 3 : TARIFS
+══════════════════════════════════════ -->
+<div class="section" id="section-tarifs">
+  <div class="content-wrap">
+    <div class="section-head">
+      <div class="section-tag">Tarifs transparents</div>
+      <h2>Choisissez votre formule</h2>
+      <p>Sans engagement, sans frais cachés. Annulez quand vous voulez.</p>
+    </div>
+
+    <div class="pricing-grid">
+      <div class="price-card">
+        <h3>Self-Service</h3>
+        <div class="amount">179€<span>/mois</span></div>
+        <div class="desc">Vous configurez, on vous guide à chaque étape</div>
+        <div class="price-feat">Dashboard temps réel complet</div>
+        <div class="price-feat">IA vocale jusqu'à 64 appels/jour</div>
+        <div class="price-feat">Gestion stocks & équipe</div>
+        <div class="price-feat">SMS clients (50/mois)</div>
+        <div class="price-feat">Support email &lt; 24h</div>
+        <div class="price-feat">Mises à jour automatiques</div>
+        <button class="price-cta outline" onclick="showSection('demarrer',null)">Démarrer en Self-Service</button>
+      </div>
+
+      <div class="price-card featured">
+        <div class="badge-top">⭐ Le plus populaire</div>
+        <h3>Assistance Complète</h3>
+        <div class="amount">269€<span>/mois</span></div>
+        <div class="desc">Notre équipe configure tout — vous démarrez en 48h sans effort</div>
+        <div class="price-feat">Tout le Self-Service inclus</div>
+        <div class="price-feat">Installation par notre équipe</div>
+        <div class="price-feat">Formation personnalisée (2h)</div>
+        <div class="price-feat">Support prioritaire 24/7</div>
+        <div class="price-feat">SMS illimités</div>
+        <div class="price-feat">Optimisation continue du menu IA</div>
+        <button class="price-cta primary" onclick="showSection('demarrer',null)">Démarrer avec Assistance →</button>
+      </div>
+
+      <div class="price-card">
+        <h3>Chaîne</h3>
+        <div class="amount" style="font-size:28px">Sur devis</div>
+        <div class="desc">Pour les chaînes multi-restaurants avec des besoins spécifiques</div>
+        <div class="price-feat">Multi-sites centralisés</div>
+        <div class="price-feat">Account manager dédié</div>
+        <div class="price-feat">SLA garanti 99.9%</div>
+        <div class="price-feat">API & intégrations sur-mesure</div>
+        <div class="price-feat">Formation équipe complète</div>
+        <button class="price-cta outline" onclick="showSection('demarrer',null)">Demander un devis</button>
+      </div>
+    </div>
+
+    <div class="price-note">
+      ⚠️ Tarif personnalisé au-delà de 64 appels IA/jour · Offre de bienvenue : −25% le premier mois
+    </div>
+
+    <div style="margin-top:60px;background:var(--pale);border:1px solid var(--border);border-radius:20px;padding:36px;text-align:center">
+      <div style="font-size:32px;margin-bottom:12px">💡</div>
+      <h3 style="font-size:18px;font-weight:700;margin-bottom:8px">ROI calculé pour vous</h3>
+      <p style="color:var(--muted);font-size:14px;margin-bottom:24px">Combien vous coûte un employé qui décroche le téléphone ?</p>
+      <div style="display:flex;gap:24px;justify-content:center;flex-wrap:wrap">
+        <div style="text-align:center">
+          <div style="font-size:28px;font-weight:800;color:#e05555">1 800€</div>
+          <div style="font-size:12px;color:var(--muted)">SMIC + charges / mois</div>
+        </div>
+        <div style="font-size:32px;color:var(--muted);align-self:center">vs</div>
+        <div style="text-align:center">
+          <div style="font-size:28px;font-weight:800;color:var(--green)">269€</div>
+          <div style="font-size:12px;color:var(--muted)">Commande-IA / mois</div>
+        </div>
+        <div style="align-self:center;background:var(--green);color:#fff;border-radius:12px;padding:10px 20px;font-weight:700;font-size:14px">
+          7× moins cher →
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SECTION 4 : DÉMARRER
+══════════════════════════════════════ -->
+<div class="section" id="section-demarrer">
+  <div class="cta-section">
+    <h2>Prêt à démarrer,<br><em id="cta-prenom" style="font-style:normal;color:#a8e063">Chef</em> ?</h2>
+    <p>Envoyez ce formulaire — on vous rappelle sous 24h pour configurer votre restaurant ensemble.</p>
+
+    <div class="cta-form-card">
+      <h3>🚀 Démarrer mon essai</h3>
+      <div id="form-area">
+        <div class="cf-group">
+          <label>Votre prénom</label>
+          <input type="text" id="cf-prenom" placeholder="Marie"/>
+        </div>
+        <div class="cf-group">
+          <label>Email de contact</label>
+          <input type="email" id="cf-email" placeholder="marie@monrestaurant.com"/>
+        </div>
+        <div class="cf-group">
+          <label>Nom du restaurant</label>
+          <input type="text" id="cf-restaurant" placeholder="Le Petit Bistro"/>
+        </div>
+        <div class="cf-group">
+          <label>Téléphone (optionnel)</label>
+          <input type="tel" id="cf-tel" placeholder="06 12 34 56 78"/>
+        </div>
+        <div class="cf-group">
+          <label>Votre message (optionnel)</label>
+          <textarea id="cf-message" rows="3" placeholder="Questions, horaires pour vous rappeler..."></textarea>
+        </div>
+        <button class="cf-submit" onclick="submitCta()">Confirmer ma demande →</button>
+      </div>
+      <div class="cf-success" id="form-success" style="display:none">
+        ✅ Demande envoyée !<br>
+        <span style="font-size:14px;font-weight:400;color:var(--muted);display:block;margin-top:8px">On vous contacte dans les 24h pour tout configurer.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════ INIT ═══════
+const params = new URLSearchParams(window.location.search);
+const restaurant = decodeURIComponent(params.get('r') || 'votre restaurant');
+const prenom = decodeURIComponent(params.get('prenom') || 'Chef');
+
+document.getElementById('hero-prenom').textContent = prenom;
+document.getElementById('hero-restaurant').textContent = restaurant;
+document.getElementById('topbar-restaurant').textContent = restaurant;
+document.getElementById('demo-restaurant-name').textContent = '— ' + restaurant;
+document.getElementById('cta-prenom').textContent = prenom + ' !';
+document.getElementById('cf-prenom').value = prenom;
+document.getElementById('cf-restaurant').value = restaurant;
+document.title = 'Démo Commande-IA — ' + restaurant;
+
+// Pré-remplir sessionStorage si pas déjà là
+const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+if (user.email) document.getElementById('cf-email').value = user.email || '';
+
+// ═══════ NAVIGATION ONGLETS ═══════
+function showSection(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('section-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// ═══════ DÉMO ORDERS ═══════
+const SAMPLE_ORDERS = [
+  { nom:'Famille Durand', items:'Burger x2, Frites x2, Coca', status:'new', time:'2 min' },
+  { nom:'Sophie Martin',  items:'Pizza Margherita, Salade verte', status:'prep', time:'8 min' },
+  { nom:'Luc Bernard',    items:'Steak frites — bien cuit', status:'ready', time:'18 min' },
+];
+let orderCount = SAMPLE_ORDERS.length;
+
+function renderOrders(list) {
+  const avatarColors = ['#3a7bd5','#e05555','#2d6a0f','#a06000','#6a2d8f'];
+  const el = document.getElementById('demo-orders-list');
+  el.innerHTML = list.map((o, i) => `
+    <div class="demo-order" style="animation-delay:${i*0.08}s">
+      <div class="demo-order-avatar" style="background:${avatarColors[i%5]}">${o.nom[0]}</div>
+      <div class="demo-order-info">
+        <div class="demo-order-name">${o.nom}</div>
+        <div class="demo-order-items">${o.items}</div>
+      </div>
+      <span class="demo-order-status status-${o.status}">${{new:'NOUVELLE',prep:'EN PREP',ready:'PRÊTE'}[o.status]}</span>
+      <div class="demo-time">${o.time}</div>
+    </div>`).join('');
+}
+renderOrders(SAMPLE_ORDERS);
+
+const RANDOM_NAMES = ['Claire Petit','Ahmed Nouri','Jean-Luc Rey','Fatima B.','Thomas G.','Emma Laurent'];
+const RANDOM_ITEMS = [
+  'Burger fromage, Frites, Perrier','Kebab grande, Boisson','3 Tacos bœuf','Pizza 4 fromages','Salade César + eau','Wrap poulet, Cookie'
+];
+function addDemoOrder() {
+  const name = RANDOM_NAMES[Math.floor(Math.random()*RANDOM_NAMES.length)];
+  const items = RANDOM_ITEMS[Math.floor(Math.random()*RANDOM_ITEMS.length)];
+  SAMPLE_ORDERS.unshift({nom:name, items, status:'new', time:'À l\'instant'});
+  if (SAMPLE_ORDERS.length > 8) SAMPLE_ORDERS.pop();
+  orderCount++;
+  document.getElementById('kpi-encours').textContent = SAMPLE_ORDERS.filter(o=>o.status!=='ready').length;
+  document.getElementById('kpi-today').textContent = 14 + orderCount - 3;
+  document.getElementById('badge-orders').textContent = SAMPLE_ORDERS.length;
+  renderOrders(SAMPLE_ORDERS);
+  showToast('📞 Nouvelle commande vocale reçue — ' + name);
+}
+
+function setDemoView(view, btn) {
+  document.querySelectorAll('.demo-nav-item').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if (view === 'stats') showToast('📊 Analytics disponibles dans la version complète');
+  if (view === 'cuisine') showToast('👨‍🍳 Vue cuisine — séparée sur tablette en cuisine');
+}
+
+// Simuler l'arrivée automatique d'une commande après 8s
+setTimeout(() => { addDemoOrder(); }, 8000);
+
+// Update temps dashboard
+setInterval(() => {
+  const now = new Date();
+  document.getElementById('demo-time').textContent = now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
+}, 30000);
+
+// ═══════ FORMULAIRE CTA ═══════
+async function submitCta() {
+  const prenom = document.getElementById('cf-prenom').value.trim();
+  const email = document.getElementById('cf-email').value.trim();
+  const restaurant = document.getElementById('cf-restaurant').value.trim();
+  const tel = document.getElementById('cf-tel').value.trim();
+  const message = document.getElementById('cf-message').value.trim();
+  if (!prenom || !email) { showToast('Prénom et email requis', 'error'); return; }
+
+  try {
+    await fetch('/contact', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ prenom, nom:'', email, restaurant, demo: true,
+        notes: `Tel: ${tel||'—'} · ${message||'—'} · (Via compte démo)` })
+    });
+  } catch(e) {}
+
+  document.getElementById('form-area').style.display = 'none';
+  document.getElementById('form-success').style.display = 'block';
+  showToast('✅ Demande envoyée — on vous contacte sous 24h !');
+}
+
+// ═══════ TOAST ═══════
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+</script>
+</body>
+</html>

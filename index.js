@@ -458,6 +458,31 @@ app.patch('/commandes/:id/refuser', (req, res) => {
 app.post('/auth/login', async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email et mot de passe requis' });
+
+  // ── Comptes démo @essai.demo ──
+  if (email.endsWith('@essai.demo')) {
+    const demos = readDemos();
+    const demo = demos.find(d => d.demoEmail === email);
+    if (!demo) return res.status(401).json({ error: 'Compte démo introuvable' });
+    if (demo.password !== password) return res.status(401).json({ error: 'Mot de passe incorrect' });
+    // Maj stats connexion
+    demo.lastLogin = new Date().toISOString();
+    demo.loginCount = (demo.loginCount || 0) + 1;
+    if (demo.statut === 'créé') demo.statut = 'connecté';
+    saveDemos(demos);
+    return res.json({
+      success: true,
+      accountType: 'demo',
+      user: {
+        id: demo.id,
+        prenom: demo.prenom,
+        nom: demo.nom,
+        restaurant: demo.restaurant,
+        email: demo.demoEmail
+      }
+    });
+  }
+
   try {
     const r = await fetch(`https://api.notion.com/v1/databases/${DB_EMPLOYES}/query`, {
       method: 'POST', headers: notionHeaders, body: JSON.stringify({})
@@ -1774,6 +1799,172 @@ app.delete('/tickets/:id', (req, res) => {
 });
 
 // ─── PING & START ────────────────────────────────────
+
+// ═══════════════════════════════════════════════════════
+// FORMULAIRE DE CONTACT — leads.json + email Resend
+// ═══════════════════════════════════════════════════════
+const LEADS_FILE = path.join(__dirname, 'leads.json');
+function readLeads() {
+  try { return JSON.parse(fs.readFileSync(LEADS_FILE, 'utf8')); } catch { return []; }
+}
+function saveLead(lead) {
+  const leads = readLeads();
+  leads.unshift(lead);
+  fs.writeFileSync(LEADS_FILE, JSON.stringify(leads, null, 2));
+}
+
+app.post('/contact', async (req, res) => {
+  const { prenom, nom, email, restaurant, demo } = req.body;
+  if (!prenom || !email) return res.status(400).json({ error: 'Prénom et email requis' });
+
+  const lead = {
+    id: 'LEAD-' + Date.now(),
+    prenom, nom: nom || '',
+    email, restaurant: restaurant || '',
+    demo: !!demo,
+    createdAt: new Date().toISOString()
+  };
+
+  // Toujours sauvegarder dans le fichier — aucun lead perdu
+  saveLead(lead);
+  console.log(`📩 Nouveau lead: ${prenom} ${nom || ''} <${email}> — ${restaurant || '—'}`);
+
+  // Envoi email si Resend configuré
+  const RESEND_KEY = process.env.RESEND_API_KEY;
+  const DEST_EMAIL = process.env.CONTACT_EMAIL || 'quentin.despres6869@gmail.com';
+
+  if (RESEND_KEY) {
+    const html = `
+      <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px;border:1px solid #e0e0e0;border-radius:12px;">
+        <h2 style="color:#3B6D11;margin-top:0;">🎯 Nouveau lead — Commande-IA</h2>
+        <table style="width:100%;border-collapse:collapse;">
+          <tr><td style="padding:8px 0;color:#666;width:120px;">Prénom</td><td style="padding:8px 0;font-weight:600;">${prenom}</td></tr>
+          <tr><td style="padding:8px 0;color:#666;">Nom</td><td style="padding:8px 0;font-weight:600;">${nom || '—'}</td></tr>
+          <tr><td style="padding:8px 0;color:#666;">Email</td><td style="padding:8px 0;"><a href="mailto:${email}" style="color:#3B6D11;">${email}</a></td></tr>
+          <tr><td style="padding:8px 0;color:#666;">Restaurant</td><td style="padding:8px 0;font-weight:600;">${restaurant || '—'}</td></tr>
+          <tr><td style="padding:8px 0;color:#666;">Démo souhaitée</td><td style="padding:8px 0;">${demo ? '✅ Oui' : '—'}</td></tr>
+        </table>
+        <p style="margin-top:20px;font-size:13px;color:#999;">Reçu le ${new Date().toLocaleString('fr-FR')} — Commande-IA</p>
+      </div>`;
+    try {
+      await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from: 'Commande-IA <onboarding@resend.dev>',
+          to: [DEST_EMAIL], reply_to: email,
+          subject: `🎯 Nouveau lead — ${restaurant || prenom + ' ' + (nom || '')}`,
+          html
+        })
+      });
+    } catch (e) { console.error('Resend error:', e.message); }
+  }
+
+  res.json({ success: true });
+});
+
+// Liste des leads (admin uniquement)
+app.get('/admin/leads', (req, res) => {
+  res.json(readLeads());
+});
+
+// ═══════════════════════════════════════════════════════
+// COMPTES DÉMO PROSPECTS
+// ═══════════════════════════════════════════════════════
+const DEMOS_FILE = path.join(__dirname, 'demos.json');
+function readDemos() {
+  try { return JSON.parse(fs.readFileSync(DEMOS_FILE, 'utf8')); } catch { return []; }
+}
+function saveDemos(list) {
+  fs.writeFileSync(DEMOS_FILE, JSON.stringify(list, null, 2));
+}
+function slugify(str) {
+  return str.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '').slice(0, 20);
+}
+function genDemoPassword() {
+  const chars = 'abcdefghjkmnpqrstuvwxyz23456789';
+  let p = '';
+  for (let i = 0; i < 8; i++) p += chars[Math.floor(Math.random() * chars.length)];
+  return p;
+}
+
+// Créer un compte démo
+app.post('/demo-accounts', (req, res) => {
+  const { prenom, nom, email, restaurant, rdvDate, rdvNotes } = req.body;
+  if (!prenom || !restaurant) return res.status(400).json({ error: 'Prénom et restaurant requis' });
+  const demos = readDemos();
+  const slug = slugify(restaurant);
+  const demoEmail = `${slug}@essai.demo`;
+  const existing = demos.find(d => d.demoEmail === demoEmail);
+  if (existing) return res.status(409).json({ error: 'Un compte démo existe déjà pour ce restaurant', existing });
+  const pwd = genDemoPassword();
+  const demo = {
+    id: 'DEMO-' + Date.now(),
+    prenom, nom: nom || '', email: email || '',
+    restaurant,
+    demoEmail,
+    password: pwd,
+    statut: 'créé',           // créé | connecté | rdv_confirmé | converti | perdu
+    rdvDate: rdvDate || null,
+    rdvNotes: rdvNotes || '',
+    createdAt: new Date().toISOString(),
+    lastLogin: null,
+    loginCount: 0
+  };
+  demos.unshift(demo);
+  saveDemos(demos);
+  console.log(`🎯 Nouveau compte démo: ${demoEmail} / ${pwd}`);
+  res.json({ success: true, demo });
+});
+
+// Liste des comptes démo
+app.get('/demo-accounts', (req, res) => {
+  res.json(readDemos());
+});
+
+// Stats démo
+app.get('/demo-accounts/stats', (req, res) => {
+  const demos = readDemos();
+  res.json({
+    total: demos.length,
+    connectes: demos.filter(d => d.loginCount > 0).length,
+    rdv: demos.filter(d => d.statut === 'rdv_confirmé').length,
+    convertis: demos.filter(d => d.statut === 'converti').length,
+    perdus: demos.filter(d => d.statut === 'perdu').length
+  });
+});
+
+// Mettre à jour un compte démo
+app.patch('/demo-accounts/:id', (req, res) => {
+  const demos = readDemos();
+  const idx = demos.findIndex(d => d.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'Introuvable' });
+  Object.assign(demos[idx], req.body, { id: demos[idx].id, demoEmail: demos[idx].demoEmail });
+  saveDemos(demos);
+  res.json({ success: true, demo: demos[idx] });
+});
+
+// Supprimer un compte démo
+app.delete('/demo-accounts/:id', (req, res) => {
+  let demos = readDemos();
+  const before = demos.length;
+  demos = demos.filter(d => d.id !== req.params.id);
+  if (demos.length === before) return res.status(404).json({ error: 'Introuvable' });
+  saveDemos(demos);
+  res.json({ success: true });
+});
+
+// Régénérer le mot de passe d'un compte démo
+app.post('/demo-accounts/:id/reset-password', (req, res) => {
+  const demos = readDemos();
+  const demo = demos.find(d => d.id === req.params.id);
+  if (!demo) return res.status(404).json({ error: 'Introuvable' });
+  demo.password = genDemoPassword();
+  saveDemos(demos);
+  res.json({ success: true, password: demo.password });
+});
 
 app.get('/ping', (req, res) => res.json({ message: 'Serveur en ligne ✅' }));
 

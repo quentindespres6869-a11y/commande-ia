@@ -1,0 +1,17 @@
+[
+  {
+    "id": "DEMO-1776616438069",
+    "prenom": "quentin",
+    "nom": "despres",
+    "email": "quentin.despres6869@gmail.com",
+    "restaurant": "mcdo",
+    "demoEmail": "mcdo@essai.demo",
+    "password": "dpsc6xw6",
+    "statut": "connecté",
+    "rdvDate": "2027-02-02T15:30",
+    "rdvNotes": "ezffzf",
+    "createdAt": "2026-04-19T16:33:58.069Z",
+    "lastLogin": "2026-04-19T16:41:43.285Z",
+    "loginCount": 2
+  }
+]
