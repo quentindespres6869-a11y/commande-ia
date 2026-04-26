@@ -2546,7 +2546,7 @@ function renderProspects() {
     return true;
   });
 
-  const RAILWAY = 'https://charming-inspiration-production-4827.up.railway.app';
+  const RAILWAY = window.location.origin;
   const tbody = document.getElementById('prospect-tbody');
   if (!list.length) {
     tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:32px;color:#aaa">Aucun prospect</td></tr>';
@@ -2640,7 +2640,7 @@ async function createProspect() {
     }
     closeProspectModal();
     // Afficher les credentials
-    const RAILWAY = 'https://charming-inspiration-production-4827.up.railway.app';
+    const RAILWAY = window.location.origin;
     document.getElementById('creds-url').textContent = RAILWAY + '/login.html';
     document.getElementById('creds-email').textContent = data.demo.demoEmail;
     document.getElementById('creds-pwd').textContent = data.demo.password;
@@ -2678,7 +2678,7 @@ function copyField(id) {
 }
 
 function copyDemoLink(email, pwd, restaurant, prenom) {
-  const RAILWAY = 'https://charming-inspiration-production-4827.up.railway.app';
+  const RAILWAY = window.location.origin;
   const text = `Bonjour ${prenom},\n\nVoici votre accès démo personnalisée Commande-IA pour "${restaurant}" :\n\n🔗 Lien : ${RAILWAY}/login.html\n📧 Email : ${email}\n🔑 Mot de passe : ${pwd}\n\nUne fois connecté vous aurez accès à une démo interactive du logiciel.\n\nÀ très bientôt,\nCommande-IA`;
   navigator.clipboard.writeText(text).then(()=>showToastAdmin('Message complet copié — prêt à coller dans un SMS/email !'));
 }

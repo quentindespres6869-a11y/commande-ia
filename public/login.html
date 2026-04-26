@@ -711,9 +711,9 @@ function onRememberChange() {
 // ════════════════════════════════════════════════════
 function detectAccountType(email) {
   const tag = document.getElementById('account-tag');
-  if (email.endsWith('@essai.demo')) { tag.className = 'account-tag demo'; tag.textContent = '🧪 Démo'; }
-  else if (email.includes('admin')) { tag.className = 'account-tag admin'; tag.textContent = '🔐 Admin'; }
-  else if (email.includes('@') && email.includes('.')) { tag.className = 'account-tag staff'; tag.textContent = '👤 Personnel'; }
+  if (email.endsWith('@essai.demo')) { tag.className = 'account-tag demo'; tag.textContent = 'Démo'; }
+  else if (email.includes('admin')) { tag.className = 'account-tag admin'; tag.textContent = 'Admin'; }
+  else if (email.includes('@') && email.includes('.')) { tag.className = 'account-tag staff'; tag.textContent = 'Personnel'; }
   else { tag.className = 'account-tag'; tag.textContent = ''; }
 }
 

@@ -4,11 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Stocks — Commande-IA</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'DM Sans', system-ui, sans-serif; background: #f0f2f0; min-height: 100vh; color: #111; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: #f0f2f0; min-height: 100vh; color: #111; }
 
     /* ═══ TOPBAR ═══ */
     .topbar {
@@ -21,9 +21,9 @@
     .logo-icon svg { width: 16px; height: 16px; }
     .page-badge { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; background: rgba(168,224,122,0.15); color: #a8e07a; padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(168,224,122,0.25); }
     .topbar-right { display: flex; align-items: center; gap: 10px; }
-    .back-btn { font-size: 12px; font-weight: 600; color: #c8e8c8; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); padding: 7px 16px; border-radius: 8px; cursor: pointer; font-family: 'DM Sans', sans-serif; text-decoration: none; transition: all 0.15s; }
+    .back-btn { font-size: 12px; font-weight: 600; color: #c8e8c8; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); padding: 7px 16px; border-radius: 8px; cursor: pointer; font-family: 'Inter', sans-serif; text-decoration: none; transition: all 0.15s; }
     .back-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
-    .resto-select { font-size: 12px; padding: 7px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08); font-family: 'DM Sans', sans-serif; color: #fff; outline: none; cursor: pointer; font-weight: 500; }
+    .resto-select { font-size: 12px; padding: 7px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08); font-family: 'Inter', sans-serif; color: #fff; outline: none; cursor: pointer; font-weight: 500; }
     .resto-select option { background: #1a3a1a; color: #fff; }
 
     /* ═══ ALERT BANNER ═══ */
@@ -53,11 +53,11 @@
     .page-title { font-size: 22px; font-weight: 800; color: #1a2a1a; letter-spacing: -0.5px; }
     .page-sub { font-size: 13px; color: #7aaa7a; margin-top: 4px; }
     .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-    .add-btn { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; padding: 9px 18px; border-radius: 10px; border: none; background: #3B6D11; color: #fff; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; box-shadow: 0 2px 8px rgba(59,109,17,0.2); }
+    .add-btn { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; padding: 9px 18px; border-radius: 10px; border: none; background: #3B6D11; color: #fff; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s; box-shadow: 0 2px 8px rgba(59,109,17,0.2); }
     .add-btn:hover { background: #2d5a0d; transform: translateY(-1px); }
-    .restock-all-btn { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; padding: 9px 18px; border-radius: 10px; border: 1.5px solid #e0ecd8; background: #fff; color: #3B6D11; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+    .restock-all-btn { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; padding: 9px 18px; border-radius: 10px; border: 1.5px solid #e0ecd8; background: #fff; color: #3B6D11; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s; }
     .restock-all-btn:hover { border-color: #3B6D11; background: #f8fdf4; }
-    .export-btn { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; padding: 9px 18px; border-radius: 10px; border: 1.5px solid #e0ecd8; background: #fff; color: #5a8a5a; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+    .export-btn { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; padding: 9px 18px; border-radius: 10px; border: 1.5px solid #e0ecd8; background: #fff; color: #5a8a5a; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s; }
     .export-btn:hover { border-color: #9ad870; }
 
     /* ═══ STATS CARDS ═══ */
@@ -97,19 +97,19 @@
       margin-bottom: 16px; flex-wrap: wrap;
     }
     .view-toggles { display: flex; gap: 2px; background: #fff; border: 1.5px solid #e0ecd8; border-radius: 10px; padding: 3px; }
-    .view-btn { font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 7px; border: none; background: transparent; color: #7aaa7a; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; display: flex; align-items: center; gap: 6px; }
+    .view-btn { font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 7px; border: none; background: transparent; color: #7aaa7a; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s; display: flex; align-items: center; gap: 6px; }
     .view-btn.active { background: #1a3a1a; color: #a8e07a; }
     .view-btn:hover:not(.active) { background: #f4f8f0; }
 
     .filter-pills { display: flex; gap: 6px; }
-    .pill { font-size: 11px; font-weight: 600; padding: 6px 12px; border-radius: 20px; border: 1.5px solid #e0ecd8; background: #fff; color: #5a8a5a; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+    .pill { font-size: 11px; font-weight: 600; padding: 6px 12px; border-radius: 20px; border: 1.5px solid #e0ecd8; background: #fff; color: #5a8a5a; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s; }
     .pill:hover { border-color: #9ad870; }
     .pill.active { background: #1a3a1a; color: #a8e07a; border-color: #1a3a1a; }
     .pill .pill-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-right: 4px; }
 
     .search-box { display: flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: 10px; border: 1.5px solid #e0ecd8; background: #fff; min-width: 200px; transition: border-color 0.15s; }
     .search-box:focus-within { border-color: #4a8a1a; }
-    .search-box input { border: none; outline: none; font-size: 12px; font-family: 'DM Sans', sans-serif; color: #1a2a1a; width: 100%; background: transparent; }
+    .search-box input { border: none; outline: none; font-size: 12px; font-family: 'Inter', sans-serif; color: #1a2a1a; width: 100%; background: transparent; }
     .search-box input::placeholder { color: #b0c8b0; }
 
     /* ═══ TABLE VIEW ═══ */
@@ -170,14 +170,14 @@
       width: 30px; height: 30px; border-radius: 8px; border: 1.5px solid #e0ecd8;
       background: #fff; cursor: pointer; display: flex; align-items: center;
       justify-content: center; font-size: 13px; font-weight: 700; color: #3B6D11;
-      font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+      font-family: 'Inter', sans-serif; transition: all 0.15s;
     }
     .quick-btn:hover { background: #e8f5dc; border-color: #9ad870; transform: scale(1.05); }
     .quick-btn.minus { color: #c03030; }
     .quick-btn.minus:hover { background: #fef0f0; border-color: #f0c0c0; }
     .qty-inline-input {
       width: 52px; padding: 5px 4px; border-radius: 7px; border: 1.5px solid #e0ecd8;
-      font-size: 13px; font-weight: 700; font-family: 'DM Sans', sans-serif;
+      font-size: 13px; font-weight: 700; font-family: 'Inter', sans-serif;
       text-align: center; outline: none; background: #f8faf6; transition: all 0.15s;
     }
     .qty-inline-input:focus { border-color: #4a8a1a; background: #fff; }
@@ -269,12 +269,12 @@
     .modal-sub { font-size: 12px; color: #9ab89a; margin-bottom: 20px; }
     .form-group { margin-bottom: 14px; }
     .form-label { font-size: 11px; font-weight: 700; color: #7aaa7a; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 7px; display: block; }
-    .form-input { width: 100%; padding: 10px 14px; border-radius: 10px; border: 1.5px solid #e0ecd8; background: #f8faf6; font-size: 13px; font-family: 'DM Sans', sans-serif; color: #1a2a1a; outline: none; transition: all 0.15s; }
+    .form-input { width: 100%; padding: 10px 14px; border-radius: 10px; border: 1.5px solid #e0ecd8; background: #f8faf6; font-size: 13px; font-family: 'Inter', sans-serif; color: #1a2a1a; outline: none; transition: all 0.15s; }
     .form-input:focus { border-color: #4a8a1a; background: #fff; }
-    .form-select { width: 100%; padding: 10px 14px; border-radius: 10px; border: 1.5px solid #e0ecd8; background: #f8faf6; font-size: 13px; font-family: 'DM Sans', sans-serif; color: #1a2a1a; outline: none; }
+    .form-select { width: 100%; padding: 10px 14px; border-radius: 10px; border: 1.5px solid #e0ecd8; background: #f8faf6; font-size: 13px; font-family: 'Inter', sans-serif; color: #1a2a1a; outline: none; }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .modal-footer { display: flex; gap: 10px; margin-top: 20px; }
-    .modal-btn { flex: 1; padding: 12px; border-radius: 10px; border: none; font-size: 13px; font-weight: 700; font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all 0.15s; }
+    .modal-btn { flex: 1; padding: 12px; border-radius: 10px; border: none; font-size: 13px; font-weight: 700; font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.15s; }
     .modal-btn.primary { background: #3B6D11; color: #fff; }
     .modal-btn.primary:hover { background: #2d5a0d; }
     .modal-btn.secondary { background: #f0f5ee; color: #5a8a5a; }
@@ -285,7 +285,7 @@
     .cat-btn {
       font-size: 12px; font-weight: 600; padding: 8px 14px; border-radius: 10px;
       border: 1.5px solid #e0ecd8; background: #fff; color: #5a8a5a;
-      cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+      cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s;
       display: flex; align-items: center; gap: 6px;
     }
     .cat-btn:hover { border-color: #9ad870; }
@@ -296,7 +296,7 @@
     .restock-item:last-child { border-bottom: none; }
     .restock-name { flex: 1; font-size: 13px; font-weight: 600; color: #1a2a1a; }
     .restock-current { font-size: 12px; color: #9ab89a; min-width: 60px; }
-    .restock-input { width: 60px; padding: 6px 8px; border-radius: 8px; border: 1.5px solid #e0ecd8; font-size: 13px; font-weight: 700; font-family: 'DM Sans', sans-serif; text-align: center; outline: none; }
+    .restock-input { width: 60px; padding: 6px 8px; border-radius: 8px; border: 1.5px solid #e0ecd8; font-size: 13px; font-weight: 700; font-family: 'Inter', sans-serif; text-align: center; outline: none; }
     .restock-input:focus { border-color: #4a8a1a; }
 
     /* ═══ TOAST ═══ */
@@ -342,7 +342,7 @@
     .period-sel {
       font-size: 11px; font-weight: 600; padding: 5px 10px; border-radius: 8px;
       border: 1.5px solid #e0ecd8; background: #f8faf6; color: #5a8a5a;
-      font-family: 'DM Sans', sans-serif; outline: none; cursor: pointer;
+      font-family: 'Inter', sans-serif; outline: none; cursor: pointer;
     }
     .period-sel:focus { border-color: #4a8a1a; }
 
@@ -377,7 +377,7 @@
     .prod-toggle {
       font-size: 10px; font-weight: 600; padding: 3px 10px; border-radius: 20px;
       border: 1.5px solid var(--color, #9ab89a); background: transparent;
-      color: var(--color, #9ab89a); cursor: pointer; font-family: 'DM Sans', sans-serif;
+      color: var(--color, #9ab89a); cursor: pointer; font-family: 'Inter', sans-serif;
       transition: all 0.15s; opacity: 0.4;
     }
     .prod-toggle.active { background: var(--color, #9ab89a); color: #fff; opacity: 1; }
@@ -1287,7 +1287,7 @@ function getProdColors() {
 const chartDefaults = {
   tooltipBg: 'rgba(26,42,26,0.92)',
   gridColor: 'rgba(0,0,0,0.045)',
-  tickFont: { size: 11, family: 'DM Sans' },
+  tickFont: { size: 11, family: 'Inter' },
   tickColor: '#9ab89a',
 };
 
@@ -1362,7 +1362,7 @@ function renderEvolutionChart() {
       scales: {
         x: { grid: { color: chartDefaults.gridColor }, ticks: { font: chartDefaults.tickFont, color: chartDefaults.tickColor } },
         y: { grid: { color: chartDefaults.gridColor }, ticks: { font: chartDefaults.tickFont, color: chartDefaults.tickColor }, beginAtZero: true,
-          title: { display: true, text: 'Quantité', font: { size: 10, family: 'DM Sans' }, color: '#b0c8b0' }
+          title: { display: true, text: 'Quantité', font: { size: 10, family: 'Inter' }, color: '#b0c8b0' }
         }
       }
     }
@@ -1416,11 +1416,11 @@ function renderActivityChart() {
       responsive: true, maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { position: 'top', labels: { font: { size: 10, family: 'DM Sans' }, color: '#5a8a5a', boxWidth: 10, padding: 14 } },
+        legend: { position: 'top', labels: { font: { size: 10, family: 'Inter' }, color: '#5a8a5a', boxWidth: 10, padding: 14 } },
         tooltip: { backgroundColor: chartDefaults.tooltipBg, titleColor: '#a8e07a', bodyColor: '#fff', padding: 12 }
       },
       scales: {
-        x: { grid: { display: false }, ticks: { font: { size: 10, family: 'DM Sans' }, color: chartDefaults.tickColor, maxRotation: 45 } },
+        x: { grid: { display: false }, ticks: { font: { size: 10, family: 'Inter' }, color: chartDefaults.tickColor, maxRotation: 45 } },
         y: { grid: { color: chartDefaults.gridColor }, ticks: { font: chartDefaults.tickFont, color: chartDefaults.tickColor }, beginAtZero: true }
       }
     }
@@ -1453,7 +1453,7 @@ function renderDistributionChart() {
     options: {
       responsive: true, maintainAspectRatio: false, cutout: '66%',
       plugins: {
-        legend: { position: 'bottom', labels: { font: { size: 10, family: 'DM Sans' }, color: '#5a8a5a', boxWidth: 10, padding: 10 } },
+        legend: { position: 'bottom', labels: { font: { size: 10, family: 'Inter' }, color: '#5a8a5a', boxWidth: 10, padding: 10 } },
         tooltip: {
           backgroundColor: chartDefaults.tooltipBg, titleColor: '#a8e07a', bodyColor: '#fff', padding: 10,
           callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed/total*100)}%)` }
@@ -1466,10 +1466,10 @@ function renderDistributionChart() {
         const { ctx, chartArea: { width, height, top, left } } = chart;
         const cx = left + width / 2, cy = top + height / 2;
         ctx.save();
-        ctx.font = `800 26px DM Sans, sans-serif`; ctx.fillStyle = '#1a2a1a';
+        ctx.font = `800 26px Inter, sans-serif`; ctx.fillStyle = '#1a2a1a';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText(total, cx, cy - 9);
-        ctx.font = `500 10px DM Sans, sans-serif`; ctx.fillStyle = '#9ab89a';
+        ctx.font = `500 10px Inter, sans-serif`; ctx.fillStyle = '#9ab89a';
         ctx.fillText('produits', cx, cy + 10);
         ctx.restore();
       }
@@ -1511,7 +1511,7 @@ function renderTopConsumedChart() {
       },
       scales: {
         x: { grid: { color: chartDefaults.gridColor }, ticks: { font: chartDefaults.tickFont, color: chartDefaults.tickColor }, beginAtZero: true },
-        y: { grid: { display: false }, ticks: { font: { size: 11, family: 'DM Sans' }, color: '#1a2a1a' } }
+        y: { grid: { display: false }, ticks: { font: { size: 11, family: 'Inter' }, color: '#1a2a1a' } }
       }
     }
   });
@@ -1550,11 +1550,11 @@ function renderEventsChart() {
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: {
-        legend: { position: 'top', labels: { font: { size: 10, family: 'DM Sans' }, color: '#5a8a5a', boxWidth: 10, padding: 12 } },
+        legend: { position: 'top', labels: { font: { size: 10, family: 'Inter' }, color: '#5a8a5a', boxWidth: 10, padding: 12 } },
         tooltip: { backgroundColor: chartDefaults.tooltipBg, titleColor: '#a8e07a', bodyColor: '#fff', padding: 10 }
       },
       scales: {
-        x: { grid: { display: false }, ticks: { font: { size: 9, family: 'DM Sans' }, color: chartDefaults.tickColor, maxRotation: 35 } },
+        x: { grid: { display: false }, ticks: { font: { size: 9, family: 'Inter' }, color: chartDefaults.tickColor, maxRotation: 35 } },
         y: { grid: { color: chartDefaults.gridColor }, ticks: { font: chartDefaults.tickFont, color: chartDefaults.tickColor }, beginAtZero: true }
       }
     }
@@ -1617,13 +1617,13 @@ function renderCaDailyChart() {
       responsive: true, maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { position: 'top', labels: { font: { size: 10, family: 'DM Sans' }, color: '#5a8a5a', boxWidth: 10, padding: 14 } },
+        legend: { position: 'top', labels: { font: { size: 10, family: 'Inter' }, color: '#5a8a5a', boxWidth: 10, padding: 14 } },
         tooltip: { backgroundColor: chartDefaults.tooltipBg, titleColor: '#a8e07a', bodyColor: '#fff', padding: 12,
           callbacks: { label: ctx => ctx.dataset.yAxisID === 'yLeft' ? ` CA: ${ctx.parsed.y.toFixed(2)}€` : ` ${ctx.dataset.label}: ${ctx.parsed.y} commande(s)` }
         }
       },
       scales: {
-        x: { grid: { display: false }, ticks: { font: { size: 10, family: 'DM Sans' }, color: chartDefaults.tickColor } },
+        x: { grid: { display: false }, ticks: { font: { size: 10, family: 'Inter' }, color: chartDefaults.tickColor } },
         yLeft: { position: 'left', grid: { color: chartDefaults.gridColor }, ticks: { font: chartDefaults.tickFont, color: '#3B6D11', callback: v => v + '€' }, beginAtZero: true },
         yRight: { position: 'right', grid: { display: false }, ticks: { font: chartDefaults.tickFont, color: chartDefaults.tickColor }, beginAtZero: true, stacked: true }
       }
@@ -1660,13 +1660,13 @@ function renderTopProductsChart() {
       responsive: true, maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { position: 'top', labels: { font: { size: 10, family: 'DM Sans' }, color: '#5a8a5a', boxWidth: 10, padding: 12 } },
+        legend: { position: 'top', labels: { font: { size: 10, family: 'Inter' }, color: '#5a8a5a', boxWidth: 10, padding: 12 } },
         tooltip: { backgroundColor: chartDefaults.tooltipBg, titleColor: '#a8e07a', bodyColor: '#fff', padding: 10,
           callbacks: { label: ctx => ctx.dataset.yAxisID === 'yCA' ? ` CA: ${ctx.parsed.y.toFixed(2)}€` : ` Vendu: ${ctx.parsed.y} unité(s)` }
         }
       },
       scales: {
-        x: { grid: { display: false }, ticks: { font: { size: 10, family: 'DM Sans' }, color: '#1a2a1a', maxRotation: 30 } },
+        x: { grid: { display: false }, ticks: { font: { size: 10, family: 'Inter' }, color: '#1a2a1a', maxRotation: 30 } },
         yQty: { position: 'left', grid: { color: chartDefaults.gridColor }, ticks: { font: chartDefaults.tickFont, color: chartDefaults.tickColor }, beginAtZero: true },
         yCA: { position: 'right', grid: { display: false }, ticks: { font: chartDefaults.tickFont, color: '#2a50aa', callback: v => v + '€' }, beginAtZero: true }
       }
@@ -1701,7 +1701,7 @@ function renderCaCatChart() {
     options: {
       responsive: true, maintainAspectRatio: false, cutout: '60%',
       plugins: {
-        legend: { position: 'bottom', labels: { font: { size: 10, family: 'DM Sans' }, color: '#5a8a5a', boxWidth: 10, padding: 10 } },
+        legend: { position: 'bottom', labels: { font: { size: 10, family: 'Inter' }, color: '#5a8a5a', boxWidth: 10, padding: 10 } },
         tooltip: { backgroundColor: chartDefaults.tooltipBg, titleColor: '#a8e07a', bodyColor: '#fff', padding: 10,
           callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed.toFixed(2)}€ (${Math.round(ctx.parsed/total*100)}%)` }
         }
@@ -1713,10 +1713,10 @@ function renderCaCatChart() {
         const { ctx, chartArea: { width, height, top, left } } = chart;
         const cx = left + width/2, cy = top + height/2;
         ctx.save();
-        ctx.font = `800 18px DM Sans,sans-serif`; ctx.fillStyle = '#1a2a1a';
+        ctx.font = `800 18px Inter,sans-serif`; ctx.fillStyle = '#1a2a1a';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText(total.toFixed(2) + '€', cx, cy - 8);
-        ctx.font = `500 10px DM Sans,sans-serif`; ctx.fillStyle = '#9ab89a';
+        ctx.font = `500 10px Inter,sans-serif`; ctx.fillStyle = '#9ab89a';
         ctx.fillText('chiffre d\'affaires', cx, cy + 10);
         ctx.restore();
       }
@@ -1767,7 +1767,7 @@ function renderRotationChart() {
       indexAxis: 'y', responsive: true, maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { position: 'top', labels: { font: { size: 10, family: 'DM Sans' }, color: '#5a8a5a', boxWidth: 10, padding: 12 } },
+        legend: { position: 'top', labels: { font: { size: 10, family: 'Inter' }, color: '#5a8a5a', boxWidth: 10, padding: 12 } },
         tooltip: {
           backgroundColor: chartDefaults.tooltipBg, titleColor: '#a8e07a', bodyColor: '#fff', padding: 10,
           callbacks: {
@@ -1778,8 +1778,8 @@ function renderRotationChart() {
         }
       },
       scales: {
-        x: { grid: { color: chartDefaults.gridColor }, ticks: { font: chartDefaults.tickFont, color: chartDefaults.tickColor }, beginAtZero: true, max: 100, title: { display: true, text: '% consommé', font: { size: 10, family: 'DM Sans' }, color: '#b0c8b0' } },
-        y: { grid: { display: false }, ticks: { font: { size: 10, family: 'DM Sans' }, color: '#1a2a1a' } },
+        x: { grid: { color: chartDefaults.gridColor }, ticks: { font: chartDefaults.tickFont, color: chartDefaults.tickColor }, beginAtZero: true, max: 100, title: { display: true, text: '% consommé', font: { size: 10, family: 'Inter' }, color: '#b0c8b0' } },
+        y: { grid: { display: false }, ticks: { font: { size: 10, family: 'Inter' }, color: '#1a2a1a' } },
         yQty: { display: false, beginAtZero: true }
       }
     }

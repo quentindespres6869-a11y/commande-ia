@@ -46,7 +46,7 @@
       background: linear-gradient(135deg,#1a3a1a,#2d6a0a);
       border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
       box-shadow: 0 6px 24px rgba(26,58,26,0.35); transition: all 0.2s;
-      font-family: 'DM Sans','Inter',system-ui,sans-serif;
+      font-family: 'Inter',system-ui,sans-serif;
     }
     #support-fab:hover { transform: translateY(-2px) scale(1.05); box-shadow: 0 10px 32px rgba(26,58,26,0.45); }
     #support-fab-badge {
@@ -76,7 +76,7 @@
       box-shadow: -8px 0 48px rgba(0,0,0,0.15);
       pointer-events: all;
       animation: soSlideIn 0.28s cubic-bezier(0.22,1,0.36,1);
-      font-family: 'DM Sans','Inter',system-ui,sans-serif;
+      font-family: 'Inter',system-ui,sans-serif;
     }
     @keyframes soSlideIn { from{transform:translateX(100%)} to{transform:translateX(0)} }
 

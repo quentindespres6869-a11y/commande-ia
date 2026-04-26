@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Messagerie — Commande-IA</title>
   <script src="/socket.io/socket.io.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'DM Sans', system-ui, sans-serif; background: #f0f2f0; min-height: 100vh; color: #1a2a1a; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: #f0f2f0; min-height: 100vh; color: #1a2a1a; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
     /* ── TOPBAR ── */
     .topbar { background: #1a3a1a; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: 60px; flex-shrink: 0; }
@@ -29,7 +29,7 @@
     .sl-title { font-size: 15px; font-weight: 700; color: #1a2a1a; }
     .sl-sub { font-size: 11px; color: #9ab89a; margin-top: 2px; }
     .sl-search { margin-top: 10px; position: relative; }
-    .sl-search input { width: 100%; background: #f4f8f0; border: 1.5px solid #e0ecd8; border-radius: 8px; padding: 8px 12px 8px 32px; font-size: 12px; font-family: 'DM Sans',sans-serif; outline: none; color: #1a2a1a; transition: border 0.15s; }
+    .sl-search input { width: 100%; background: #f4f8f0; border: 1.5px solid #e0ecd8; border-radius: 8px; padding: 8px 12px 8px 32px; font-size: 12px; font-family: 'Inter',sans-serif; outline: none; color: #1a2a1a; transition: border 0.15s; }
     .sl-search input:focus { border-color: #4a8a1a; background: #fff; }
     .sl-search svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); }
     .sl-tabs { display: flex; border-bottom: 1px solid #f0f5ee; flex-shrink: 0; }
@@ -55,7 +55,7 @@
     .chat-head-name { font-size: 14px; font-weight: 700; color: #1a2a1a; }
     .chat-head-sub { font-size: 11px; color: #9ab89a; margin-top: 1px; }
     .chat-head-actions { margin-left: auto; display: flex; gap: 6px; }
-    .chat-btn { padding: 5px 11px; border-radius: 6px; border: 1.5px solid #e0ecd8; background: #f4f8f0; font-size: 11px; font-weight: 600; color: #3B6D11; cursor: pointer; font-family:'DM Sans',sans-serif; transition: all 0.12s; }
+    .chat-btn { padding: 5px 11px; border-radius: 6px; border: 1.5px solid #e0ecd8; background: #f4f8f0; font-size: 11px; font-weight: 600; color: #3B6D11; cursor: pointer; font-family:'Inter',sans-serif; transition: all 0.12s; }
     .chat-btn:hover { background: #e8f5dc; }
     .chat-btn.danger { color: #b03030; border-color: #f5c5c5; background: #fef0f0; }
     .chat-btn.danger:hover { background: #fce0e0; }
@@ -90,7 +90,7 @@
     .date-sep { text-align: center; font-size: 10px; color: #ccc; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; margin: 4px 0; }
     .chat-input-area { padding: 14px 20px; background: #fff; border-top: 1.5px solid #e8f0e0; flex-shrink: 0; }
     .chat-input-wrap { display: flex; gap: 10px; align-items: flex-end; }
-    .chat-textarea { flex: 1; background: #f4f8f0; border: 1.5px solid #e0ecd8; border-radius: 12px; padding: 10px 14px; font-size: 13px; font-family: 'DM Sans',sans-serif; outline: none; resize: none; min-height: 44px; max-height: 120px; transition: border 0.15s; overflow-y: auto; }
+    .chat-textarea { flex: 1; background: #f4f8f0; border: 1.5px solid #e0ecd8; border-radius: 12px; padding: 10px 14px; font-size: 13px; font-family: 'Inter',sans-serif; outline: none; resize: none; min-height: 44px; max-height: 120px; transition: border 0.15s; overflow-y: auto; }
     .chat-textarea:focus { border-color: #4a8a1a; background: #fff; }
     .chat-send-btn { width: 44px; height: 44px; border-radius: 12px; background: #1a3a1a; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; flex-shrink: 0; }
     .chat-send-btn:hover { background: #2a5a2a; }
@@ -111,7 +111,7 @@
     .restock-rec.attention { background: #fffcec; border-color: #e8e898; }
     .restock-nom { font-size: 12px; font-weight: 700; color: #1a2a1a; }
     .restock-detail { font-size: 11px; color: #5a6a5a; margin-top: 2px; line-height: 1.5; }
-    .restock-send-btn { margin-top: 6px; font-size: 10px; font-weight: 600; padding: 4px 10px; border-radius: 5px; background: #f0f7e8; border: 1px solid #c8e8a0; color: #2d6a0a; cursor: pointer; font-family:'DM Sans',sans-serif; transition: all 0.12s; }
+    .restock-send-btn { margin-top: 6px; font-size: 10px; font-weight: 600; padding: 4px 10px; border-radius: 5px; background: #f0f7e8; border: 1px solid #c8e8a0; color: #2d6a0a; cursor: pointer; font-family:'Inter',sans-serif; transition: all 0.12s; }
     .restock-send-btn:hover { background: #e0f0d0; }
     .urgency-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; }
     .urgency-dot.critique { background: #e05555; }

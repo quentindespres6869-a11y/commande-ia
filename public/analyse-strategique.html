@@ -3,28 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Analyse Pricing & Stratégie Commerciale — Commande-IA</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<title>Analyse Strategique — Commande-IA</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #0c0f0a;
-  --surface: #151a12;
-  --surface-hover: #1c2318;
-  --border: #2a3524;
-  --text: #e8efe4;
-  --text-muted: #8a9a7e;
-  --accent: #7ed957;
-  --accent-dim: #3B6D11;
-  --red: #e85d5d;
-  --orange: #e8a34d;
-  --blue: #5da8e8;
-  --purple: #a57ded;
+  --bg: #f4f7f1;
+  --surface: #ffffff;
+  --surface-hover: #f0f6ea;
+  --border: #e0ead0;
+  --text: #1a2a1a;
+  --text-muted: #6a8a6a;
+  --accent: #3B6D11;
+  --accent-dim: #eaf4dc;
+  --red: #c03030;
+  --orange: #c07020;
+  --blue: #2060a0;
+  --purple: #6030a0;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
   background: var(--bg);
   color: var(--text);
   line-height: 1.7;
@@ -53,7 +53,7 @@ body {
   margin-bottom: 24px;
 }
 .report-header h1 {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Inter', serif;
   font-size: clamp(32px, 5vw, 52px);
   font-weight: 900;
   line-height: 1.15;
@@ -80,7 +80,7 @@ body {
   margin-bottom: 8px;
 }
 .section h2 {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Inter', serif;
   font-size: 28px;
   font-weight: 700;
   margin-bottom: 24px;
@@ -125,7 +125,7 @@ td {
 tr:last-child td { border-bottom: none; }
 tr:hover td { background: var(--surface-hover); }
 tr.highlight td {
-  background: rgba(126, 217, 87, 0.06);
+  background: rgba(59, 109, 17, 0.05);
   color: var(--text);
   font-weight: 500;
 }
@@ -137,10 +137,10 @@ tr.highlight td:first-child { color: var(--accent); font-weight: 700; }
   font-size: 11px;
   font-weight: 700;
 }
-.badge-green { background: rgba(126,217,87,0.15); color: var(--accent); }
-.badge-orange { background: rgba(232,163,77,0.15); color: var(--orange); }
-.badge-red { background: rgba(232,93,93,0.15); color: var(--red); }
-.badge-blue { background: rgba(93,168,232,0.15); color: var(--blue); }
+.badge-green { background: #eaf4dc; color: var(--accent); }
+.badge-orange { background: #fff3e0; color: var(--orange); }
+.badge-red { background: #fef0f0; color: var(--red); }
+.badge-blue { background: #e8f0fc; color: var(--blue); }
 
 /* CARDS */
 .card-grid {
@@ -187,7 +187,7 @@ tr.highlight td:first-child { color: var(--accent); font-weight: 700; }
 .price-card:hover { transform: translateY(-4px); border-color: var(--accent-dim); }
 .price-card.recommended {
   border-color: var(--accent);
-  background: linear-gradient(180deg, rgba(126,217,87,0.06) 0%, var(--surface) 100%);
+  background: linear-gradient(180deg, rgba(59,109,17,0.05) 0%, var(--surface) 100%);
 }
 .price-card.recommended::before {
   content: 'RECOMMANDÉ';
@@ -196,7 +196,7 @@ tr.highlight td:first-child { color: var(--accent); font-weight: 700; }
   left: 50%;
   transform: translateX(-50%);
   background: var(--accent);
-  color: var(--bg);
+  color: #fff;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 1.5px;
@@ -205,7 +205,7 @@ tr.highlight td:first-child { color: var(--accent); font-weight: 700; }
 }
 .price-card .tier { font-size: 13px; color: var(--text-muted); font-weight: 500; margin-bottom: 8px; }
 .price-card .price-val {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Inter', serif;
   font-size: 44px;
   font-weight: 900;
   color: var(--accent);
@@ -296,7 +296,7 @@ tr.highlight td:first-child { color: var(--accent); font-weight: 700; }
   text-align: center;
 }
 .metric .val {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Inter', serif;
   font-size: 36px;
   font-weight: 900;
   color: var(--accent);
@@ -311,8 +311,8 @@ tr.highlight td:first-child { color: var(--accent); font-weight: 700; }
 
 /* CALLOUT */
 .callout {
-  background: linear-gradient(135deg, rgba(126,217,87,0.08) 0%, rgba(59,109,17,0.08) 100%);
-  border: 1px solid var(--accent-dim);
+  background: linear-gradient(135deg, rgba(59,109,17,0.05) 0%, rgba(59,109,17,0.08) 100%);
+  border: 1px solid var(--border);
   border-radius: 14px;
   padding: 28px;
   margin: 24px 0;
@@ -385,24 +385,23 @@ tr.highlight td:first-child { color: var(--accent); font-weight: 700; }
 /* ── ADMIN NAV BAR ── */
 .admin-nav {
   position: fixed; top: 0; left: 0; right: 0; height: 52px;
-  background: rgba(12,15,10,0.94);
-  backdrop-filter: blur(14px);
-  border-bottom: 1px solid var(--border);
+  background: #1a3a1a;
+  border-bottom: 1px solid rgba(0,0,0,.2);
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 28px; z-index: 1000;
 }
-.admin-nav-logo { font-size: 15px; font-weight: 700; color: var(--accent); letter-spacing: -0.3px; display:flex; align-items:center; gap:8px; }
-.admin-nav-logo span { color: var(--text); }
+.admin-nav-logo { font-size: 15px; font-weight: 700; color: #a8e07a; letter-spacing: -0.3px; display:flex; align-items:center; gap:8px; }
+.admin-nav-logo span { color: #fff; }
 .admin-nav-right { display: flex; align-items: center; gap: 12px; }
 .admin-back-btn {
-  font-size: 12px; font-weight: 600; color: var(--text-muted);
-  background: var(--surface); border: 1px solid var(--border);
+  font-size: 12px; font-weight: 600; color: #c8e8c8;
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(200,232,200,0.2);
   padding: 6px 14px; border-radius: 7px; cursor: pointer;
-  font-family: 'DM Sans', sans-serif; text-decoration: none; transition: all 0.15s;
+  font-family: 'Inter', sans-serif; text-decoration: none; transition: all 0.15s;
 }
-.admin-back-btn:hover { color: var(--accent); border-color: var(--accent-dim); background: var(--surface-hover); }
-.admin-nav-badge { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 3px 10px; border-radius: 10px; background: var(--accent-dim); color: var(--accent); }
-.admin-nav-date { font-size: 11px; color: var(--text-muted); }
+.admin-back-btn:hover { color: #fff; background: rgba(255,255,255,0.15); }
+.admin-nav-badge { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 3px 10px; border-radius: 10px; background: rgba(168,224,122,0.15); color: #a8e07a; }
+.admin-nav-date { font-size: 11px; color: rgba(255,255,255,0.45); }
 .admin-toc { position:fixed; right:24px; top:72px; width:200px; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px 16px; z-index:900; }
 .admin-toc-title { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); margin-bottom:10px; }
 .admin-toc a { display:block; font-size:12px; color:var(--text-muted); text-decoration:none; padding:4px 0; border-bottom:1px solid var(--border); transition:color 0.12s; }

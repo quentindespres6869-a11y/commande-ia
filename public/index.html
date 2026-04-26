@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Commande-IA</title>
   <script src="/socket.io/socket.io.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'DM Sans', system-ui, sans-serif; background: #f0f2f0; min-height: 100vh; color: #111; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: #f0f2f0; min-height: 100vh; color: #111; }
 
     /* ═══ TOPBAR ═══ */
     .topbar {
@@ -51,7 +51,7 @@
     .stat-value.small { font-size: 14px; padding-top: 5px; color: #c8e8c8; }
 
     .topbar-right { display: flex; align-items: center; gap: 4px; background: rgba(0,0,0,0.2); padding: 4px; border-radius: 10px; }
-    .tab { font-size: 13px; padding: 7px 20px; border-radius: 7px; border: none; background: transparent; color: rgba(200,232,200,0.6); cursor: pointer; font-weight: 500; font-family: 'DM Sans', sans-serif; transition: all 0.15s; white-space: nowrap; }
+    .tab { font-size: 13px; padding: 7px 20px; border-radius: 7px; border: none; background: transparent; color: rgba(200,232,200,0.6); cursor: pointer; font-weight: 500; font-family: 'Inter', sans-serif; transition: all 0.15s; white-space: nowrap; }
     .tab:hover { color: #fff; background: rgba(255,255,255,0.08); }
     .tab.active { background: #fff; color: #1c3a1c; font-weight: 600; }
 
@@ -65,7 +65,7 @@
     .pill {
       font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 20px;
       border: 1.5px solid #e0ecd8; background: #fff; color: #5a8a5a;
-      cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+      cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s;
       display: flex; align-items: center; gap: 5px;
     }
     .pill:hover { border-color: #9ad870; background: #f8fdf4; }
@@ -97,7 +97,7 @@
     }
     .search-box:focus-within { border-color: #4a8a1a; }
     .search-box input {
-      border: none; outline: none; font-size: 13px; font-family: 'DM Sans', sans-serif;
+      border: none; outline: none; font-size: 13px; font-family: 'Inter', sans-serif;
       color: #1a2a1a; width: 100%; background: transparent;
     }
     .search-box input::placeholder { color: #b0c8b0; }
@@ -193,7 +193,7 @@
     .prep-bar-fill { height: 100%; background: linear-gradient(90deg, #4a8aff, #70a0f0); border-radius: 4px; transition: width 1s linear; }
 
     .cmd-footer { display: flex; gap: 6px; margin-top: 12px; }
-    .btn { font-size: 12px; padding: 8px 8px; border-radius: 8px; border: none; background: #3B6D11; color: #fff; cursor: pointer; flex: 1; font-weight: 600; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+    .btn { font-size: 12px; padding: 8px 8px; border-radius: 8px; border: none; background: #3B6D11; color: #fff; cursor: pointer; flex: 1; font-weight: 600; font-family: 'Inter', sans-serif; transition: all 0.15s; }
     .btn:hover { background: #2d5a0d; transform: translateY(-1px); }
     .btn:active { transform: translateY(0); }
     .btn-refuse { background: #fef0f0; color: #b03030; border: 1.5px solid #f0c0c0; }
@@ -241,14 +241,14 @@
     }
     .note-input {
       flex: 1; font-size: 12px; padding: 8px 12px; border-radius: 8px;
-      border: 1.5px solid #e0ecd8; font-family: 'DM Sans', sans-serif;
+      border: 1.5px solid #e0ecd8; font-family: 'Inter', sans-serif;
       outline: none; transition: border-color 0.15s;
     }
     .note-input:focus { border-color: #4a8a1a; }
     .note-add-btn {
       padding: 8px 14px; border-radius: 8px; border: none;
       background: #3B6D11; color: #fff; font-size: 12px; font-weight: 600;
-      cursor: pointer; font-family: 'DM Sans', sans-serif;
+      cursor: pointer; font-family: 'Inter', sans-serif;
     }
 
     /* Timeline dans le detail */
@@ -262,7 +262,7 @@
     .timeline-text strong { color: #1a2a1a; font-weight: 600; }
     .timeline-time { font-size: 10px; color: #9ab89a; }
 
-    .pdf-btn { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 10px; border: none; background: #3B6D11; color: #fff; font-size: 13px; cursor: pointer; text-decoration: none; font-weight: 600; font-family: 'DM Sans', sans-serif; transition: background 0.15s; }
+    .pdf-btn { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 10px; border: none; background: #3B6D11; color: #fff; font-size: 13px; cursor: pointer; text-decoration: none; font-weight: 600; font-family: 'Inter', sans-serif; transition: background 0.15s; }
     .pdf-btn:hover { background: #2d5a0d; }
 
     /* ═══ ARCHIVES (refonte) ═══ */
@@ -280,14 +280,14 @@
     .arch-date-label { font-size: 14px; font-weight: 700; color: #1a2a1a; }
     .arch-date-sub { font-size: 10px; color: #9ab89a; margin-top: 1px; }
     .arch-date-picker { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
-    .arch-today-btn { font-size: 11px; font-weight: 600; padding: 6px 14px; border-radius: 8px; border: 1.5px solid #3B6D11; background: #e8f5dc; color: #2d6a0a; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; white-space: nowrap; }
+    .arch-today-btn { font-size: 11px; font-weight: 600; padding: 6px 14px; border-radius: 8px; border: 1.5px solid #3B6D11; background: #e8f5dc; color: #2d6a0a; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s; white-space: nowrap; }
     .arch-today-btn:hover { background: #d8edc8; }
     .arch-date-dots { display: flex; gap: 4px; align-items: center; }
     .arch-dot { width: 7px; height: 7px; border-radius: 50%; background: #c0e090; cursor: pointer; transition: all 0.15s; }
     .arch-dot.has-data { background: #3B6D11; }
     .arch-dot:hover { transform: scale(1.4); }
     .arch-header-actions { display: flex; gap: 8px; align-items: center; }
-    .arch-action-btn { font-size: 12px; font-weight: 600; padding: 8px 16px; border-radius: 9px; border: 1.5px solid #e0ecd8; background: #fff; color: #5a7a5a; cursor: pointer; font-family: 'DM Sans', sans-serif; display: flex; align-items: center; gap: 6px; transition: all 0.15s; }
+    .arch-action-btn { font-size: 12px; font-weight: 600; padding: 8px 16px; border-radius: 9px; border: 1.5px solid #e0ecd8; background: #fff; color: #5a7a5a; cursor: pointer; font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 6px; transition: all 0.15s; }
     .arch-action-btn:hover { border-color: #9ad870; background: #f0f5ee; color: #3B6D11; }
     .arch-action-btn.danger:hover { border-color: #f0c0c0; background: #fef0f0; color: #b03030; }
     .arch-action-btn.primary { background: #3B6D11; color: #fff; border-color: #3B6D11; }
@@ -308,15 +308,15 @@
     .arch-toolbar { display: flex; align-items: center; gap: 10px; padding: 12px 28px; background: #fff; border-bottom: 1.5px solid #e0ecd8; flex-wrap: wrap; }
     .arch-search { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 10px; border: 1.5px solid #e0ecd8; background: #f8faf6; flex: 1; max-width: 280px; transition: all 0.15s; }
     .arch-search:focus-within { border-color: #4a8a1a; background: #fff; }
-    .arch-search input { border: none; outline: none; font-size: 12px; font-family: 'DM Sans', sans-serif; color: #1a2a1a; background: transparent; width: 100%; }
+    .arch-search input { border: none; outline: none; font-size: 12px; font-family: 'Inter', sans-serif; color: #1a2a1a; background: transparent; width: 100%; }
     .arch-filter-pills { display: flex; gap: 5px; flex-wrap: wrap; flex: 1; }
-    .arch-pill { font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: 20px; border: 1.5px solid #e0ecd8; background: #fff; color: #5a7a5a; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; display: flex; align-items: center; gap: 4px; }
+    .arch-pill { font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: 20px; border: 1.5px solid #e0ecd8; background: #fff; color: #5a7a5a; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s; display: flex; align-items: center; gap: 4px; }
     .arch-pill:hover { border-color: #9ad870; }
     .arch-pill.active { background: #1a3a1a; color: #a8e07a; border-color: #1a3a1a; }
     .arch-pill .pc { font-size: 9px; background: rgba(0,0,0,0.08); padding: 1px 5px; border-radius: 8px; }
     .arch-pill.active .pc { background: rgba(168,224,122,0.2); }
     .arch-view-toggle { display: flex; gap: 2px; background: #f0f5ee; padding: 3px; border-radius: 9px; margin-left: auto; }
-    .arch-view-btn { padding: 6px 12px; border-radius: 6px; border: none; background: transparent; cursor: pointer; font-size: 12px; font-weight: 600; color: #7aaa7a; font-family: 'DM Sans', sans-serif; transition: all 0.15s; display: flex; align-items: center; gap: 5px; }
+    .arch-view-btn { padding: 6px 12px; border-radius: 6px; border: none; background: transparent; cursor: pointer; font-size: 12px; font-weight: 600; color: #7aaa7a; font-family: 'Inter', sans-serif; transition: all 0.15s; display: flex; align-items: center; gap: 5px; }
     .arch-view-btn:hover { color: #3B6D11; }
     .arch-view-btn.active { background: #fff; color: #1a3a1a; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
 
@@ -399,7 +399,7 @@
     .arch-modal-row:last-child { border-bottom: none; }
     .arch-modal-key { color: #7aaa7a; font-size: 11px; }
     .arch-modal-val { font-weight: 600; color: #1a2a1a; text-align: right; }
-    .arch-modal-close { width: 100%; padding: 14px; border-radius: 0 0 22px 22px; border: none; border-top: 1.5px solid #f0f5ee; background: #f8faf6; color: #5a7a5a; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background 0.15s; }
+    .arch-modal-close { width: 100%; padding: 14px; border-radius: 0 0 22px 22px; border: none; border-top: 1.5px solid #f0f5ee; background: #f8faf6; color: #5a7a5a; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: background 0.15s; }
     .arch-modal-close:hover { background: #f0f5ee; }
 
     /* Empty archive */
@@ -418,7 +418,7 @@
       font-size: 12px; font-weight: 600; padding: 8px 16px;
       border-radius: 8px; border: 1.5px solid #f0c0c0;
       background: #fef0f0; color: #b03030;
-      cursor: pointer; font-family: 'DM Sans', sans-serif;
+      cursor: pointer; font-family: 'Inter', sans-serif;
       transition: all 0.15s;
     }
     .clear-btn:hover { background: #fce0e0; border-color: #e09090; }
@@ -525,7 +525,7 @@
     .modal-sub { font-size: 12px; color: #9ab89a; margin-bottom: 16px; }
     .modal-textarea {
       width: 100%; height: 80px; border-radius: 10px; border: 1.5px solid #e0ecd8;
-      padding: 10px 12px; font-size: 13px; font-family: 'DM Sans', sans-serif;
+      padding: 10px 12px; font-size: 13px; font-family: 'Inter', sans-serif;
       outline: none; resize: none; transition: border-color 0.15s;
     }
     .modal-textarea:focus { border-color: #4a8a1a; }
@@ -537,7 +537,7 @@
     .preset-btn {
       font-size: 11px; padding: 5px 10px; border-radius: 8px;
       border: 1.5px solid #e0ecd8; background: #f8faf6; color: #5a8a5a;
-      cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+      cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s;
     }
     .preset-btn:hover { background: #e8f5dc; border-color: #c0e090; }
     /* ═══ SUR PLACE — reflets orange ═══ */
@@ -552,7 +552,7 @@
 .lieu-badge.sur-place { background: #fff4e0; color: #906010; border: 1px solid #f0d090; }
 .lieu-badge.emporter { background: #f0f5ee; color: #5a8a5a; border: 1px solid #d0e0c8; }
 
-.btn-lieu { flex: 0; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 700; transition: all 0.15s; border: 1.5px solid #e8d090; background: #fff8e8; color: #906010; }
+.btn-lieu { flex: 0; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 700; transition: all 0.15s; border: 1.5px solid #e8d090; background: #fff8e8; color: #906010; }
 .btn-lieu:hover { background: #fff0d0; }
 .btn-lieu.active { background: #e09010; color: #fff; border-color: #e09010; }
   </style>
@@ -788,7 +788,7 @@
 </div>
 
 <!-- INSTALL BTN -->
-<div id="install-btn" onclick="installerApp()" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a3a1a;color:#fff;padding:12px 24px;border-radius:24px;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;align-items:center;gap:8px;box-shadow:0 4px 20px rgba(0,0,0,0.2);z-index:999;">
+<div id="install-btn" onclick="installerApp()" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a3a1a;color:#fff;padding:12px 24px;border-radius:24px;font-size:13px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;align-items:center;gap:8px;box-shadow:0 4px 20px rgba(0,0,0,0.2);z-index:999;">
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v9M5 8l3 3 3-3M2 13h12" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
   Installer l'application
 </div>
